@@ -31,6 +31,10 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: 'RevOS - Login',
   description: 'Automotive SaaS Platform - Login to your account',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export default function RootLayout({

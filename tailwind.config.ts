@@ -12,6 +12,16 @@ const config: Config = {
         brand: {
           DEFAULT: '#CCFF00', // Volt Lime
           hover: '#B2DE00',
+          50: '#F5FFCC',
+          100: '#EBFF99',
+          200: '#D4FF33',
+          300: '#C2E617',
+          400: '#A3C914',
+          500: '#84AC10',
+          600: '#658F0D',
+          700: '#467209',
+          800: '#275506',
+          900: '#183A04',
         },
         graphite: {
           900: '#0F172A', // Main Background
@@ -40,8 +50,33 @@ const config: Config = {
       animation: {
         'spin-slow': 'spin 8s cubic-bezier(0.4, 0, 0.2, 1) infinite',
       },
+      // Add safe area utilities for iPhone home bar
+      spacing: {
+        'safe': 'env(safe-area-inset-bottom)',
+      },
     },
   },
-  plugins: [],
-}
+  plugins: [
+    function({ addUtilities }: { addUtilities: any }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          /* Firefox */
+          'scrollbar-width': 'none',
+          /* IE/Edge */
+          '-ms-overflow-style': 'none',
+          /* WebKit */
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        },
+        '.pb-safe': {
+          'padding-bottom': 'env(safe-area-inset-bottom)',
+        },
+        '.pt-safe': {
+          'padding-top': 'env(safe-area-inset-top)',
+        },
+      });
+    },
+  ],
+} as Config // Add type assertion to extend config
 export default config

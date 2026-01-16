@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-graphite-900 text-white font-sans antialiased;
+    @apply bg-[#efffb1] text-graphite-900 font-sans antialiased;
   }
 
   h1, h2, h3 {
@@ -26,5 +26,71 @@
   /* Safe area for mobile devices with home indicators */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Hide scrollbars but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari and Opera */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar-track {
+    display: none !important;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar-thumb {
+    display: none !important;
+  }
+
+  /* Completely remove horizontal scrollbar track */
+  .no-scrollbar {
+    overflow: hidden !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Extra aggressive scrollbar hiding for sidebar */
+  .sidebar-scroll-hide {
+    overflow: hidden !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .sidebar-scroll-hide::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .sidebar-scroll-hide::-webkit-scrollbar-track {
+    display: none !important;
+  }
+
+  .sidebar-scroll-hide::-webkit-scrollbar-thumb {
+    display: none !important;
+  }
+
+  .sidebar-scroll-hide::-webkit-scrollbar-corner {
+    display: none !important;
+  }
+
+  /* Hide scrollbar for all sidebar children */
+  .sidebar-scroll-hide *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .sidebar-scroll-hide * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 }
