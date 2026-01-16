@@ -1,0 +1,69 @@
+1. System Identity & Agent DirectivesTheme Name: The Digital VoltRole: Dark Mode Native Automotive SaaSPrimary Tech Stack: React, Next.js, Tailwind CSS🤖 Agent Instructions (Strict Rules)When generating UI components or modifying styles, you MUST adhere to the following directives:Dark Mode Default: Assume the application is always in dark mode. Do not generate dark: prefixes; use dark colors as the base.Contrast Enforcement:NEVER use white text on brand (Lime) backgrounds. Always use text-graphite-900.NEVER use brand (Lime) text on light backgrounds.No Pure Black: Do not use #000000 or bg-black. Use bg-graphite-900 (#0F172A) as the darkest shade.Semantic Fallbacks: If a specific color is not specified for a "Success" state, default to Teal/Emerald, never Green (to avoid conflict with Brand Lime).Interactive Glow: For primary actions, append shadow-glow (defined in config) to the button class.2. The Color Palette (Token Map)2.1 Primary Brand (The Volt)High Energy, Action-Oriented.Token NameHex ValueTailwind ClassSemantic RoleBrand Primary#CCFF00bg-brandPrimary CTAs, Toggles, Active Tabs.Brand Hover#B2DE00bg-brand-hoverHover state for Brand Primary.Brand Surface#CCFF00 (15%)bg-brand/15Active list item background, subtle highlights.Brand Text#0F172Atext-graphite-900REQUIRED text color on Brand Primary buttons.2.2 Neutrals (The Graphite)Cool Slate Tones. No warm greys.Token NameHex ValueTailwind ClassSemantic RoleApp Bg#0F172Abg-graphite-900Global <body> background.Card Surface#1E293Bbg-graphite-800Cards, Sidebars, Panels.Elevated Surface#334155bg-graphite-700Dropdowns, Modals, Popovers.Border Subtle#334155border-graphite-700Dividers, Table rows.Border Strong#475569border-graphite-600Inputs, Checkboxes, Active Borders.2.3 Semantic States (Functional)Standardized feedback colors.Token NameHex ValueTailwind ClassSemantic RoleError#EF4444text-status-errorCritical failures, Destructive actions.Warning#F59E0Btext-status-warningPending actions, Low stock.Success#2DD4BFtext-status-successUse Teal. Completion, Validations.Info#38BDF8text-status-infoLinks, Help text.3. Component Patterns (Code Snippets)Agents: Use these exact structures when generating components.3.1 Primary ButtonUsage: The main "Call to Action" on a page (e.g., "Create Job", "Save Invoice").JavaScript<button className="
+  flex items-center justify-center gap-2 
+  bg-brand hover:bg-brand-hover 
+  text-graphite-900 font-semibold 
+  px-6 py-3 rounded-lg 
+  shadow-glow transition-all duration-200
+">
+  <IconName className="w-5 h-5" />
+  <span>Action Label</span>
+</button>
+3.2 Secondary ButtonUsage: Cancel, Back, or secondary options.JavaScript<button className="
+  px-6 py-3 rounded-lg 
+  border border-graphite-600 hover:bg-graphite-800 
+  text-white font-medium 
+  transition-colors
+">
+  Cancel
+</button>
+3.3 Dashboard Card (Data Widget)Usage: Displaying metrics or lists.JavaScript<div className="
+  bg-graphite-800 
+  border border-graphite-700 
+  rounded-xl p-6 
+  shadow-sm
+">
+  <h3 className="text-status-info text-sm font-medium uppercase tracking-wider mb-2">
+    Revenue
+  </h3>
+  <p className="text-3xl font-bold text-white">
+    $12,450
+  </p>
+</div>
+3.4 Status BadgeUsage: Displaying job status (e.g., "In Progress").JavaScript// Example: Success State
+<span className="
+  inline-flex items-center px-2.5 py-0.5 rounded-full 
+  text-xs font-medium 
+  bg-status-success/10 text-status-success border border-status-success/20
+">
+  Completed
+</span>
+4. Typography RulesAgents: strictly enforce font weights and colors.Headings (H1-H3): text-white, font-bold, tracking-tight.Body Text: text-slate-300 (Tailwind standard) or text-white/80.Meta Data (Dates/Labels): text-slate-400.Numbers (Prices/VINs): Use font-mono or tabular-nums for alignment.5. Tailwind Configuration (Copy/Paste)Agents: Ensure this configuration exists in tailwind.config.js before styling.JavaScriptmodule.exports = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          DEFAULT: '#CCFF00', // Volt Lime
+          hover: '#B2DE00',
+          dim: 'rgba(204, 255, 0, 0.1)',
+        },
+        graphite: {
+          900: '#0F172A', // Main Bg
+          800: '#1E293B', // Card Bg
+          700: '#334155', // Border/Modal
+          600: '#475569', // Input Border
+        },
+        status: {
+          error: '#EF4444',
+          warning: '#F59E0B',
+          success: '#2DD4BF', // Teal (Not Green)
+          info: '#38BDF8',
+        }
+      },
+      boxShadow: {
+        'glow': '0 0 15px rgba(204, 255, 0, 0.3)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
+      }
+    },
+  },
+}
+6. Accessibility (A11y) ChecksAgents: Perform these checks on generated code.Check: Is text-graphite-900 used on bg-brand?If Yes: ✅ Pass.If No: ❌ Fail. Correct to dark text.Check: Is the font size on inputs at least text-base (16px)?Reason: Prevents auto-zoom on mobile devices in garage settings.Check: Do icon-only buttons have an aria-label?Reason: Mechanics using screen readers or voice control.

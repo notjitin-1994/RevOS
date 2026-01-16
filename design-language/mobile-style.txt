@@ -1,0 +1,52 @@
+1. System Identity & Mobile PhilosophyTheme Name: Precision Volt MobileCore Concept: "The Grease-Proof Interface."Primary Constraint: The user is likely standing, has dirty hands, or is holding a tool in one hand.Interaction Model: Thumb-driven navigation, large touch targets (>44px), and high contrast for outdoor/bay visibility.2. 🤖 Agent Instructions (Strict Rules)Role: You are a Mobile-First UX Engineer.Directives for Code Generation:The "Thumb Zone" Rule:NEVER place primary actions (Save, Start Job) at the top left of the screen.ALWAYS place primary actions in a Fixed Bottom Bar, Floating Action Button (FAB), or the bottom 30% of the screen.The "Grease-Proof" Target Rule:All interactive elements (buttons, inputs, icons) MUST have a minimum height/width of 44px (or h-11/p-3 in Tailwind).Reason: Preventing mis-taps with gloves.Input Zoom Prevention (iOS):IF creating an <input> or <select> for mobile...THEN you MUST ensure the font size is text-base (16px).Reason: Prevents the OS from auto-zooming when the input is focused1.No Hover States:Do not rely on hover: for critical information (tooltips). Mobile users cannot hover.Use active: states to provide immediate feedback on tap.3. Layout & Grid Strategy (Responsive Breakpoints)3.1 Breakpoint PhilosophyWe write code Mobile-First. The base classes apply to mobile, and md: applies to tablet/desktop.BreakpointWidthUsage ContextDefault< 640pxPhone (Portrait). Stacked layout, bottom sheet navigation.sm640px+Large Phone / Small Tablet. 2-column grids allowed.md768px+Tablet (Portrait). Sidebar appears (collapsible).lg1024px+Tablet (Landscape) / Laptop. Full Dashboard Grid.3.2 The "Stack-to-Grid" PatternAgent Instruction: Convert complex dashboard widgets into linear stacks for mobile.Desktop: 3 Columns (Widget A | Widget B | Widget C).Mobile: Vertical Stack with vertical spacing space-y-4.4. Navigation Patterns4.1 Bottom Navigation Bar (Mobile Main)Instead of a top sidebar, use a sticky bottom nav for core routes.Height: h-16 (64px).Background: bg-graphite-800 + border-t border-graphite-700.Z-Index: z-50.Safe Area: Ensure pb-safe (Tailwind safe-area plugin) is used for iPhone Home bars.4.2 Bottom Sheets (The "Drawer")Do not use center-screen modals on mobile (they are hard to reach). Use Slide-up Bottom Sheets for forms or filters.Trigger: Tap action.Animation: Slide up from bottom (translate-y-0).Backdrop: bg-graphite-900/80 backdrop-blur-sm.Drag Handle: A small w-12 h-1.5 bg-graphite-600 rounded-full centered at the top of the sheet.5. Component Adaptations (Copy-Paste Patterns)5.1 The "Mobile Card" (Compact Widget)Reduces padding and font sizes slightly to fit narrow screens.JavaScript<div className="
+  bg-graphite-800 
+  border-b border-graphite-700 md:border md:rounded-xl 
+  p-4 md:p-6 
+  flex flex-col gap-3
+">
+  {/* Header: Flex row for alignment */}
+  <div className="flex justify-between items-center">
+    <h3 className="font-display font-medium text-white text-base">
+      Recent Jobs
+    </h3>
+    <button className="text-brand text-sm font-medium p-2">
+      View All
+    </button>
+  </div>
+  
+  {/* Content */}
+  <div className="flex flex-col gap-2">
+    {/* List Items... */}
+  </div>
+</div>
+5.2 The Sticky Action Bar (Form Footer)Ensures the "Save" button is always accessible without scrolling.JavaScript<div className="
+  fixed bottom-0 left-0 right-0 z-40
+  bg-graphite-900/95 backdrop-blur-md 
+  border-t border-graphite-700 
+  p-4 pb-safe
+">
+  <button className="
+    w-full 
+    bg-brand text-graphite-900 font-semibold 
+    h-12 rounded-lg 
+    shadow-glow active:scale-[0.98] transition-transform
+  ">
+    Save Changes
+  </button>
+</div>
+5.3 Large Input Fields (Touch Friendly)Increases tap area for mechanics wearing gloves.JavaScript<div>
+  <label className="text-xs font-medium uppercase tracking-wider text-graphite-400 mb-1 block">
+    Odometer Reading
+  </label>
+  <input 
+    type="number" 
+    pattern="[0-9]*" /* Triggers numeric keypad on iOS/Android */
+    className="
+      w-full bg-graphite-900 
+      border border-graphite-600 focus:border-brand focus:ring-1 focus:ring-brand
+      text-white text-base font-mono 
+      h-12 px-4 rounded-lg
+    "
+  />
+</div>
+6. Typography AdjustmentsMobile typography must be tighter to prevent excessive scrolling, but data must remain legible.ElementDesktop SizeMobile SizeTailwind Class (Mobile)Page Title (H1)text-3xltext-2xltext-2xl font-bold font-displaySection (H2)text-xltext-lgtext-lg font-semibold font-displayBody Texttext-smtext-smtext-sm font-sans (No change)Inputstext-sm16pxtext-base (Prevent Zoom)7. Touch & Gestures7.1 Swipe ActionsIn lists (e.g., Parts List), implement Swipe-to-Reveal actions.Swipe Left: Reveal "Delete" (Red/Error background).Swipe Right: Reveal "Mark Complete" (Teal/Success background).7.2 Active States (Feedback)Since there is no hover, every tap must have visual feedback.Utility: active:scale-[0.98] or active:bg-graphite-700.Rule: Apply this to every clickable card or list item.8. Accessibility (Mobile Specifics)System Font Scaling: Ensure layouts do not break if the user has their OS font size set to "Large." Use flexible heights (h-auto or min-h-[44px]) rather than fixed heights.Dark Mode Outdoor Visibility: The bg-graphite-900 provides good contrast, but ensure borders (border-graphite-600) are sufficient to define button edges in bright sunlight (e.g., checking a car outdoors).Keypad Triggers:For VINs: Use inputmode="text".For Mileage/Price: Use inputmode="decimal" or numeric.For Email: Use inputmode="email".

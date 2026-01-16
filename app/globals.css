@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-graphite-900 text-white font-sans antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Custom focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-graphite-900;
+  }
+
+  /* Smooth transitions for interactive elements */
+  button, a, input {
+    @apply transition-all duration-200 ease-out;
+  }
+}
+
+@layer utilities {
+  /* Safe area for mobile devices with home indicators */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

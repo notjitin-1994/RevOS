@@ -1,0 +1,80 @@
+1. System Identity & Agent DirectivesTheme Name: Precision IndustrialRole: Garage Management SaaS (Dark Mode Native)Tech Stack: React, Next.js, Tailwind CSS🤖 Agent Instructions (Strict Rules)When generating UI components or modifying typography, you MUST adhere to the following directives:The "VIN" Rule (CRITICAL):IF the data is a Vehicle Identification Number (VIN), Part Number, SKU, License Plate, IP Address, or a columnar Price...THEN you MUST apply the font-mono class.Reason: Distinguishes 0 vs O and ensures vertical alignment.The "Label" Rule:IF the text is a metadata label (e.g., "Status", "Created At", "Customer")...THEN you MUST use: text-xs font-medium uppercase tracking-wider text-graphite-400.Reason: Creates visual hierarchy distinct from the data values.Header Distinction:NEVER use font-sans for H1, H2, or H3 elements.ALWAYS use font-display (Barlow) for headings to maintain the industrial brand identity.No Serif Fonts:NEVER introduce serif fonts (Times New Roman, Garamond, etc.). The system is strictly Sans/Mono.2. The Font Stack (Token Map)2.1 Display Font: Barlow (font-display)Usage: Branding & StructureTokenTailwind ClassUsage ContextDisplay Boldfont-display font-boldPage Titles (H1), Modal Titles.Display Semiboldfont-display font-semiboldSection Headers (H2), Alert Titles.Display Mediumfont-display font-mediumCard Headers (H3), Widget Titles.2.2 Body Font: Inter (font-sans)Usage: UI Navigation & ReadingTokenTailwind ClassUsage ContextSans Regularfont-sans font-normalParagraphs, Tooltips, Standard Inputs.Sans Mediumfont-sans font-mediumButtons, Navigation Links, Dropdown Items.Sans Semiboldfont-sans font-semiboldemphasized UI text (not headers).2.3 Data Font: JetBrains Mono (font-mono)Usage: Exact Data RepresentationTokenTailwind ClassUsage ContextMono Regularfont-mono font-normalStandard tabular data.Mono Mediumfont-mono font-mediumHighlighted data values (VINs, Prices).3. Typography Scale & Patterns (Copy-Paste Ready)Agents: Use these exact class combinations when asked to build specific UI elements.3.1 Page Header (H1)JavaScript<h1 className="font-display font-bold text-3xl text-white tracking-tight leading-tight">
+  {pageTitle}
+</h1>
+3.2 Dashboard Section Header (H2)JavaScript<h2 className="font-display font-semibold text-xl text-white tracking-normal mb-4">
+  {sectionTitle}
+</h2>
+3.3 The "Data Pair" Pattern (Label + Value)Used heavily in sidebars and inspection reports.JavaScript<div className="flex flex-col">
+  {/* LABEL: Uppercase, small, wider tracking */}
+  <span className="text-xs font-medium uppercase tracking-wider text-graphite-400 mb-1">
+    VIN Number
+  </span>
+  {/* VALUE: Mono font for precision */}
+  <span className="font-mono text-sm font-medium text-white tracking-wide">
+    1HG CM8 263 3A 004352
+  </span>
+</div>
+3.4 Table Cell (Price/Currency)Ensures decimal alignment in financial tables.JavaScript<td className="text-right py-3 px-4">
+  <span className="font-mono text-sm text-white">
+    $1,240.50
+  </span>
+</td>
+4. Setup Configuration (For Reference)4.1 layout.tsx (Next.js Font Loader)Agents: Ensure variable names match the Tailwind config.TypeScriptimport { Barlow, Inter, JetBrains_Mono } from 'next/font/google'
+
+const barlow = Barlow({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-barlow',
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+})
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${barlow.variable} ${inter.variable} ${mono.variable}`}>
+      <body className="font-sans antialiased bg-graphite-900 text-white">
+        {children}
+      </body>
+    </html>
+  )
+}
+4.2 tailwind.config.jsAgents: Verify extend block contains these families.JavaScriptmodule.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['var(--font-barlow)', 'sans-serif'],
+        sans:    ['var(--font-inter)', 'sans-serif'],
+        mono:    ['var(--font-mono)', 'monospace'],
+      },
+      letterSpacing: {
+        tightest: '-.075em',
+        tighter: '-.05em',
+        tight: '-.025em',
+        normal: '0',
+        wide: '.025em',
+        wider: '.05em',
+        widest: '.1em',
+      },
+    },
+  },
+}
+5. Accessibility Checklist (A11y)Agents: Perform these checks on generated output.Tabular Nums: If using font-sans for a timer or shifting number, append tabular-nums.Contrast: Ensure text-graphite-400 is the lightest grey used. Never use text-graphite-500 or higher on dark backgrounds.Click Targets: Links inside paragraphs must be font-medium and text-brand (or text-status-info) to be distinguishable from body text.6. Visual ExamplesBad Example ❌Why it fails: Uses Sans font for VIN (ambiguous characters), Label is not uppercase/distinct.JavaScript<div>
+  <span className="text-gray-500">Vin:</span>
+  <span className="text-white">1HGCM82633A004352</span>
+</div>
+Good Example ✅Why it passes: Uses Label Pattern (Uppercase/Wide) and Data Pattern (Mono).JavaScript<div>
+  <span className="block text-xs font-medium uppercase tracking-wider text-graphite-400">
+    VIN
+  </span>
+  <span className="block font-mono text-sm text-white tracking-wide mt-1">
+    1HG CM8 263 3A 004352
+  </span>
+</div>

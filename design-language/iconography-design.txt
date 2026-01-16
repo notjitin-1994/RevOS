@@ -1,0 +1,39 @@
+1. System Identity & Agent DirectivesTheme Name: Precision SchematicLibrary Standard: Lucide React (Preferred) or Heroicons (Fallback).Visual Style: 2px Stroke, Rounded Joints, Technical/Geometric.🤖 Agent Instructions (Strict Rules)When generating UI components involving icons, you MUST adhere to the following directives:The Library Rule: Always import icons from lucide-react. Do not use FontAwesome or Material Icons (they look too generic/web-1.0).The "Stroke" Rule: Use Outlined (Stroke) icons for all UI elements. Never use Solid/Filled icons unless it is a specific toggle state (e.g., a filled star for "Favorited").Sizing Standards:Button Icons: w-4 h-4 (16px) or w-5 h-5 (20px).Navigation Icons: w-6 h-6 (24px).Feature/Hero Icons: w-8 h-8 (32px) or larger.Color Inheritance: Never hardcode colors on the icon SVG itself. Always use Tailwind text classes (e.g., text-graphite-400) on the parent or the icon component so it inherits currentColor.2. Icon Vocabulary (The Metaphors)In a garage context, we need specific mapping to ensure specific technical concepts are represented accurately. We avoid "cartoony" metaphors.2.1 Core NavigationConceptIcon Name (Lucide)ReasoningDashboard<LayoutGrid /> or <Gauge />Represents the "Control Center."Jobs/Repairs<Wrench />The universal symbol for active mechanical work.Schedule/Bay<CalendarRange />Represents time-blocking for lifts/bays.Inventory<PackageSearch />Represents tracking parts (not just a box).Customers<Users />Standard CRM representation.Invoices<FileText />Represents the finalized document.Settings<Settings2 />Important: Use Settings2 (sliders) instead of Settings (gear) to differentiate from "Mechanical Parts."2.2 Automotive SpecificsConceptIcon Name (Lucide)ReasoningVehicle<CarFront />Looks technical/blueprint-like.Engine/Motor<Cpu /> or <Zap />Represents modern diagnostics/ECU (Engine Control Unit).Diagnostics<Activity />Represents live data streams/pulse.VIN Number<Barcode />Represents the unique ID scan.Tires/Wheels<CircleDashed />Abstract representation of a wheel/rotation.Fluids/Oil<Droplet />Universal symbol for liquid inputs.3. Style & States3.1 Default State (Inactive)Icons should generally recede until interacted with.Color: text-graphite-400Stroke Width: stroke-[1.5px] (Elegant/Technical)3.2 Active / Hover State (The "Volt")When a button is hovered or a tab is active, the icon "powers up."Color: text-brand (Lime)Glow: Drop shadow or background glow.3.3 Semantic StatesError: <AlertTriangle className="text-status-error" />Success: <CheckCircle2 className="text-status-success" /> (Use the "2" variant for a cleaner look).Info: <Info className="text-status-info" />4. Implementation Guide (React / Tailwind)4.1 Standard Icon Button PatternUsage: Action buttons in toolbars.JavaScriptimport { Wrench, Printer } from 'lucide-react';
+
+export function ActionButton({ label, icon: Icon }) {
+  return (
+    <button className="
+      group flex items-center gap-2 px-4 py-2 rounded-lg
+      border border-graphite-600 bg-graphite-800
+      hover:bg-graphite-700 hover:border-brand/50
+      transition-all duration-200
+    ">
+      {/* Icon: Grey by default, turns Lime on group hover */}
+      <Icon className="
+        w-4 h-4 text-graphite-400 
+        group-hover:text-brand transition-colors
+      " />
+      
+      <span className="text-sm font-medium text-white">
+        {label}
+      </span>
+    </button>
+  );
+}
+4.2 The "Feature Icon" (Hero)Usage: Empty states or major dashboard headers.JavaScriptimport { CarFront } from 'lucide-react';
+
+export function VehicleEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-graphite-700 rounded-xl">
+      <div className="p-4 bg-graphite-800 rounded-full mb-4">
+        <CarFront className="w-10 h-10 text-brand opacity-80" />
+      </div>
+      <h3 className="font-display font-medium text-white text-lg">No Vehicle Selected</h3>
+      <p className="text-graphite-400 text-sm mt-1">Search via VIN or Plate to begin.</p>
+    </div>
+  );
+}
+5. Accessibility & UX Directives5.1 Decorative IconsIf an icon is purely visual (e.g., next to a label "Settings"), it must be hidden from screen readers to avoid clutter.Code: <Settings2 className="w-4 h-4" aria-hidden="true" />5.2 Standalone IconsIf an icon is the button (e.g., a trash can with no text), it MUST have a label.Code:JavaScript<button aria-label="Delete Invoice">
+  <Trash2 className="w-4 h-4 text-status-error" />
+</button>
+5.3 Click TargetsIcons are small (20px), but fingers are big. Never put an onClick directly on the icon SVG. Put it on the parent <button> or <div> and ensure that parent has padding (p-2) to create a minimum 44x44px touch target.

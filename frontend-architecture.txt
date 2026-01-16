@@ -1,0 +1,163 @@
+Frontend Architecture: The Precision Volt System
+Version: 1.0 Project Identity: Dark Mode Native Automotive SaaS
+
+
+Core Philosophy: "The Grease-Proof Interface" — High contrast, high legibility, and touch-optimized for garage environments. 
+
+
+
+1. Core Technology Stack
+This architecture leverages the specific "Precision Volt" constraints to build a performant, type-safe application.
+
+Framework: Next.js 14+ (App Router). Chosen for its robust routing and server-side rendering capabilities, essential for SEO and initial load speed in low-bandwidth garage environments. 
+
+Styling Engine: Tailwind CSS. Configured strictly for the "Digital Volt" palette (#CCFF00 Lime / #0F172A Graphite). 
+
+
+
+
+Language: TypeScript. Strict typing required for VINs, Part Numbers, and Financial calculations.
+
+Iconography: Lucide React. Configured with 2px stroke and rounded joints to match the "Schematic Stroke" design identity. 
+
+State Management:
+
+Server State: TanStack Query (React Query). Essential for real-time inventory syncing and job card updates.
+
+Client State: Zustand. For managing complex, ephemeral UI states like the multi-step "Job Card" workflow.
+
+Form Handling: React Hook Form + Zod. Critical for validating complex inputs like Engine Numbers and VINs with strict schemas.
+
+2. Layout & Navigation Strategy
+The application uses a Responsive Dual-Layout System to handle the transition between the front desk (Desktop) and the repair bay (Mobile).
+
+2.1 The "Bay View" (Desktop/Tablet)
+
+Structure: Sidebar-first approach. 
+
+
+Sidebar (Fixed w-64): Contains core navigation icons (<Wrench />, <LayoutGrid />) for high-level module access. 
+
+
+Sticky Header (h-16, z-50): Contains Global Search (VIN lookup) and User Profile. 
+
+Grid System: 12-Column Grid. Dashboard widgets span 3, 4, or 6 columns. Data tables (Inventory) use single-column full width. 
+
+2.2 The "Grease-Proof" View (Mobile)
+
+Philosophy: Thumb-driven navigation with large touch targets (>44px) for mechanics wearing gloves. 
+
+
+Navigation: Sticky Bottom Navigation Bar (h-16) instead of a top sidebar. 
+
+
+Action Placement: Primary actions (e.g., "Start Job", "Save") are placed in a fixed bottom bar or floating action button, never at the top left. 
+
+
+Input Handling: All inputs default to text-base (16px) to prevent iOS auto-zoom. 
+
+
+3. Design System Implementation (The Volt Standard)
+3.1 Color & Theme Enforcement
+Dark Mode Default: The app is strictly dark mode (bg-graphite-900). There is no light mode toggle. 
+
+
+Primary Action: #CCFF00 (Brand Lime). Rule: Text on Lime must always be #0F172A (Graphite-900). 
+
+
+Status Colors:
+
+Success: Teal (#2DD4BF). CRITICAL: Never use Green, to avoid conflict with Brand Lime. 
+
+
+Error: Red (#EF4444) for critical failures. 
+
+
+Depth: Depth is achieved via Overlay (bg-graphite-700) + Glow Shadows (shadow-glow), not black shadows. 
+
+3.2 Typography Strategy
+Three distinct font families are used to distinguish data types instantly:
+
+Headings: font-display (Barlow). Used for H1-H3 structure and branding. 
+
+UI Text: font-sans (Inter). Highly legible interface text. 
+
+Data: font-mono (JetBrains Mono). CRITICAL: Must be used for VINs, License Plates, IP Addresses, and Prices to distinguish 0 vs O. 
+
+
+4. Module-Specific Architectures
+4.1 Job Card Management (The Core Workflow)
+View: Kanban Board (Desktop) / Vertical Stack (Mobile).
+
+Data Pattern: The "VIN Pattern" is applied to every vehicle reference:
+
+Label: text-xs font-medium uppercase tracking-wider text-graphite-400. 
+
+Value: font-mono text-sm text-white tracking-wide. 
+
+Features:
+
+Synced Details: Uses React Query invalidation to pull fresh Customer/Vehicle data when a Job Card opens.
+
+
+Live Status: Status badges use the 10% opacity background style (bg-status-success/10). 
+
+4.2 Inventory & Parts
+
+View: High-density Data Tables. 
+
+
+Low-Stock Warning: Visualized using the text-status-warning (#F59E0B) color token. 
+
+
+Interactions: Mobile users use Swipe-to-Reveal actions (Swipe Left to Delete, Swipe Right to Mark Used). 
+
+4.3 Employee & Schedule
+RBAC (Role-Based Access):
+
+Owner/Admin: Full access to Financials/Margins.
+
+Mechanic: View-only for Schedule, Edit access for Job Cards.
+
+Visuals: Time slots use border-graphite-700 dividers. Current time is marked by a border-brand (Lime) line.
+
+5. Component Library Standards
+All components must be built mobile-first using the following patterns:
+
+5.1 Buttons
+
+Primary: bg-brand text-graphite-900 shadow-glow. 
+
+
+Secondary: border border-graphite-600 text-white. 
+
+
+Touch Targets: Parent containers must have p-2 to ensure minimum 44x44px target size. 
+
+5.2 Micro-interactions
+Motion: "Industrial Smoothness" — Hydraulic easing (fast start, smooth stop). No bouncy springs. 
+
+
+Feedback: "Volt Pulse" — Buttons emit a ring pulse of brand color upon completion. 
+
+
+Mobile Feedback: Since there is no hover on mobile, use active:scale-[0.98] for tactile feedback. 
+
+6. Directory Structure (Suggested)
+src/
+├── app/
+│   ├── (auth)/             # Login/Register
+│   ├── (dashboard)/        # Main App Layout (Sidebar/BottomNav)
+│   │   ├── jobs/           # Job Card Management
+│   │   ├── inventory/      # Parts & Stock
+│   │   ├── schedule/       # Calendar & Time Tracking
+│   │   └── customers/      # CRM & Bike History
+├── components/
+│   ├── ui/                 # Primitives (Buttons, Inputs - "Volt" styled)
+│   ├── domain/             # Feature-specific (JobCard, VinDisplay)
+│   └── layout/             # Sidebar, MobileNav, StickyHeader
+├── lib/
+│   ├── fonts.ts            # Barlow, Inter, JetBrains Mono config [cite: 41]
+│   └── utils.ts            # CN helper, currency formatters
+└── styles/
+    └── globals.css         # Tailwind directives & Base layer reset [cite: 22]
