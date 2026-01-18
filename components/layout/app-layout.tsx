@@ -19,11 +19,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#efffb1]">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#dfe5ef' }}>
       <AppSidebar open={sidebarOpen} setOpen={setSidebarOpen} hideMobile={true} />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto bg-[#efffb1] pb-16 md:pb-0">
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0" style={{ backgroundColor: '#dfe5ef' }}>
         {children}
       </main>
 

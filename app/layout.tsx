@@ -35,6 +35,10 @@ export const metadata: Metadata = {
     icon: '/icon.svg',
     apple: '/icon.svg',
   },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+  },
 }
 
 export default function RootLayout({
@@ -47,7 +51,7 @@ export default function RootLayout({
       lang="en"
       className={`${barlow.variable} ${inter.variable} ${jetbrainsMono.variable} ${manrope.variable}`}
     >
-      <body className="font-sans antialiased bg-graphite-900 text-white">
+      <body className="font-sans antialiased text-white">
         {children}
       </body>
     </html>

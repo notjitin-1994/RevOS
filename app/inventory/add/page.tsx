@@ -186,21 +186,21 @@ export default function AddPartPage() {
         transition={{ duration: 0.5 }}
         className="mb-6 md:mb-8"
       >
-        <button
-          onClick={() => router.push('/inventory')}
-          className="flex items-center gap-2 text-graphite-600 hover:text-graphite-900 transition-colors mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm font-medium">Back to Inventory</span>
-        </button>
+        <div className="flex items-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/inventory')}
+            className="flex items-center justify-center h-10 w-10 bg-graphite-800 text-white rounded-xl hover:bg-graphite-700 transition-all duration-200 shadow-md border border-graphite-700"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </motion.button>
 
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-1 bg-graphite-600 rounded-full" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
               Add New Part
             </h1>
-            <p className="text-sm md:text-base text-graphite-600 mt-1">
+            <p className="text-sm md:text-base text-gray-600 mt-1">
               Add a new part to your inventory
             </p>
           </div>
@@ -212,7 +212,7 @@ export default function AddPartPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="bg-white rounded-2xl shadow-lg border border-graphite-200 overflow-hidden"
+        className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden"
       >
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
           {/* Error Message */}
@@ -229,13 +229,13 @@ export default function AddPartPage() {
 
           {/* Basic Information */}
           <div>
-            <h3 className="text-lg font-semibold text-graphite-900 mb-4 flex items-center gap-2">
-              <Package className="h-5 w-5 text-brand" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Package className="h-5 w-5 text-gray-700" />
               Basic Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Part Number *
                 </label>
                 <input
@@ -244,13 +244,13 @@ export default function AddPartPage() {
                   placeholder="e.g., OIL-001"
                   value={formData.partNumber}
                   onChange={(e) => handleChange('partNumber', e.target.value.toUpperCase())}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all uppercase"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all uppercase"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Unique identifier for this part</p>
+                <p className="text-xs text-gray-500 mt-1">Unique identifier for this part</p>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Part Name *
                 </label>
                 <input
@@ -259,19 +259,19 @@ export default function AddPartPage() {
                   placeholder="e.g., Engine Oil 10W-40"
                   value={formData.partName}
                   onChange={(e) => handleChange('partName', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Category *
                 </label>
                 <select
                   required
                   value={formData.category}
                   onChange={(e) => handleChange('category', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
@@ -282,14 +282,14 @@ export default function AddPartPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Used For *
                 </label>
                 <select
                   required
                   value={formData.usedFor}
                   onChange={(e) => handleChange('usedFor', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
                 >
                   {usedForOptions.map((option) => (
                     <option key={option} value={option}>
@@ -300,7 +300,7 @@ export default function AddPartPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Make
                 </label>
                 <input
@@ -308,12 +308,12 @@ export default function AddPartPage() {
                   placeholder="e.g., Honda"
                   value={formData.make}
                   onChange={(e) => handleChange('make', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Model
                 </label>
                 <input
@@ -321,12 +321,12 @@ export default function AddPartPage() {
                   placeholder="e.g., CBR650R"
                   value={formData.model}
                   onChange={(e) => handleChange('model', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Description
                 </label>
                 <textarea
@@ -334,7 +334,7 @@ export default function AddPartPage() {
                   placeholder="Detailed description of the part..."
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all resize-none"
                 />
               </div>
             </div>
@@ -342,10 +342,10 @@ export default function AddPartPage() {
 
           {/* Stock Information */}
           <div>
-            <h3 className="text-lg font-semibold text-graphite-900 mb-4">Stock Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   On-Hand Stock *
                 </label>
                 <input
@@ -354,13 +354,13 @@ export default function AddPartPage() {
                   min="0"
                   value={formData.onHandStock}
                   onChange={(e) => handleChange('onHandStock', parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Available in workshop</p>
+                <p className="text-xs text-gray-500 mt-1">Available in workshop</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Warehouse Stock *
                 </label>
                 <input
@@ -369,13 +369,13 @@ export default function AddPartPage() {
                   min="0"
                   value={formData.warehouseStock}
                   onChange={(e) => handleChange('warehouseStock', parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">In deep storage</p>
+                <p className="text-xs text-gray-500 mt-1">In deep storage</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Low Stock Threshold *
                 </label>
                 <input
@@ -384,16 +384,16 @@ export default function AddPartPage() {
                   min="0"
                   value={formData.lowStockThreshold}
                   onChange={(e) => handleChange('lowStockThreshold', parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Alert when below this</p>
+                <p className="text-xs text-gray-500 mt-1">Alert when below this</p>
               </div>
 
               {/* Stock Status Preview */}
-              <div className="md:col-span-3 p-4 bg-graphite-50 rounded-xl border border-graphite-200">
+              <div className="md:col-span-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm text-graphite-600">Stock Status Preview:</span>
+                    <span className="text-sm text-gray-600">Stock Status Preview:</span>
                     <span
                       className={cn(
                         'ml-3 px-3 py-1 rounded-lg text-sm font-semibold border inline-block',
@@ -403,8 +403,8 @@ export default function AddPartPage() {
                       {stockStatus === 'in-stock' ? 'In Stock' : stockStatus === 'low-stock' ? 'Low Stock' : 'Out of Stock'}
                     </span>
                   </div>
-                  <div className="text-sm text-graphite-600">
-                    Total: <span className="font-semibold text-graphite-900">{formData.onHandStock + formData.warehouseStock}</span>
+                  <div className="text-sm text-gray-600">
+                    Total: <span className="font-semibold text-gray-900">{formData.onHandStock + formData.warehouseStock}</span>
                   </div>
                 </div>
               </div>
@@ -413,10 +413,10 @@ export default function AddPartPage() {
 
           {/* Pricing Information */}
           <div>
-            <h3 className="text-lg font-semibold text-graphite-900 mb-4">Pricing Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Purchase Price (₹) *
                 </label>
                 <input
@@ -426,13 +426,13 @@ export default function AddPartPage() {
                   step="0.01"
                   value={formData.purchasePrice}
                   onChange={(e) => handleChange('purchasePrice', parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Cost per unit</p>
+                <p className="text-xs text-gray-500 mt-1">Cost per unit</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Selling Price (₹) *
                 </label>
                 <input
@@ -442,14 +442,14 @@ export default function AddPartPage() {
                   step="0.01"
                   value={formData.sellingPrice}
                   onChange={(e) => handleChange('sellingPrice', parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Retail price per unit</p>
+                <p className="text-xs text-gray-500 mt-1">Retail price per unit</p>
               </div>
 
               {/* Margin Display */}
-              <div className="p-4 bg-graphite-50 rounded-xl border border-graphite-200">
-                <span className="block text-sm font-medium text-graphite-700 mb-1">Profit Margin</span>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <span className="block text-sm font-medium text-gray-700 mb-1">Profit Margin</span>
                 <div className="flex items-baseline gap-2">
                   <span className={cn(
                     "text-2xl font-bold",
@@ -457,7 +457,7 @@ export default function AddPartPage() {
                   )}>
                     {margin.toFixed(1)}%
                   </span>
-                  <span className="text-sm text-graphite-600">
+                  <span className="text-sm text-gray-600">
                     (₹{(formData.sellingPrice - formData.purchasePrice).toFixed(2)})
                   </span>
                 </div>
@@ -467,10 +467,10 @@ export default function AddPartPage() {
 
           {/* Additional Information */}
           <div>
-            <h3 className="text-lg font-semibold text-graphite-900 mb-4">Additional Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Location
                 </label>
                 <input
@@ -478,13 +478,13 @@ export default function AddPartPage() {
                   placeholder="e.g., A1-01"
                   value={formData.location}
                   onChange={(e) => handleChange('location', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Storage location</p>
+                <p className="text-xs text-gray-500 mt-1">Storage location</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Supplier
                 </label>
                 <input
@@ -492,27 +492,27 @@ export default function AddPartPage() {
                   placeholder="e.g., AutoParts Ltd"
                   value={formData.supplier}
                   onChange={(e) => handleChange('supplier', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-graphite-500 mt-1">Primary supplier</p>
+                <p className="text-xs text-gray-500 mt-1">Primary supplier</p>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-6 border-t border-graphite-200">
+          <div className="flex gap-3 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={() => router.push('/inventory')}
               disabled={isLoading}
-              className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>

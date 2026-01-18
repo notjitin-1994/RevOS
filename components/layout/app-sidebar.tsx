@@ -41,42 +41,42 @@ export function AppSidebar({ open, setOpen, hideMobile = false }: AppSidebarProp
     {
       label: 'Dashboard',
       href: '/dashboard',
-      icon: <LayoutDashboard className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <LayoutDashboard className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Job Card Management',
       href: '/job-cards',
-      icon: <ClipboardList className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <ClipboardList className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Employee Management',
       href: '/employee-management',
-      icon: <Users className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <Users className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Customer Management',
       href: '/customer-management',
-      icon: <UserPlus className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <UserPlus className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Service Scope Management',
       href: '/services',
-      icon: <Wrench className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <Wrench className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Vehicle Management',
       href: '/vehicles',
-      icon: <MotorcycleIcon className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <MotorcycleIcon className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Parts & Inventory',
       href: '/inventory',
-      icon: <Package className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <Package className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Calendar & Schedule',
       href: '/calendar',
-      icon: <CalendarIcon className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <CalendarIcon className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
   ]
 
@@ -84,12 +84,12 @@ export function AppSidebar({ open, setOpen, hideMobile = false }: AppSidebarProp
     {
       label: 'Settings',
       href: '/settings',
-      icon: <Settings className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <Settings className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Logout',
       href: '#',
-      icon: <LogOut className="h-5 w-5 shrink-0 text-brand" />,
+      icon: <LogOut className="h-5 w-5 shrink-0 text-graphite-900" />,
       onClick: handleLogout,
     },
   ]

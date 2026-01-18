@@ -149,7 +149,7 @@ export default function VehiclesPage() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'make' | 'customer'>('newest')
   const [currentPage, setCurrentPage] = useState(1)
 
-  const itemsPerPage = 5
+  const itemsPerPage = 10
 
   // Extract unique makes and categories for filters
   const makes = ['all', ...Array.from(new Set(vehicles.map((v) => v.make)))]
@@ -233,12 +233,12 @@ export default function VehiclesPage() {
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-1 bg-graphite-600 rounded-full" />
+            <div className="h-10 w-1 bg-gray-700 rounded-full" />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                 Vehicle Management
               </h1>
-              <p className="text-sm md:text-base text-graphite-600 mt-1">
+              <p className="text-sm md:text-base text-gray-600 mt-1">
                 Customer vehicle registry with ownership details
               </p>
             </div>
@@ -248,7 +248,7 @@ export default function VehiclesPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/vehicles/add')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-card"
           >
             <Plus className="h-5 w-5" />
             Register Bike
@@ -263,21 +263,21 @@ export default function VehiclesPage() {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
       >
-        <div className="bg-graphite-800 rounded-xl p-4 border border-graphite-700 shadow-sm">
-          <p className="text-sm text-graphite-400 mb-1">Total Bikes</p>
-          <p className="text-2xl font-bold text-white">{vehicles.length}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Total Bikes</p>
+          <p className="text-2xl font-bold text-gray-900">{vehicles.length}</p>
         </div>
-        <div className="bg-graphite-800 rounded-xl p-4 border border-graphite-700 shadow-sm">
-          <p className="text-sm text-graphite-400 mb-1">Registered Owners</p>
-          <p className="text-2xl font-bold text-white">{new Set(vehicles.map(v => v.customerId)).size}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Registered Owners</p>
+          <p className="text-2xl font-bold text-gray-900">{new Set(vehicles.map(v => v.customerId)).size}</p>
         </div>
-        <div className="bg-graphite-800 rounded-xl p-4 border border-graphite-700 shadow-sm">
-          <p className="text-sm text-graphite-400 mb-1">Makes</p>
-          <p className="text-2xl font-bold text-brand">{makes.length - 1}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Makes</p>
+          <p className="text-2xl font-bold text-gray-700">{makes.length - 1}</p>
         </div>
-        <div className="bg-graphite-800 rounded-xl p-4 border border-graphite-700 shadow-sm">
-          <p className="text-sm text-graphite-400 mb-1">Sport Bikes</p>
-          <p className="text-2xl font-bold text-graphite-300">{vehicles.filter(v => v.category === 'Sport').length}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Sport Bikes</p>
+          <p className="text-2xl font-bold text-gray-900">{vehicles.filter(v => v.category === 'Sport').length}</p>
         </div>
       </motion.div>
 
@@ -286,18 +286,18 @@ export default function VehiclesPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.15 }}
-        className="bg-graphite-800 rounded-xl border border-graphite-700 shadow-sm p-4 mb-6"
+        className="bg-white rounded-xl border border-gray-200 shadow-card p-4 mb-6"
       >
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search by make, model, customer, VIN, or engine..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-graphite-900 border-2 border-graphite-700 rounded-lg text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
             />
           </div>
 
@@ -308,7 +308,7 @@ export default function VehiclesPage() {
               <select
                 value={makeFilter}
                 onChange={(e) => setMakeFilter(e.target.value)}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-graphite-900 border-2 border-graphite-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"
+                className="appearance-none pl-4 pr-10 py-2.5 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all cursor-pointer"
               >
                 {makes.map((make) => (
                   <option key={make} value={make}>
@@ -316,7 +316,7 @@ export default function VehiclesPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-graphite-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             </div>
 
             {/* Category Filter */}
@@ -324,7 +324,7 @@ export default function VehiclesPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-graphite-900 border-2 border-graphite-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"
+                className="appearance-none pl-4 pr-10 py-2.5 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all cursor-pointer"
               >
                 {categories.map((category) => (
                   <option key={category} value={category}>
@@ -332,7 +332,7 @@ export default function VehiclesPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-graphite-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             </div>
 
             {/* Sort */}
@@ -340,14 +340,14 @@ export default function VehiclesPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-graphite-900 border-2 border-graphite-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"
+                className="appearance-none pl-4 pr-10 py-2.5 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all cursor-pointer"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="make">Sort by Make</option>
                 <option value="customer">Sort by Customer</option>
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-graphite-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -361,17 +361,17 @@ export default function VehiclesPage() {
         className="space-y-4"
       >
         {filteredVehicles.length === 0 ? (
-          <div className="bg-graphite-800 rounded-xl border border-graphite-700 shadow-sm p-12 text-center">
-            <MotorcycleIcon className="h-16 w-16 text-graphite-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">No bikes found</h3>
-            <p className="text-graphite-400 mb-4">Try adjusting your search or filter criteria</p>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-card p-12 text-center">
+            <MotorcycleIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No bikes found</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your search or filter criteria</p>
             <button
               onClick={() => {
                 setSearchQuery('')
                 setMakeFilter('all')
                 setCategoryFilter('all')
               }}
-              className="text-brand font-medium hover:underline"
+              className="text-gray-700 font-medium hover:underline"
             >
               Clear all filters
             </button>
@@ -387,30 +387,30 @@ export default function VehiclesPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   onClick={() => handleViewVehicle(vehicle.id)}
-                  className="bg-graphite-800 backdrop-blur-sm rounded-xl border border-graphite-700 shadow-sm hover:shadow-lg hover:border-brand/50 transition-all duration-200 cursor-pointer group overflow-hidden"
+                  className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group overflow-hidden"
                 >
                   <div className="p-5">
                     <div className="flex flex-col gap-4">
                       {/* Vehicle Icon & Basic Info */}
                       <div className="flex items-start gap-4">
-                        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 border border-brand/20 shrink-0">
-                          <MotorcycleIcon className="h-7 w-7 text-brand" />
+                        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 border border-gray-200 shrink-0">
+                          <MotorcycleIcon className="h-7 w-7 text-gray-700" />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-white mb-0.5">
+                          <h3 className="text-lg font-bold text-gray-900 mb-0.5">
                             {vehicle.make}
                           </h3>
-                          <p className="text-brand font-semibold text-base mb-1">
+                          <p className="text-gray-700 font-semibold text-base mb-1">
                             {vehicle.model}
                           </p>
-                          <div className="flex items-center gap-2 text-sm text-graphite-400">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="h-3.5 w-3.5" />
                             <span>{vehicle.year}</span>
                             {vehicle.category && (
                               <>
                                 <span>•</span>
-                                <span className="px-2 py-0.5 bg-graphite-700 text-graphite-300 text-xs font-medium rounded">
+                                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
                                   {vehicle.category}
                                 </span>
                               </>
@@ -420,36 +420,36 @@ export default function VehiclesPage() {
                       </div>
 
                       {/* Customer Info */}
-                      <div className="flex items-start gap-3 bg-graphite-900/50 rounded-lg p-3">
-                        <div className="h-8 w-8 rounded-lg bg-brand/20 flex items-center justify-center shrink-0">
-                          <User className="h-4 w-4 text-brand" />
+                      <div className="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+                        <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                          <User className="h-4 w-4 text-gray-700" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-graphite-400 mb-0.5">Owner</p>
-                          <p className="text-sm font-semibold text-white truncate">
+                          <p className="text-xs text-gray-600 mb-0.5">Owner</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate">
                             {vehicle.customerName}
                           </p>
                           {vehicle.customerPhone && (
-                            <p className="text-xs text-graphite-400 mt-0.5">{vehicle.customerPhone}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{vehicle.customerPhone}</p>
                           )}
                         </div>
                       </div>
 
                       {/* Vehicle Identification */}
-                      <div className="flex items-start gap-3 bg-graphite-900/50 rounded-lg p-3">
-                        <div className="h-8 w-8 rounded-lg bg-graphite-700 flex items-center justify-center shrink-0">
-                          <Hash className="h-4 w-4 text-graphite-300" />
+                      <div className="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+                        <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                          <Hash className="h-4 w-4 text-gray-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-graphite-400 mb-1">Identification</p>
+                          <p className="text-xs text-gray-600 mb-1">Identification</p>
                           <div className="space-y-1">
                             <div>
-                              <p className="text-xs text-graphite-500">Engine No.</p>
-                              <p className="text-xs font-mono text-white truncate">{vehicle.engineNumber}</p>
+                              <p className="text-xs text-gray-500">Engine No.</p>
+                              <p className="text-xs font-mono text-gray-900 truncate">{vehicle.engineNumber}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-graphite-500">Chassis No.</p>
-                              <p className="text-xs font-mono text-white truncate">{vehicle.chassisNumber}</p>
+                              <p className="text-xs text-gray-500">Chassis No.</p>
+                              <p className="text-xs font-mono text-gray-900 truncate">{vehicle.chassisNumber}</p>
                             </div>
                           </div>
                         </div>
@@ -457,27 +457,27 @@ export default function VehiclesPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-graphite-700">
+                    <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handleViewVehicle(vehicle.id)
                         }}
-                        className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all duration-200"
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
                         title="View Details"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
                         onClick={(e) => handleEditVehicle(e, vehicle.id)}
-                        className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all duration-200"
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
                         title="Edit Bike"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={(e) => handleDeleteVehicle(e, vehicle.id)}
-                        className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all duration-200"
+                        className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all duration-200"
                         title="Remove Bike"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -489,31 +489,31 @@ export default function VehiclesPage() {
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden md:block bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden">
+            <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-graphite-700/50">
+                  <tr className="border-b border-gray-200 bg-gray-50">
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Vehicle</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Vehicle</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Owner</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Owner</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Engine Number</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Engine Number</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Chassis Number</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Chassis Number</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Category</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</span>
                     </th>
                     <th className="px-6 py-4 text-right">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Actions</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-graphite-700/30">
+                <tbody className="divide-y divide-gray-200">
                   {paginatedVehicles.map((vehicle, index) => (
                     <motion.tr
                       key={vehicle.id}
@@ -521,18 +521,18 @@ export default function VehiclesPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: index * 0.03 }}
                       onClick={() => handleViewVehicle(vehicle.id)}
-                      className="hover:bg-graphite-700/30 transition-colors duration-150 cursor-pointer"
+                      className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                     >
                       {/* Vehicle Info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
-                            <MotorcycleIcon className="h-6 w-6 text-brand" />
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border border-gray-200 flex-shrink-0">
+                            <MotorcycleIcon className="h-6 w-6 text-gray-700" />
                           </div>
                           <div>
-                            <p className="text-base font-semibold text-white">{vehicle.make}</p>
-                            <p className="text-sm font-semibold text-brand">{vehicle.model}</p>
-                            <div className="flex items-center gap-1 text-xs text-graphite-400 mt-0.5">
+                            <p className="text-base font-semibold text-gray-900">{vehicle.make}</p>
+                            <p className="text-sm font-semibold text-gray-700">{vehicle.model}</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
                               <Calendar className="h-3 w-3" />
                               <span>{vehicle.year}</span>
                             </div>
@@ -543,11 +543,11 @@ export default function VehiclesPage() {
                       {/* Owner Info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-brand shrink-0" />
+                          <User className="h-4 w-4 text-gray-700 shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-white">{vehicle.customerName}</p>
+                            <p className="text-sm font-medium text-gray-900">{vehicle.customerName}</p>
                             {vehicle.customerPhone && (
-                              <p className="text-xs text-graphite-400">{vehicle.customerPhone}</p>
+                              <p className="text-xs text-gray-500">{vehicle.customerPhone}</p>
                             )}
                           </div>
                         </div>
@@ -555,22 +555,22 @@ export default function VehiclesPage() {
 
                       {/* Engine Number */}
                       <td className="px-6 py-4">
-                        <p className="text-sm font-mono text-graphite-300">{vehicle.engineNumber}</p>
+                        <p className="text-sm font-mono text-gray-700">{vehicle.engineNumber}</p>
                       </td>
 
                       {/* Chassis Number */}
                       <td className="px-6 py-4">
-                        <p className="text-sm font-mono text-graphite-300">{vehicle.chassisNumber}</p>
+                        <p className="text-sm font-mono text-gray-700">{vehicle.chassisNumber}</p>
                       </td>
 
                       {/* Category */}
                       <td className="px-6 py-4">
                         {vehicle.category ? (
-                          <span className="px-3 py-1 bg-brand/20 text-brand text-xs font-medium rounded-full inline-block">
+                          <span className="px-3 py-1 bg-gray-100 text-gray-900 text-xs font-medium rounded-full inline-block">
                             {vehicle.category}
                           </span>
                         ) : (
-                          <span className="text-sm text-graphite-500">N/A</span>
+                          <span className="text-sm text-gray-400">N/A</span>
                         )}
                       </td>
 
@@ -582,7 +582,7 @@ export default function VehiclesPage() {
                               e.stopPropagation()
                               handleViewVehicle(vehicle.id)
                             }}
-                            className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all duration-200"
+                            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
@@ -592,7 +592,7 @@ export default function VehiclesPage() {
                               e.stopPropagation()
                               handleEditVehicle(e, vehicle.id)
                             }}
-                            className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all duration-200"
+                            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
                             title="Edit Bike"
                           >
                             <Edit className="h-4 w-4" />
@@ -602,7 +602,7 @@ export default function VehiclesPage() {
                               e.stopPropagation()
                               handleDeleteVehicle(e, vehicle.id)
                             }}
-                            className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all duration-200"
+                            className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all duration-200"
                             title="Remove Bike"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -625,9 +625,9 @@ export default function VehiclesPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-6 flex items-center justify-between"
           >
-            <div className="text-sm text-graphite-700">
-              Page <span className="font-medium text-graphite-900">{currentPage}</span> of{' '}
-              <span className="font-medium text-graphite-900">{totalPages}</span>
+            <div className="text-sm text-gray-600">
+              Page <span className="font-medium text-gray-900">{currentPage}</span> of{' '}
+              <span className="font-medium text-gray-900">{totalPages}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -636,7 +636,7 @@ export default function VehiclesPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Previous
               </motion.button>
@@ -659,7 +659,7 @@ export default function VehiclesPage() {
                     return (
                       <React.Fragment key={page}>
                         {showEllipsis && (
-                          <span className="px-2 text-graphite-500">...</span>
+                          <span className="px-2 text-gray-500">...</span>
                         )}
                         <motion.button
                           whileHover={{ scale: currentPage !== page ? 1.05 : 1 }}
@@ -667,8 +667,8 @@ export default function VehiclesPage() {
                           onClick={() => setCurrentPage(page)}
                           className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                             currentPage === page
-                              ? 'bg-brand text-graphite-900'
-                              : 'bg-graphite-800 border border-graphite-700 text-white hover:bg-graphite-700'
+                              ? 'bg-gray-700 text-white'
+                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
                           }`}
                         >
                           {page}
@@ -683,7 +683,7 @@ export default function VehiclesPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next
               </motion.button>

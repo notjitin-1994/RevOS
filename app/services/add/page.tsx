@@ -166,19 +166,19 @@ export default function AddMakePage() {
       >
         <div className="flex items-center gap-4">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleBack}
-            className="flex items-center justify-center h-10 w-10 bg-graphite-800 text-white rounded-xl hover:bg-graphite-700 transition-all duration-200 shadow-md border border-graphite-700"
+            className="flex items-center justify-center h-10 w-10 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200 shadow-sm border border-gray-300"
           >
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
 
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+            <h1 className="font-display font-bold text-2xl md:text-3xl text-gray-900 tracking-tight">
               Add New Make
             </h1>
-            <p className="text-sm md:text-base text-graphite-600 mt-1">
+            <p className="text-sm md:text-base text-gray-600 mt-1">
               Add a motorcycle manufacturer to service scope
             </p>
           </div>
@@ -192,24 +192,24 @@ export default function AddMakePage() {
         transition={{ duration: 0.5, delay: 0.1 }}
         onSubmit={handleSubmit}
       >
-        <div className="bg-graphite-800 backdrop-blur-sm rounded-xl shadow-lg border border-graphite-700">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-card">
           {/* Make Information */}
-          <div className="p-6 border-b border-graphite-700">
+          <div className="p-4 md:p-6 border-b border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 bg-brand/20 rounded-xl flex items-center justify-center">
-                <MotorcycleIcon className="h-5 w-5 text-brand" />
+              <div className="h-10 w-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <MotorcycleIcon className="h-5 w-5 text-gray-700" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Make Information</h2>
-                <p className="text-sm text-graphite-400">Basic details about the manufacturer</p>
+                <h2 className="text-base md:text-lg font-semibold text-gray-900">Make Information</h2>
+                <p className="text-sm text-gray-600">Basic details about the manufacturer</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Make Name */}
               <div>
-                <label htmlFor="makeName" className="block text-sm font-semibold text-white mb-2">
-                  Make Name <span className="text-red-400">*</span>
+                <label htmlFor="makeName" className="block text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">
+                  Make Name <span className="text-status-error">*</span>
                 </label>
                 <input
                   type="text"
@@ -217,21 +217,21 @@ export default function AddMakePage() {
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="e.g., Honda, Kawasaki, Yamaha"
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all"
                   required
                 />
               </div>
 
               {/* Country */}
               <div>
-                <label htmlFor="country" className="block text-sm font-semibold text-white mb-2">
-                  Country of Origin <span className="text-red-400">*</span>
+                <label htmlFor="country" className="block text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">
+                  Country of Origin <span className="text-status-error">*</span>
                 </label>
                 <select
                   id="country"
                   value={formData.country}
                   onChange={(e) => handleInputChange('country', e.target.value)}
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all appearance-none cursor-pointer"
                   required
                 >
                   <option value="">Select Country</option>
@@ -246,15 +246,15 @@ export default function AddMakePage() {
           </div>
 
           {/* Models Section */}
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-brand/20 rounded-xl flex items-center justify-center">
-                  <MotorcycleIcon className="h-5 w-5 text-brand" />
+                <div className="h-10 w-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <MotorcycleIcon className="h-5 w-5 text-gray-700" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-white">Models</h2>
-                  <p className="text-sm text-graphite-400">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-900">Models</h2>
+                  <p className="text-sm text-gray-600">
                     {formData.models.length} {formData.models.length === 1 ? 'model' : 'models'} added
                   </p>
                 </div>
@@ -265,7 +265,7 @@ export default function AddMakePage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={addModel}
-                className="flex items-center gap-2 px-4 py-2 bg-brand/20 text-brand font-medium rounded-xl hover:bg-brand/30 transition-all duration-200 border border-brand/30"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
               >
                 <Plus className="h-4 w-4" />
                 Add Model
@@ -274,10 +274,10 @@ export default function AddMakePage() {
 
             {/* Models List */}
             {formData.models.length === 0 ? (
-              <div className="text-center py-12 bg-graphite-900/50 rounded-xl border-2 border-dashed border-graphite-700">
-                <MotorcycleIcon className="h-12 w-12 text-graphite-600 mx-auto mb-3" />
-                <p className="text-graphite-400 font-medium">No models added yet</p>
-                <p className="text-sm text-graphite-500 mt-1">Click "Add Model" to get started</p>
+              <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                <MotorcycleIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-700 font-medium">No models added yet</p>
+                <p className="text-sm text-gray-500 mt-1">Click "Add Model" to get started</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -287,14 +287,14 @@ export default function AddMakePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="bg-graphite-900 rounded-xl border border-graphite-700 p-5"
+                    className="bg-gray-50 rounded-xl border border-gray-200 p-4 md:p-5"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-brand/20 rounded-lg flex items-center justify-center">
-                          <MotorcycleIcon className="h-4 w-4 text-brand" />
+                        <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <MotorcycleIcon className="h-4 w-4 text-gray-700" />
                         </div>
-                        <span className="text-white font-semibold">Model {index + 1}</span>
+                        <span className="text-gray-900 font-semibold">Model {index + 1}</span>
                       </div>
                       <motion.button
                         type="button"
@@ -311,28 +311,28 @@ export default function AddMakePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {/* Model Name */}
                       <div>
-                        <label className="block text-sm font-semibold text-white mb-2">
-                          Model Name <span className="text-red-400">*</span>
+                        <label className="block text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">
+                          Model Name <span className="text-status-error">*</span>
                         </label>
                         <input
                           type="text"
                           value={model.name}
                           onChange={(e) => updateModel(model.id, 'name', e.target.value)}
                           placeholder="e.g., CBR650R"
-                          className="w-full px-4 py-2.5 bg-graphite-800 border-2 border-graphite-700 rounded-lg text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all"
                           required
                         />
                       </div>
 
                       {/* Category */}
                       <div>
-                        <label className="block text-sm font-semibold text-white mb-2">
-                          Category <span className="text-red-400">*</span>
+                        <label className="block text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">
+                          Category <span className="text-status-error">*</span>
                         </label>
                         <select
                           value={model.category}
                           onChange={(e) => updateModel(model.id, 'category', e.target.value)}
-                          className="w-full px-4 py-2.5 bg-graphite-800 border-2 border-graphite-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all appearance-none cursor-pointer"
                           required
                         >
                           <option value="">Select Category</option>
@@ -347,8 +347,8 @@ export default function AddMakePage() {
 
                     {/* Year Selection */}
                     <div>
-                      <label className="block text-sm font-semibold text-white mb-2">
-                        Applicable Years <span className="text-red-400">*</span>
+                      <label className="block text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">
+                        Applicable Years <span className="text-status-error">*</span>
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {availableYears.map((year) => (
@@ -360,8 +360,8 @@ export default function AddMakePage() {
                             onClick={() => toggleYear(model.id, year)}
                             className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
                               model.years.includes(year)
-                                ? 'bg-brand text-graphite-900 border-2 border-brand'
-                                : 'bg-graphite-800 text-graphite-400 border-2 border-graphite-700 hover:border-graphite-600'
+                                ? 'bg-gray-900 text-white border-2 border-gray-900'
+                                : 'bg-white text-gray-600 border-2 border-gray-300 hover:border-gray-400'
                             }`}
                           >
                             {year}
@@ -369,7 +369,7 @@ export default function AddMakePage() {
                         ))}
                       </div>
                       {model.years.length > 0 && (
-                        <p className="text-sm text-brand mt-2">
+                        <p className="text-sm text-gray-700 mt-2">
                           Selected: {model.years.sort((a, b) => b - a).join(', ')}
                         </p>
                       )}
@@ -381,7 +381,7 @@ export default function AddMakePage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="p-6 pt-0">
+          <div className="p-4 md:p-6 pt-0">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -393,7 +393,7 @@ export default function AddMakePage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleBack}
-                className="px-6 py-3 bg-white/80 backdrop-blur-sm text-graphite-900 font-semibold rounded-xl hover:bg-white transition-all duration-200 shadow-md border-2 border-graphite-200"
+                className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 border border-gray-300"
               >
                 Cancel
               </motion.button>
@@ -403,7 +403,7 @@ export default function AddMakePage() {
                 disabled={isSubmitting}
                 whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                 whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                className="flex items-center justify-center gap-2 px-8 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]"
+                className="flex items-center justify-center gap-2 px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]"
               >
                 {isSubmitting ? (
                   <>

@@ -246,7 +246,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#efffb1]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#dfe5ef' }}>
         <div className="text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -255,8 +255,8 @@ export default function SettingsPage() {
             className="relative"
           >
             <div className="inline-block h-16 w-16 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-brand/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-brand border-r-transparent border-b-transparent animate-spin" />
+              <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-gray-600 border-r-transparent border-b-transparent animate-spin" />
             </div>
           </motion.div>
           <motion.p
@@ -274,7 +274,7 @@ export default function SettingsPage() {
 
   if (error || !userData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#efffb1] p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#dfe5ef' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -294,7 +294,7 @@ export default function SettingsPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/login')}
-            className="w-full bg-brand text-graphite-900 font-semibold py-3.5 px-4 rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20 mt-6"
+            className="w-full bg-gray-700 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg shadow-gray-300/20 mt-6"
           >
             Back to Login
           </motion.button>
@@ -314,7 +314,7 @@ export default function SettingsPage() {
 
   return (
     <React.Fragment>
-      <main className="flex-1 overflow-y-auto bg-[#efffb1] pb-16 md:pb-0">
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0" style={{ backgroundColor: '#dfe5ef' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Header - Visible on mobile and desktop */}
           <motion.header
@@ -344,56 +344,69 @@ export default function SettingsPage() {
             className="mb-6 md:mb-8"
           >
             {userData.profilePicture ? (
-              // Mobile: Profile picture as background with glassmorphic overlay
-              <div className="md:hidden relative overflow-hidden rounded-2xl shadow-2xl">
-                {/* Background profile picture */}
+              // Mobile: Premium blurred zoomed background with glassmorphic overlay
+              <div className="md:hidden relative overflow-hidden rounded-3xl shadow-2xl h-64">
+                {/* Layer 1: Blurred zoomed-in background image */}
                 <div className="absolute inset-0">
                   <img
                     src={userData.profilePicture}
                     alt="Profile background"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover scale-125 blur-xl"
                   />
-                  {/* Gradient overlay for better text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
                 </div>
 
-                {/* Glassmorphic card overlay - half height */}
-                <div className="relative h-40 bg-white/10 backdrop-blur-md border border-white/20">
-                  {/* Edit button overlay */}
+                {/* Layer 2: Multi-stop gradient overlay for depth and readability */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/60" />
+
+                {/* Layer 3: Subtle noise texture for premium feel */}
+                <div className="absolute inset-0 opacity-[0.03]" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                }} />
+
+                {/* Layer 4: Glassmorphic content area */}
+                <div className="relative h-full flex flex-col justify-end p-5">
+                  {/* Subtle edit button - minimal and clean */}
                   <button
                     onClick={() => setIsProfilePictureModalOpen(true)}
-                    className="absolute top-3 right-3 p-2 bg-black/30 backdrop-blur-sm rounded-full active:scale-90 transition-transform"
+                    className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-full border border-white/10 active:scale-90 transition-all duration-200"
                     aria-label="Edit profile picture"
                   >
-                    <Camera className="h-4 w-4 text-white" />
+                    <Camera className="h-3.5 w-3.5 text-white/80" strokeWidth={2.5} />
                   </button>
 
-                  <div className="absolute inset-0 flex items-end p-4">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h2 className="text-xl font-bold text-white mb-1">
-                            {userData.firstName} {userData.lastName}
-                          </h2>
-                          <p className="text-sm text-white/90 flex items-center gap-2">
-                            <Building className="h-4 w-4" />
-                            {userData.garageName}
-                          </p>
+                  {/* Content container with subtle glass effect */}
+                  <div className="bg-white/12 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-xl">
+                    <div className="flex gap-4">
+                      {/* Unblurred profile picture */}
+                      <div className="relative shrink-0">
+                        <div className="h-20 w-16 rounded-xl overflow-hidden border-2 border-white/30 shadow-lg">
+                          <img
+                            src={userData.profilePicture}
+                            alt="Profile"
+                            className="h-full w-full object-cover"
+                          />
                         </div>
+                        {/* Status indicator overlapping photo */}
+                        <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-emerald-400 border-2 border-white/30 shadow-md" />
+                      </div>
 
-                        {/* Role Badge - Glass effect */}
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-brand/20 backdrop-blur-sm border border-brand/30 rounded-lg">
-                          <Shield className="h-3.5 w-3.5 text-brand" />
-                          <span className="text-brand font-semibold text-xs capitalize">
+                      {/* Name and info */}
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-xl font-bold text-white mb-0.5 tracking-tight drop-shadow-lg leading-tight">
+                          {userData.firstName} {userData.lastName}
+                        </h2>
+                        <p className="text-xs text-white/90 flex items-center gap-1.5 mb-2 font-medium drop-shadow-md truncate">
+                          <Building className="h-3 w-3" strokeWidth={2.5} />
+                          {userData.garageName}
+                        </p>
+
+                        {/* Role Badge */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full w-fit">
+                          <Shield className="h-3 w-3 text-white" strokeWidth={2.5} />
+                          <span className="text-white font-semibold text-[10px] uppercase tracking-wide">
                             {userData.userRole}
                           </span>
                         </div>
-                      </div>
-
-                      {/* Status indicator */}
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <div className="h-2 w-2 rounded-full bg-brand shadow-[0_0_8px_rgba(204,255,0,0.6)]" />
-                        <span className="text-xs text-white/80">Active</span>
                       </div>
                     </div>
                   </div>
@@ -401,8 +414,8 @@ export default function SettingsPage() {
               </div>
             ) : (
               // Mobile: No profile picture - current treatment
-              <div className="md:hidden relative overflow-hidden rounded-2xl bg-graphite-800 backdrop-blur-sm border border-graphite-700 shadow-2xl">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-graphite-600 via-graphite-600/80 to-transparent" />
+              <div className="md:hidden relative overflow-hidden rounded-2xl bg-white backdrop-blur-sm border border-gray-200 shadow-2xl">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand via-brand/80 to-transparent" />
                 <div className="relative p-4">
                   <div className="flex flex-col gap-4">
                     {/* Avatar */}
@@ -411,11 +424,11 @@ export default function SettingsPage() {
                       whileTap={{ scale: 0.95 }}
                       className="relative group mx-auto"
                     >
-                      <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border-2 border-brand/30 shadow-lg shadow-brand/20 overflow-hidden">
-                        <User className="h-10 w-10 text-brand" />
+                      <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center border-2 border-gray-300 shadow-lg shadow-gray-300/20 overflow-hidden">
+                        <User className="h-10 w-10 text-gray-700" />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-brand flex items-center justify-center shadow-lg">
-                        <CheckCircle2 className="h-4 w-4 text-graphite-900" />
+                      <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center shadow-lg">
+                        <CheckCircle2 className="h-4 w-4 text-white" />
                       </div>
                     </motion.div>
 
@@ -423,19 +436,19 @@ export default function SettingsPage() {
                     <div className="flex-1 text-center">
                       <div className="flex flex-col gap-3">
                         <div>
-                          <h2 className="text-xl font-bold text-brand mb-1">
+                          <h2 className="text-xl font-bold text-gray-900 mb-1">
                             {userData.firstName} {userData.lastName}
                           </h2>
-                          <p className="text-sm text-graphite-300 flex items-center justify-center gap-2">
-                            <Building className="h-4 w-4 text-brand" />
+                          <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
+                            <Building className="h-4 w-4 text-gray-600" />
                             {userData.garageName}
                           </p>
                         </div>
 
                         {/* Role Badge */}
-                        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-brand/10 border border-brand/30 rounded-xl min-h-[44px]">
-                          <Shield className="h-4 w-4 text-brand" />
-                          <span className="text-brand font-semibold text-sm capitalize">
+                        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 border border-gray-300 rounded-xl min-h-[44px]">
+                          <Shield className="h-4 w-4 text-gray-700" />
+                          <span className="text-gray-700 font-semibold text-sm capitalize">
                             {userData.userRole}
                           </span>
                         </div>
@@ -447,9 +460,9 @@ export default function SettingsPage() {
             )}
 
             {/* Desktop: Original card for both cases */}
-            <div className="hidden md:block relative overflow-hidden rounded-2xl bg-graphite-800 backdrop-blur-sm border border-graphite-700 shadow-2xl">
+            <div className="hidden md:block relative overflow-hidden rounded-2xl bg-white backdrop-blur-sm border border-gray-200 shadow-2xl">
               {/* Decorative accent line */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-graphite-600 via-graphite-600/80 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand via-brand/80 to-transparent" />
 
               <div className="relative p-4 md:p-8">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 md:gap-6">
@@ -459,7 +472,7 @@ export default function SettingsPage() {
                     whileTap={{ scale: 0.95 }}
                     className="relative group mx-auto lg:mx-0"
                   >
-                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border-2 border-brand/30 shadow-lg shadow-brand/20 overflow-hidden">
+                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center border-2 border-gray-300 shadow-lg shadow-gray-300/20 overflow-hidden">
                       {userData.profilePicture ? (
                         <img
                           src={userData.profilePicture}
@@ -467,11 +480,11 @@ export default function SettingsPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <User className="h-10 w-10 md:h-12 md:w-12 text-brand" />
+                        <User className="h-10 w-10 md:h-12 md:w-12 text-gray-700" />
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-brand flex items-center justify-center shadow-lg">
-                      <CheckCircle2 className="h-4 w-4 text-graphite-900" />
+                    <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center shadow-lg">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
                     </div>
                     {/* Edit Button - Larger touch target on mobile */}
                     <button
@@ -487,19 +500,19 @@ export default function SettingsPage() {
                   <div className="flex-1 text-center lg:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 md:gap-4">
                       <div>
-                        <h2 className="text-xl md:text-2xl font-bold text-brand mb-1">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
                           {userData.firstName} {userData.lastName}
                         </h2>
-                        <p className="text-sm md:text-base text-graphite-300 flex items-center justify-center lg:justify-start gap-2">
-                          <Building className="h-4 w-4 text-brand" />
+                        <p className="text-sm md:text-base text-gray-600 flex items-center justify-center lg:justify-start gap-2">
+                          <Building className="h-4 w-4 text-gray-600" />
                           {userData.garageName}
                         </p>
                       </div>
 
                       {/* Role Badge */}
-                      <div className="flex items-center justify-center lg:justify-start gap-2 px-3 md:px-4 py-2 bg-brand/10 border border-brand/30 rounded-xl min-h-[44px]">
-                        <Shield className="h-4 w-4 text-brand" />
-                        <span className="text-brand font-semibold text-sm capitalize">
+                      <div className="flex items-center justify-center lg:justify-start gap-2 px-3 md:px-4 py-2 bg-gray-100 border border-gray-300 rounded-xl min-h-[44px]">
+                        <Shield className="h-4 w-4 text-gray-700" />
+                        <span className="text-gray-700 font-semibold text-sm capitalize">
                           {userData.userRole}
                         </span>
                       </div>
@@ -518,16 +531,26 @@ export default function SettingsPage() {
             className="mb-4 md:mb-6"
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="">
+              <TabsList className="hidden md:flex items-center gap-1">
                 <TabsTrigger value="user-settings" className="flex items-center gap-2">
                   <User className="h-4 w-4" strokeWidth={2.5} />
-                  <span className="hidden sm:inline">User Information</span>
-                  <span className="sm:hidden">User</span>
+                  <span>User Information</span>
                 </TabsTrigger>
                 <TabsTrigger value="garage-settings" className="flex items-center gap-2">
                   <Building className="h-4 w-4" strokeWidth={2.5} />
-                  <span className="hidden sm:inline">Garage Information</span>
-                  <span className="sm:hidden">Garage</span>
+                  <span>Garage Information</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Mobile Tabs List - Full Width */}
+              <TabsList className="md:hidden flex w-full">
+                <TabsTrigger value="user-settings" className="flex-1 flex items-center justify-center gap-2">
+                  <User className="h-4 w-4" strokeWidth={2.5} />
+                  <span>User</span>
+                </TabsTrigger>
+                <TabsTrigger value="garage-settings" className="flex-1 flex items-center justify-center gap-2">
+                  <Building className="h-4 w-4" strokeWidth={2.5} />
+                  <span>Garage</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -544,8 +567,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Personal Information"
                       icon={User}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="First Name" value={userData.firstName} field="firstName" onEdit={openEditModal} />
                       <InfoItem label="Last Name" value={userData.lastName} field="lastName" onEdit={openEditModal} />
@@ -577,8 +600,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Location Information"
                       icon={MapPin}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                       className="h-full"
                     >
                       <InfoItem label="Street Address" value={userData.address} field="address" onEdit={openEditModal} />
@@ -635,8 +658,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Identity Verification"
                       icon={Shield}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                       className="h-full"
                     >
                       <InfoItem
@@ -656,8 +679,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Account Details"
                       icon={Calendar}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem
                         label="Account Status"
@@ -695,8 +718,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Contact Information"
                       icon={Building}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="Garage Name" value={garageSettings?.garageName} field="garageName" onEdit={openEditModal} />
                       <InfoItem label="Email Address" value={garageSettings?.email} field="email" fieldType="email" onEdit={openEditModal} />
@@ -715,8 +738,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Business Details"
                       icon={Building}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="GSTIN" value={garageSettings?.gstin} field="gstin" onEdit={openEditModal} />
                       <InfoItem label="PAN Number" value={garageSettings?.panNumber} field="panNumber" onEdit={openEditModal} />
@@ -736,8 +759,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Address Information"
                       icon={MapPin}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="Street Address" value={garageSettings?.address} field="address" onEdit={openEditModal} />
                       <InfoItem label="City" value={garageSettings?.city} field="city" onEdit={openEditModal} />
@@ -756,8 +779,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Operating Hours"
                       icon={Clock}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem
                         label="Monday - Friday"
@@ -792,8 +815,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Operational Details"
                       icon={Wrench}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="Service Types" value={garageSettings?.serviceTypes?.join(', ')} field="serviceTypes" fieldType="multiSelect" onEdit={openEditModal} />
                       <InfoItem label="Vehicle Types Serviced" value={garageSettings?.vehicleTypesServiced?.join(', ')} field="vehicleTypesServiced" fieldType="multiSelect" onEdit={openEditModal} />
@@ -812,8 +835,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Financial Details"
                       icon={DollarSign}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="Payment Methods" value={garageSettings?.paymentMethods?.join(', ')} field="paymentMethods" onEdit={openEditModal} />
                       <InfoItem label="Bank Name" value={garageSettings?.bankName} field="bankName" onEdit={openEditModal} />
@@ -834,8 +857,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Facilities & Services"
                       icon={Wrench}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem label="Parking Capacity" value={garageSettings?.parkingCapacity} field="parkingCapacity" onEdit={openEditModal} />
                       <InfoItem label="Waiting Area Amenities" value={garageSettings?.waitingAreaAmenities?.join(', ')} field="waitingAreaAmenities" onEdit={openEditModal} />
@@ -865,8 +888,8 @@ export default function SettingsPage() {
                     <InfoCard
                       title="Tax & Billing"
                       icon={FileText}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-gray-100"
+                      iconColor="text-gray-700"
                     >
                       <InfoItem
                         label="GST/Tax Rate"
@@ -896,17 +919,17 @@ export default function SettingsPage() {
                       <InfoCard
                         title="Additional Notes"
                         icon={FileText}
-                        iconBg="bg-brand/10"
-                        iconColor="text-brand"
+                        iconBg="bg-gray-100"
+                        iconColor="text-gray-700"
                       >
                         <div className="py-4 px-3 -mx-3">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="text-brand font-medium mb-2">Notes</p>
-                              <p className="text-graphite-300 whitespace-pre-wrap">{garageSettings?.notes || 'Not provided'}</p>
+                              <p className="text-gray-900 font-medium mb-2">Notes</p>
+                              <p className="text-gray-700 whitespace-pre-wrap">{garageSettings?.notes || 'Not provided'}</p>
                             </div>
                             <Edit
-                              className="h-4 w-4 text-graphite-500 hover:text-brand transition-colors duration-200 cursor-pointer"
+                              className="h-4 w-4 text-gray-400 hover:text-gray-700 transition-colors duration-200 cursor-pointer"
                               onClick={() => openEditModal('notes', 'Additional Notes', 'text')}
                             />
                           </div>
@@ -960,14 +983,14 @@ interface InfoCardProps {
 
 function InfoCard({ title, icon: Icon, iconBg, iconColor, children, className }: InfoCardProps) {
   return (
-    <div className={cn("h-full bg-graphite-800 backdrop-blur-sm rounded-xl md:rounded-2xl border border-graphite-700 overflow-hidden active:border-brand/40 transition-colors duration-300 shadow-card flex flex-col", className)}>
+    <div className={cn("h-full bg-white backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200 overflow-hidden active:border-gray-400 transition-colors duration-300 shadow-card flex flex-col", className)}>
       {/* Card Header */}
-      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-graphite-700 bg-gradient-to-r from-graphite-900 to-graphite-800 shrink-0">
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white shrink-0">
         <div className="flex items-center gap-2 md:gap-3">
           <div className={cn("h-8 w-8 md:h-10 md:w-10 rounded-lg md:rounded-xl flex items-center justify-center shrink-0", iconBg)}>
             <Icon className={cn("h-4 w-4 md:h-5 md:w-5", iconColor)} />
           </div>
-          <h3 className="text-base md:text-lg font-semibold text-brand">{title}</h3>
+          <h3 className="text-base md:text-lg font-semibold text-gray-900">{title}</h3>
         </div>
       </div>
 
@@ -997,18 +1020,18 @@ function InfoItem({ label, value, icon: Icon, iconColor, valueColor, field, fiel
   return (
     <div
       className={cn(
-        "group flex items-start justify-between py-3 md:py-4 px-3 -mx-3 rounded-xl active:bg-graphite-700/50 transition-colors duration-200",
+        "group flex items-start justify-between py-3 md:py-4 px-3 -mx-3 rounded-xl active:bg-gray-100 transition-colors duration-200",
         isEditable && "cursor-pointer min-h-[44px] items-center" // Minimum touch target for editable items
       )}
       onClick={() => isEditable && onEdit(field, label, fieldType)}
     >
       <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
         {Icon && (
-          <div className="h-8 w-8 rounded-lg bg-graphite-700/50 flex items-center justify-center shrink-0 active:bg-graphite-700 transition-colors duration-200">
-            <Icon className={cn("h-4 w-4", iconColor || "text-graphite-400")} />
+          <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 active:bg-gray-200 transition-colors duration-200">
+            <Icon className={cn("h-4 w-4", iconColor || "text-gray-500")} />
           </div>
         )}
-        <span className="text-sm md:text-base text-graphite-400 font-medium truncate">{label}</span>
+        <span className="text-sm md:text-base text-gray-600 font-medium truncate">{label}</span>
       </div>
 
       <div
@@ -1018,14 +1041,14 @@ function InfoItem({ label, value, icon: Icon, iconColor, valueColor, field, fiel
         )}
       >
         {value ? (
-          <span className={cn("text-sm md:text-base text-white font-medium truncate max-w-[150px] md:max-w-[200px]", valueColor)}>
+          <span className={cn("text-sm md:text-base text-gray-900 font-medium truncate max-w-[150px] md:max-w-[200px]", valueColor)}>
             {value}
           </span>
         ) : (
-          <span className="text-sm md:text-base text-graphite-500 italic">Not provided</span>
+          <span className="text-sm md:text-base text-gray-400 italic">Not provided</span>
         )}
         {isEditable && (
-          <Edit className="h-4 w-4 text-graphite-500 group-active:text-brand transition-colors duration-200 shrink-0" />
+          <Edit className="h-4 w-4 text-gray-400 group-active:text-gray-700 transition-colors duration-200 shrink-0" />
         )}
       </div>
     </div>

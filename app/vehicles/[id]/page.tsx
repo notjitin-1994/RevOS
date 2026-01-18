@@ -100,7 +100,7 @@ export default function VehicleDetailPage() {
             className="relative"
           >
             <div className="inline-block h-16 w-16 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-brand/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
               <div className="absolute inset-0 rounded-full border-4 border-t-brand border-r-transparent border-b-transparent animate-spin" />
             </div>
           </motion.div>
@@ -108,7 +108,7 @@ export default function VehicleDetailPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-graphite-600 font-medium"
+            className="mt-6 text-gray-600 font-medium"
           >
             Loading bike details...
           </motion.p>
@@ -124,22 +124,22 @@ export default function VehicleDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="max-w-md w-full bg-white/70 backdrop-blur-sm rounded-2xl border border-red-500/50 p-8 shadow-2xl"
+          className="max-w-md w-full bg-white backdrop-blur-sm rounded-2xl border border-status-error/50 p-8 shadow-card"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-red-500" />
+            <div className="h-12 w-12 rounded-full bg-status-error/10 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-status-error" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-graphite-900">Error</h2>
-              <p className="text-sm text-graphite-600 mt-0.5">{error || 'Bike not found'}</p>
+              <h2 className="text-xl font-semibold text-gray-900">Error</h2>
+              <p className="text-sm text-gray-600 mt-0.5">{error || 'Bike not found'}</p>
             </div>
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/vehicles')}
-            className="w-full bg-brand text-graphite-900 font-semibold py-3.5 px-4 rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20 mt-6 flex items-center justify-center gap-2"
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-200 shadow-card mt-6 flex items-center justify-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Bike Registry
@@ -164,16 +164,16 @@ export default function VehicleDetailPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/vehicles')}
-              className="p-2 hover:bg-white/50 rounded-xl transition-all"
+              className="p-2 hover:bg-gray-100 rounded-xl transition-all"
             >
-              <ArrowLeft className="h-5 w-5 text-graphite-700" />
+              <ArrowLeft className="h-5 w-5 text-gray-700" />
             </motion.button>
-            <div className="h-10 w-1 bg-graphite-600 rounded-full" />
+            <div className="h-10 w-1 bg-gray-700 rounded-full" />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                 Bike Details
               </h1>
-              <p className="text-sm md:text-base text-graphite-600 mt-1">
+              <p className="text-sm md:text-base text-gray-600 mt-1">
                 Vehicle registry information
               </p>
             </div>
@@ -185,38 +185,38 @@ export default function VehicleDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-graphite-800 backdrop-blur-sm rounded-2xl shadow-2xl border border-graphite-700 overflow-hidden"
+          className="bg-white backdrop-blur-sm rounded-2xl shadow-card border border-gray-200 overflow-hidden"
         >
           {/* Vehicle Hero */}
-          <div className="relative p-6 md:p-10 bg-gradient-to-br from-graphite-900 to-graphite-800 border-b border-graphite-700">
+          <div className="relative p-6 md:p-10 bg-gradient-to-br from-gray-50 to-white border-b border-gray-200">
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               {/* Vehicle Icon */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="mx-auto md:mx-0"
               >
-                <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border-2 border-brand/30 shadow-lg shadow-brand/20">
-                  <MotorcycleIcon className="h-12 w-12 text-brand" />
+                <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border-2 border-gray-200 shadow-card">
+                  <MotorcycleIcon className="h-12 w-12 text-gray-700" />
                 </div>
               </motion.div>
 
               {/* Vehicle Info */}
               <div className="flex-1 text-center md:text-left">
                 <div className="mb-3">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
                     {vehicle.make}
                   </h2>
-                  <p className="text-2xl md:text-3xl font-bold text-brand">
+                  <p className="text-2xl md:text-3xl font-bold text-gray-700">
                     {vehicle.model}
                   </p>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                  <span className="px-4 py-2 bg-graphite-700/50 rounded-xl text-white font-semibold">
+                  <span className="px-4 py-2 bg-gray-100 rounded-xl text-gray-900 font-semibold">
                     {vehicle.year}
                   </span>
                   {vehicle.category && (
-                    <span className="px-4 py-2 bg-brand/20 text-brand font-medium rounded-xl">
+                    <span className="px-4 py-2 bg-gray-100 text-gray-900 font-medium rounded-xl">
                       {vehicle.category}
                     </span>
                   )}
@@ -229,7 +229,7 @@ export default function VehicleDetailPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleEdit}
-                  className="p-3 bg-brand/20 text-brand rounded-xl hover:bg-brand/30 transition-all"
+                  className="p-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all"
                   title="Edit Bike"
                 >
                   <Edit className="h-5 w-5" />
@@ -238,7 +238,7 @@ export default function VehicleDetailPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleDelete}
-                  className="p-3 bg-status-error/20 text-status-error rounded-xl hover:bg-status-error/30 transition-all"
+                  className="p-3 bg-status-error/10 text-status-error rounded-xl hover:bg-status-error/20 transition-all"
                   title="Remove Bike"
                 >
                   <Trash2 className="h-5 w-5" />
@@ -253,8 +253,8 @@ export default function VehicleDetailPage() {
               {/* Vehicle Information */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <MotorcycleIcon className="h-5 w-5 text-brand" />
-                  <h3 className="text-lg font-semibold text-white">Vehicle Information</h3>
+                  <MotorcycleIcon className="h-5 w-5 text-gray-700" />
+                  <h3 className="text-lg font-semibold text-gray-900">Vehicle Information</h3>
                 </div>
                 <div className="space-y-1">
                   <DetailRow label="Make" value={vehicle.make} />
@@ -268,8 +268,8 @@ export default function VehicleDetailPage() {
               {/* Customer Information */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <User className="h-5 w-5 text-brand" />
-                  <h3 className="text-lg font-semibold text-white">Owner Information</h3>
+                  <User className="h-5 w-5 text-gray-700" />
+                  <h3 className="text-lg font-semibold text-gray-900">Owner Information</h3>
                 </div>
                 <div className="space-y-1">
                   <DetailRow label="Owner Name" value={vehicle.customerName} />
@@ -283,19 +283,19 @@ export default function VehicleDetailPage() {
               {/* Vehicle Identification */}
               <div className="md:col-span-2">
                 <div className="flex items-center gap-3 mb-4">
-                  <Hash className="h-5 w-5 text-graphite-300" />
-                  <h3 className="text-lg font-semibold text-white">Vehicle Identification</h3>
+                  <Hash className="h-5 w-5 text-gray-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">Vehicle Identification</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-graphite-900/50 rounded-xl p-4 border border-graphite-700">
-                    <p className="text-xs text-graphite-400 mb-1">Engine Number</p>
-                    <p className="text-base font-mono font-semibold text-white break-all">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <p className="text-xs text-gray-600 mb-1">Engine Number</p>
+                    <p className="text-base font-mono font-semibold text-gray-900 break-all">
                       {vehicle.engineNumber}
                     </p>
                   </div>
-                  <div className="bg-graphite-900/50 rounded-xl p-4 border border-graphite-700">
-                    <p className="text-xs text-graphite-400 mb-1">Chassis Number (VIN)</p>
-                    <p className="text-base font-mono font-semibold text-white break-all">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <p className="text-xs text-gray-600 mb-1">Chassis Number (VIN)</p>
+                    <p className="text-base font-mono font-semibold text-gray-900 break-all">
                       {vehicle.chassisNumber}
                     </p>
                   </div>
@@ -305,9 +305,9 @@ export default function VehicleDetailPage() {
               {/* Notes */}
               {vehicle.notes && (
                 <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-white mb-4">Additional Notes</h3>
-                  <div className="bg-graphite-900/50 rounded-xl p-4 border border-graphite-700">
-                    <p className="text-sm text-graphite-300">{vehicle.notes}</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <p className="text-sm text-gray-700">{vehicle.notes}</p>
                   </div>
                 </div>
               )}
@@ -329,9 +329,9 @@ interface DetailRowProps {
 
 function DetailRow({ label, value }: DetailRowProps) {
   return (
-    <div className="group flex items-start justify-between py-3 px-4 -mx-4 rounded-xl hover:bg-graphite-700/30 transition-colors">
-      <span className="text-sm text-graphite-400 font-medium">{label}</span>
-      <span className="text-sm text-white font-semibold text-right">{value}</span>
+    <div className="group flex items-start justify-between py-3 px-4 -mx-4 rounded-xl hover:bg-gray-50 transition-colors">
+      <span className="text-sm text-gray-600 font-medium">{label}</span>
+      <span className="text-sm text-gray-900 font-semibold text-right">{value}</span>
     </div>
   )
 }

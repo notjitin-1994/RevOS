@@ -169,15 +169,15 @@ export default function AddCustomerPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.back()}
-            className="p-2 bg-graphite-800 border border-graphite-700 rounded-xl text-white hover:bg-graphite-700 transition-all"
+            className="p-2 bg-white border border-gray-300 rounded-xl text-gray-900 hover:bg-gray-50 transition-all"
           >
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900 tracking-tight">
               Add New Customer
             </h1>
-            <p className="text-sm md:text-base text-graphite-600 mt-1">
+            <p className="text-sm md:text-base text-gray-600 mt-1">
               Fill in the customer details below
             </p>
           </div>
@@ -189,22 +189,22 @@ export default function AddCustomerPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="bg-white rounded-2xl shadow-xl border border-graphite-200 overflow-hidden"
+        className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
       >
         {/* Success Message */}
         {success && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-green-50 border-b border-green-200"
+            className="p-4 bg-status-success/10 border-b border-status-success/30"
           >
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-full bg-status-success flex items-center justify-center">
                 <Save className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-green-900">Customer Added Successfully!</p>
-                <p className="text-sm text-green-700">Redirecting to customer list...</p>
+                <p className="font-semibold text-status-success">Customer Added Successfully!</p>
+                <p className="text-sm text-status-success/80">Redirecting to customer list...</p>
               </div>
             </div>
           </motion.div>
@@ -215,11 +215,11 @@ export default function AddCustomerPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-red-50 border-b border-red-200"
+            className="p-4 bg-status-error/10 border-b border-status-error/30"
           >
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+              <AlertCircle className="h-5 w-5 text-status-error shrink-0 mt-0.5" />
+              <p className="text-sm text-status-error/80">{error}</p>
             </div>
           </motion.div>
         )}
@@ -228,13 +228,13 @@ export default function AddCustomerPage() {
           {/* Personal Information Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-1 bg-brand rounded-full" />
-              <h2 className="text-lg font-semibold text-graphite-900">Personal Information</h2>
+              <div className="h-8 w-1 bg-gray-700 rounded-full" />
+              <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* First Name */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   First Name <span className="text-status-error">*</span>
                 </label>
                 <input
@@ -244,13 +244,13 @@ export default function AddCustomerPage() {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="John"
-                  className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Last Name */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Last Name <span className="text-status-error">*</span>
                 </label>
                 <input
@@ -260,17 +260,17 @@ export default function AddCustomerPage() {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Doe"
-                  className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Email */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email Address <span className="text-status-error">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="email"
                     name="email"
@@ -278,18 +278,18 @@ export default function AddCustomerPage() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="john.doe@example.com"
-                    className="w-full pl-12 pr-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
 
               {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Phone Number <span className="text-status-error">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="tel"
                     name="phoneNumber"
@@ -297,42 +297,42 @@ export default function AddCustomerPage() {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     placeholder="+91 98765 43210"
-                    className="w-full pl-12 pr-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
 
               {/* Alternate Phone */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Alternate Phone
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="tel"
                     name="alternatePhone"
                     value={formData.alternatePhone}
                     onChange={handleChange}
                     placeholder="+91 98765 43211"
-                    className="w-full pl-12 pr-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
 
               {/* Date of Birth */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Birth
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="date"
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
@@ -342,31 +342,31 @@ export default function AddCustomerPage() {
           {/* Address Information Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-1 bg-brand rounded-full" />
-              <h2 className="text-lg font-semibold text-graphite-900">Address Information</h2>
+              <div className="h-8 w-1 bg-gray-700 rounded-full" />
+              <h2 className="text-lg font-semibold text-gray-900">Address Information</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Street Address */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Street Address
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-4 h-5 w-5 text-graphite-400" />
+                  <MapPin className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
                   <textarea
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="123 Main Street, Apt 4B"
                     rows={2}
-                    className="w-full pl-12 pr-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
                   />
                 </div>
               </div>
 
               {/* City */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   City
                 </label>
                 <input
@@ -375,13 +375,13 @@ export default function AddCustomerPage() {
                   value={formData.city}
                   onChange={handleChange}
                   placeholder="Mumbai"
-                  className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               {/* State */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   State
                 </label>
                 <input
@@ -390,13 +390,13 @@ export default function AddCustomerPage() {
                   value={formData.state}
                   onChange={handleChange}
                   placeholder="Maharashtra"
-                  className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Postal Code */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Postal Code
                 </label>
                 <input
@@ -405,13 +405,13 @@ export default function AddCustomerPage() {
                   value={formData.zipCode}
                   onChange={handleChange}
                   placeholder="400001"
-                  className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Country */}
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Country
                 </label>
                 <input
@@ -419,7 +419,7 @@ export default function AddCustomerPage() {
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -428,11 +428,11 @@ export default function AddCustomerPage() {
           {/* Additional Information Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-1 bg-brand rounded-full" />
-              <h2 className="text-lg font-semibold text-graphite-900">Additional Information</h2>
+              <div className="h-8 w-1 bg-gray-700 rounded-full" />
+              <h2 className="text-lg font-semibold text-gray-900">Additional Information</h2>
             </div>
             <div>
-              <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Notes
               </label>
               <textarea
@@ -441,20 +441,20 @@ export default function AddCustomerPage() {
                 onChange={handleChange}
                 placeholder="Any additional notes about the customer..."
                 rows={3}
-                className="w-full px-4 py-3 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
               />
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-graphite-200">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               type="button"
               onClick={() => router.back()}
               disabled={isLoading || success}
-              className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </motion.button>
@@ -463,7 +463,7 @@ export default function AddCustomerPage() {
               whileTap={{ scale: 0.99 }}
               type="submit"
               disabled={isLoading || success}
-              className="flex-1 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>

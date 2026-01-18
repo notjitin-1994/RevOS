@@ -38,13 +38,13 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['var(--font-barlow)', 'sans-serif'],
-        sans: ['var(--font-inter)', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
-        manrope: ['var(--font-manrope)', 'sans-serif'],
+        display: ['var(--font-barlow)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        manrope: ['var(--font-manrope)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       boxShadow: {
-        glow: '0 0 15px rgba(204, 255, 0, 0.3)',
+        glow: '0 0 15px rgba(15, 23, 42, 0.3)',
         'card': '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
       },
       animation: {

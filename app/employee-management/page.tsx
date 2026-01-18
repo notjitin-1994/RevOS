@@ -211,13 +211,13 @@ export default function EmployeeManagementPage() {
   const getStatusColor = (status: Employee['status']) => {
     switch (status) {
       case 'active':
-        return 'text-status-success bg-status-success/10 border-status-success/30'
+        return 'text-status-success bg-status-success/10 border-status-success/20'
       case 'inactive':
-        return 'text-status-error bg-status-error/10 border-status-error/30'
+        return 'text-status-error bg-status-error/10 border-status-error/20'
       case 'on-leave':
-        return 'text-graphite-400 bg-graphite-700/50 border-graphite-600'
+        return 'text-status-warning bg-status-warning/10 border-status-warning/20'
       default:
-        return 'text-graphite-400'
+        return 'text-gray-600 bg-gray-100 border-gray-300'
     }
   }
 
@@ -230,8 +230,8 @@ export default function EmployeeManagementPage() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-brand mx-auto mb-4" />
-          <p className="text-graphite-600 font-medium">Loading employees...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-graphite-900 mx-auto mb-4" />
+          <p className="text-gray-700 font-medium">Loading employees...</p>
         </motion.div>
       </div>
     )
@@ -244,11 +244,11 @@ export default function EmployeeManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="max-w-md w-full bg-white/70 backdrop-blur-sm rounded-2xl border border-red-500/50 p-8 shadow-2xl"
+          className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 shadow-lg"
         >
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-graphite-900 text-center mb-2">Error Loading Employees</h2>
-          <p className="text-sm text-graphite-600 text-center">{error}</p>
+          <AlertCircle className="h-12 w-12 text-status-error mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">Error Loading Employees</h2>
+          <p className="text-sm text-gray-700 text-center">{error}</p>
         </motion.div>
       </div>
     )
@@ -266,12 +266,12 @@ export default function EmployeeManagementPage() {
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-1 bg-graphite-600 rounded-full" />
+                <div className="h-10 w-1 bg-gray-700 rounded-full" />
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                     Employee Management
                   </h1>
-                  <p className="text-sm md:text-base text-graphite-600 mt-1">
+                  <p className="text-sm md:text-base text-gray-700 mt-1">
                     Manage your garage team members
                   </p>
                 </div>
@@ -280,7 +280,7 @@ export default function EmployeeManagementPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddEmployee}
-                className="flex items-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+                className="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg"
               >
                 <UserPlus className="h-5 w-5" />
                 <span className="hidden sm:inline">Add Employee</span>
@@ -294,28 +294,28 @@ export default function EmployeeManagementPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-6 bg-graphite-800 backdrop-blur-sm rounded-xl p-4 border border-graphite-700"
+            className="mb-6 bg-white rounded-xl p-4 border border-gray-200"
           >
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search */}
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search employees..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Status Filter */}
               <div className="relative">
-                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
@@ -333,9 +333,9 @@ export default function EmployeeManagementPage() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="mb-6 flex items-center justify-between"
           >
-            <p className="text-sm text-graphite-700">
-              Showing <span className="font-semibold text-graphite-900">{startIndex + 1}-{Math.min(endIndex, filteredEmployees.length)}</span> of{' '}
-              <span className="font-semibold text-graphite-900">{filteredEmployees.length}</span> employees
+            <p className="text-sm text-gray-700">
+              Showing <span className="font-semibold text-gray-900">{startIndex + 1}-{Math.min(endIndex, filteredEmployees.length)}</span> of{' '}
+              <span className="font-semibold text-gray-900">{filteredEmployees.length}</span> employees
             </p>
           </motion.div>
 
@@ -354,13 +354,13 @@ export default function EmployeeManagementPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
-                  className="bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden"
+                  className="bg-white rounded-xl border border-gray-200 overflow-hidden"
                 >
                   {/* Card Header - Name, Status & Actions */}
-                  <div className="p-4 border-b border-graphite-700/50">
+                  <div className="p-4 border-b border-gray-200">
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
-                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-graphite-700/20 to-graphite-700/5 flex items-center justify-center border border-graphite-700/30 flex-shrink-0">
                         {employee.profilePicture ? (
                           <img
                             src={employee.profilePicture}
@@ -368,14 +368,14 @@ export default function EmployeeManagementPage() {
                             className="h-full w-full rounded-xl object-cover"
                           />
                         ) : (
-                          <Users className="h-6 w-6 text-brand" />
+                          <Users className="h-6 w-6 text-graphite-900" />
                         )}
                       </div>
 
                       {/* Name & Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-base font-semibold text-white truncate">
+                          <h3 className="text-base font-semibold text-gray-900 truncate">
                             {employee.firstName} {employee.lastName}
                           </h3>
                           <span
@@ -387,7 +387,7 @@ export default function EmployeeManagementPage() {
                             {employee.status.charAt(0).toUpperCase() + employee.status.slice(1).replace('-', ' ')}
                           </span>
                         </div>
-                        <p className="text-sm text-graphite-400 font-mono">{employee.employeeId}</p>
+                        <p className="text-sm text-gray-600 font-mono">{employee.employeeId}</p>
                       </div>
 
                       {/* Actions */}
@@ -395,14 +395,14 @@ export default function EmployeeManagementPage() {
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleViewEmployee(employee)}
-                          className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                          className="p-2 text-gray-500 hover:text-graphite-900 hover:bg-graphite-100 rounded-lg transition-all"
                         >
                           <Eye className="h-4 w-4" />
                         </motion.button>
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleDeleteEmployee(employee)}
-                          className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                          className="p-2 text-gray-500 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                         >
                           <Trash2 className="h-4 w-4" />
                         </motion.button>
@@ -418,8 +418,8 @@ export default function EmployeeManagementPage() {
                         className={cn(
                           'px-2.5 py-1 rounded-lg text-xs font-medium border',
                           employee.role === 'Manager'
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                            : 'bg-brand/10 text-brand border-brand/20'
+                            ? 'bg-status-info/10 text-status-info border-status-info/20'
+                            : 'bg-graphite-100 text-gray-700 border-graphite-300'
                         )}
                       >
                         {employee.role || 'N/A'}
@@ -427,7 +427,7 @@ export default function EmployeeManagementPage() {
                     </div>
 
                     {/* Location */}
-                    <div className="flex items-center gap-2 text-sm text-graphite-400">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MapPin className="h-4 w-4 shrink-0" />
                       <span className="truncate">
                         {employee.city}{employee.city && employee.state ? ', ' : ''}{employee.state}
@@ -435,14 +435,14 @@ export default function EmployeeManagementPage() {
                     </div>
 
                     {/* Contact Info */}
-                    <div className="space-y-2 pt-2 border-t border-graphite-700/30">
+                    <div className="space-y-2 pt-2 border-t border-gray-200">
                       <div className="flex items-center gap-3 text-sm">
-                        <Mail className="h-4 w-4 text-graphite-500 shrink-0" />
-                        <span className="text-graphite-300 truncate flex-1">{employee.email}</span>
+                        <Mail className="h-4 w-4 text-gray-500 shrink-0" />
+                        <span className="text-gray-700 truncate flex-1">{employee.email}</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
-                        <Phone className="h-4 w-4 text-graphite-500 shrink-0" />
-                        <span className="text-graphite-300">{employee.phoneNumber}</span>
+                        <Phone className="h-4 w-4 text-gray-500 shrink-0" />
+                        <span className="text-gray-700">{employee.phoneNumber}</span>
                       </div>
                     </div>
                   </div>
@@ -451,43 +451,43 @@ export default function EmployeeManagementPage() {
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden md:block bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden">
+            <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-graphite-700/50">
+                  <tr className="border-b border-gray-200">
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Employee</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Employee</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Employee ID</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Employee ID</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Role</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Contact</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Status</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</span>
                     </th>
                     <th className="px-6 py-4 text-right">
-                      <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Actions</span>
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-graphite-700/30">
+                <tbody className="divide-y divide-gray-200">
                   {paginatedEmployees.map((employee, index) => (
                     <motion.tr
                       key={employee.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: index * 0.03 }}
-                      className="hover:bg-graphite-700/30 transition-colors duration-150"
+                      className="hover:bg-gray-50 transition-colors duration-150"
                     >
                       {/* Employee Name & Avatar */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-graphite-700/20 to-graphite-700/5 flex items-center justify-center border border-graphite-700/30 flex-shrink-0">
                             {employee.profilePicture ? (
                               <img
                                 src={employee.profilePicture}
@@ -495,19 +495,19 @@ export default function EmployeeManagementPage() {
                                 className="h-full w-full rounded-lg object-cover"
                               />
                             ) : (
-                              <Users className="h-5 w-5 text-brand" />
+                              <Users className="h-5 w-5 text-graphite-900" />
                             )}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-white">{employee.firstName} {employee.lastName}</div>
-                            <div className="text-xs text-graphite-400">{employee.city}{employee.city && employee.state ? ', ' : ''}{employee.state}</div>
+                            <div className="text-sm font-medium text-gray-900">{employee.firstName} {employee.lastName}</div>
+                            <div className="text-xs text-gray-600">{employee.city}{employee.city && employee.state ? ', ' : ''}{employee.state}</div>
                           </div>
                         </div>
                       </td>
 
                       {/* Employee ID */}
                       <td className="px-6 py-4">
-                        <div className="text-sm text-graphite-300 font-mono">{employee.employeeId}</div>
+                        <div className="text-sm text-gray-700 font-mono">{employee.employeeId}</div>
                       </td>
 
                       {/* Role */}
@@ -516,8 +516,8 @@ export default function EmployeeManagementPage() {
                           className={cn(
                             'px-2.5 py-1 rounded-lg text-xs font-medium border',
                             employee.role === 'Manager'
-                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                              : 'bg-brand/10 text-brand border-brand/20'
+                              ? 'bg-status-info/10 text-status-info border-status-info/20'
+                              : 'bg-graphite-100 text-gray-700 border-graphite-300'
                           )}
                         >
                           {employee.role || 'N/A'}
@@ -527,11 +527,11 @@ export default function EmployeeManagementPage() {
                       {/* Contact */}
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-graphite-400">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Mail className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate max-w-[200px]">{employee.email}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-graphite-400">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Phone className="h-3.5 w-3.5 shrink-0" />
                             <span>{employee.phoneNumber}</span>
                           </div>
@@ -557,7 +557,7 @@ export default function EmployeeManagementPage() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleViewEmployee(employee)}
-                            className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                            className="p-2 text-gray-500 hover:text-graphite-900 hover:bg-graphite-100 rounded-lg transition-all"
                             title="View"
                           >
                             <Eye className="h-4 w-4" />
@@ -566,7 +566,7 @@ export default function EmployeeManagementPage() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleDeleteEmployee(employee)}
-                            className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                            className="p-2 text-gray-500 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -581,10 +581,10 @@ export default function EmployeeManagementPage() {
 
           {/* Empty State */}
           {paginatedEmployees.length === 0 && (
-            <div className="text-center py-16 bg-graphite-800 rounded-xl border border-graphite-700">
-                <Users className="h-16 w-16 text-graphite-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No employees found</h3>
-                <p className="text-graphite-400 mb-6">
+            <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No employees found</h3>
+                <p className="text-gray-600 mb-6">
                   {searchQuery || statusFilter !== 'all'
                     ? 'Try adjusting your search or filters'
                     : 'Get started by adding your first employee'}
@@ -594,7 +594,7 @@ export default function EmployeeManagementPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleAddEmployee}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg"
                   >
                     <UserPlus className="h-5 w-5" />
                     Add Your First Employee
@@ -612,9 +612,9 @@ export default function EmployeeManagementPage() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="mt-6 flex items-center justify-between"
             >
-              <div className="text-sm text-graphite-700">
-                Page <span className="font-medium text-graphite-900">{currentPage}</span> of{' '}
-                <span className="font-medium text-graphite-900">{totalPages}</span>
+              <div className="text-sm text-gray-700">
+                Page <span className="font-medium text-gray-900">{currentPage}</span> of{' '}
+                <span className="font-medium text-gray-900">{totalPages}</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -623,7 +623,7 @@ export default function EmployeeManagementPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Previous
                 </motion.button>
@@ -646,7 +646,7 @@ export default function EmployeeManagementPage() {
                       return (
                         <React.Fragment key={page}>
                           {showEllipsis && (
-                            <span className="px-2 text-graphite-500">...</span>
+                            <span className="px-2 text-gray-500">...</span>
                           )}
                           <motion.button
                             whileHover={{ scale: currentPage !== page ? 1.05 : 1 }}
@@ -655,8 +655,8 @@ export default function EmployeeManagementPage() {
                             className={cn(
                               'min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all',
                               currentPage === page
-                                ? 'bg-brand text-graphite-900'
-                                : 'bg-graphite-800 border border-graphite-700 text-white hover:bg-graphite-700'
+                                ? 'bg-gray-700 text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
                             )}
                           >
                             {page}
@@ -671,7 +671,7 @@ export default function EmployeeManagementPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Next
                 </motion.button>
@@ -804,16 +804,16 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-graphite-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-graphite-900">Add New Employee</h2>
-            <p className="text-sm text-graphite-600 mt-1">Fill in the employee details</p>
+            <h2 className="text-xl font-bold text-gray-900">Add New Employee</h2>
+            <p className="text-sm text-gray-600 mt-1">Fill in the employee details</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-graphite-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="h-5 w-5 text-graphite-500" />
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
 
@@ -822,17 +822,17 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-status-error shrink-0 mt-0.5" />
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           {/* Personal Information */}
           <div>
-            <h3 className="text-sm font-semibold text-graphite-900 mb-3">Personal Information</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   First Name *
                 </label>
                 <input
@@ -840,11 +840,11 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Last Name *
                 </label>
                 <input
@@ -852,11 +852,11 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Employee ID *
                 </label>
                 <input
@@ -864,11 +864,11 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.employeeId}
                   onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email *
                 </label>
                 <input
@@ -876,11 +876,11 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Phone Number *
                 </label>
                 <input
@@ -888,39 +888,39 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.phoneNumber || ''}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Alternate Phone
                 </label>
                 <input
                   type="tel"
                   value={formData.alternatePhone || ''}
                   onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Birth
                 </label>
                 <input
                   type="date"
                   value={formData.dateOfBirth || ''}
                   onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Blood Group
                 </label>
                 <select
                   value={formData.bloodGroup || ''}
                   onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="">Select</option>
                   <option value="A+">A+</option>
@@ -938,61 +938,61 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
 
           {/* Address Information */}
           <div>
-            <h3 className="text-sm font-semibold text-graphite-900 mb-3">Address Information</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Address Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Address
                 </label>
                 <input
                   type="text"
                   value={formData.address || ''}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   City
                 </label>
                 <input
                   type="text"
                   value={formData.city || ''}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   State
                 </label>
                 <input
                   type="text"
                   value={formData.state || ''}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Postal Code
                 </label>
                 <input
                   type="text"
                   value={formData.zipCode || ''}
                   onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Country
                 </label>
                 <input
                   type="text"
                   value={formData.country || ''}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -1000,24 +1000,24 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
 
           {/* Employment Information */}
           <div>
-            <h3 className="text-sm font-semibold text-graphite-900 mb-3">Employment Information</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Employment Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Department *
                 </label>
                 <select
                   required
                   value={formData.department || 'Mechanic'}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="Mechanic">Mechanic</option>
                   <option value="Manager">Manager</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Role *
                 </label>
                 <input
@@ -1025,11 +1025,11 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.role || ''}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Joining *
                 </label>
                 <input
@@ -1037,18 +1037,18 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
                   required
                   value={formData.dateOfJoining || ''}
                   onChange={(e) => setFormData({ ...formData, dateOfJoining: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Status *
                 </label>
                 <select
                   required
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as Employee['status'] })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -1059,19 +1059,19 @@ function AddEmployeeModal({ isOpen, onClose, onAdd }: AddEmployeeModalProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-graphite-200">
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -1203,16 +1203,16 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
         className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-graphite-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-graphite-900">Edit Employee</h2>
-            <p className="text-sm text-graphite-600 mt-1">Update employee information</p>
+            <h2 className="text-xl font-bold text-gray-900">Edit Employee</h2>
+            <p className="text-sm text-gray-600 mt-1">Update employee information</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-graphite-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="h-5 w-5 text-graphite-500" />
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
 
@@ -1221,17 +1221,17 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-status-error shrink-0 mt-0.5" />
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           {/* Personal Information */}
           <div>
-            <h3 className="text-sm font-semibold text-graphite-900 mb-3">Personal Information</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   First Name *
                 </label>
                 <input
@@ -1239,11 +1239,11 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData!, firstName: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Last Name *
                 </label>
                 <input
@@ -1251,11 +1251,11 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData!, lastName: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Employee ID *
                 </label>
                 <input
@@ -1263,11 +1263,11 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.employeeId || ''}
                   onChange={(e) => setFormData({ ...formData!, employeeId: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email *
                 </label>
                 <input
@@ -1275,11 +1275,11 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData!, email: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Phone Number *
                 </label>
                 <input
@@ -1287,39 +1287,39 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.phoneNumber || ''}
                   onChange={(e) => setFormData({ ...formData!, phoneNumber: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Alternate Phone
                 </label>
                 <input
                   type="tel"
                   value={formData.alternatePhone || ''}
                   onChange={(e) => setFormData({ ...formData!, alternatePhone: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Birth
                 </label>
                 <input
                   type="date"
                   value={formData.dateOfBirth || ''}
                   onChange={(e) => setFormData({ ...formData!, dateOfBirth: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Blood Group
                 </label>
                 <select
                   value={formData.bloodGroup || ''}
                   onChange={(e) => setFormData({ ...formData!, bloodGroup: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="">Select</option>
                   <option value="A+">A+</option>
@@ -1337,61 +1337,61 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
 
           {/* Address Information */}
           <div>
-            <h3 className="text-sm font-semibold text-graphite-900 mb-3">Address Information</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Address Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Address
                 </label>
                 <input
                   type="text"
                   value={formData.address || ''}
                   onChange={(e) => setFormData({ ...formData!, address: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   City
                 </label>
                 <input
                   type="text"
                   value={formData.city || ''}
                   onChange={(e) => setFormData({ ...formData!, city: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   State
                 </label>
                 <input
                   type="text"
                   value={formData.state || ''}
                   onChange={(e) => setFormData({ ...formData!, state: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Postal Code
                 </label>
                 <input
                   type="text"
                   value={formData.zipCode || ''}
                   onChange={(e) => setFormData({ ...formData!, zipCode: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Country
                 </label>
                 <input
                   type="text"
                   value={formData.country || ''}
                   onChange={(e) => setFormData({ ...formData!, country: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -1399,24 +1399,24 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
 
           {/* Employment Information */}
           <div>
-            <h3 className="text-sm font-semibold text-graphite-900 mb-3">Employment Information</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Employment Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Department *
                 </label>
                 <select
                   required
                   value={formData.department || 'Mechanic'}
                   onChange={(e) => setFormData({ ...formData!, department: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="Mechanic">Mechanic</option>
                   <option value="Manager">Manager</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Role *
                 </label>
                 <input
@@ -1424,11 +1424,11 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.role || ''}
                   onChange={(e) => setFormData({ ...formData!, role: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Joining *
                 </label>
                 <input
@@ -1436,18 +1436,18 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
                   required
                   value={formData.dateOfJoining || ''}
                   onChange={(e) => setFormData({ ...formData!, dateOfJoining: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-graphite-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Status *
                 </label>
                 <select
                   required
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData!, status: e.target.value as Employee['status'] })}
-                  className="w-full px-4 py-2.5 bg-graphite-50 border border-graphite-200 rounded-xl text-graphite-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -1458,19 +1458,19 @@ function EditEmployeeModal({ isOpen, onClose, employee, onUpdate }: EditEmployee
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-graphite-200">
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -1528,15 +1528,15 @@ function DeleteConfirmationModal({ isOpen, onClose, employeeName, onConfirm }: D
         {/* Warning Icon */}
         <div className="flex justify-center mb-4">
           <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-            <AlertCircle className="h-8 w-8 text-red-500" />
+            <AlertCircle className="h-8 w-8 text-status-error" />
           </div>
         </div>
 
         {/* Title and Message */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-graphite-900 mb-2">Delete Employee?</h2>
-          <p className="text-graphite-600">
-            Are you sure you want to delete <span className="font-semibold text-graphite-900">{employeeName}</span>? This action cannot be undone.
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Employee?</h2>
+          <p className="text-gray-600">
+            Are you sure you want to delete <span className="font-semibold text-gray-900">{employeeName}</span>? This action cannot be undone.
           </p>
         </div>
 
@@ -1545,14 +1545,14 @@ function DeleteConfirmationModal({ isOpen, onClose, employeeName, onConfirm }: D
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-status-error text-white font-semibold rounded-xl hover:bg-status-error/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-status-error text-white font-semibold rounded-xl hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>

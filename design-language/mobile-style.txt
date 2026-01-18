@@ -1,52 +1,282 @@
-1. System Identity & Mobile PhilosophyTheme Name: Precision Volt MobileCore Concept: "The Grease-Proof Interface."Primary Constraint: The user is likely standing, has dirty hands, or is holding a tool in one hand.Interaction Model: Thumb-driven navigation, large touch targets (>44px), and high contrast for outdoor/bay visibility.2. 🤖 Agent Instructions (Strict Rules)Role: You are a Mobile-First UX Engineer.Directives for Code Generation:The "Thumb Zone" Rule:NEVER place primary actions (Save, Start Job) at the top left of the screen.ALWAYS place primary actions in a Fixed Bottom Bar, Floating Action Button (FAB), or the bottom 30% of the screen.The "Grease-Proof" Target Rule:All interactive elements (buttons, inputs, icons) MUST have a minimum height/width of 44px (or h-11/p-3 in Tailwind).Reason: Preventing mis-taps with gloves.Input Zoom Prevention (iOS):IF creating an <input> or <select> for mobile...THEN you MUST ensure the font size is text-base (16px).Reason: Prevents the OS from auto-zooming when the input is focused1.No Hover States:Do not rely on hover: for critical information (tooltips). Mobile users cannot hover.Use active: states to provide immediate feedback on tap.3. Layout & Grid Strategy (Responsive Breakpoints)3.1 Breakpoint PhilosophyWe write code Mobile-First. The base classes apply to mobile, and md: applies to tablet/desktop.BreakpointWidthUsage ContextDefault< 640pxPhone (Portrait). Stacked layout, bottom sheet navigation.sm640px+Large Phone / Small Tablet. 2-column grids allowed.md768px+Tablet (Portrait). Sidebar appears (collapsible).lg1024px+Tablet (Landscape) / Laptop. Full Dashboard Grid.3.2 The "Stack-to-Grid" PatternAgent Instruction: Convert complex dashboard widgets into linear stacks for mobile.Desktop: 3 Columns (Widget A | Widget B | Widget C).Mobile: Vertical Stack with vertical spacing space-y-4.4. Navigation Patterns4.1 Bottom Navigation Bar (Mobile Main)Instead of a top sidebar, use a sticky bottom nav for core routes.Height: h-16 (64px).Background: bg-graphite-800 + border-t border-graphite-700.Z-Index: z-50.Safe Area: Ensure pb-safe (Tailwind safe-area plugin) is used for iPhone Home bars.4.2 Bottom Sheets (The "Drawer")Do not use center-screen modals on mobile (they are hard to reach). Use Slide-up Bottom Sheets for forms or filters.Trigger: Tap action.Animation: Slide up from bottom (translate-y-0).Backdrop: bg-graphite-900/80 backdrop-blur-sm.Drag Handle: A small w-12 h-1.5 bg-graphite-600 rounded-full centered at the top of the sheet.5. Component Adaptations (Copy-Paste Patterns)5.1 The "Mobile Card" (Compact Widget)Reduces padding and font sizes slightly to fit narrow screens.JavaScript<div className="
-  bg-graphite-800 
-  border-b border-graphite-700 md:border md:rounded-xl 
-  p-4 md:p-6 
+1. System Identity & Mobile Philosophy
+Theme Name: Precision Volt Mobile (Light Mode)
+Core Concept: "The Clean Precision Interface."
+Primary Constraint: The user is likely standing, has dirty hands, or is holding a tool in one hand.
+Interaction Model: Thumb-driven navigation, large touch targets (>44px), and high contrast for outdoor/bay visibility.
+
+2. 🤖 Agent Instructions (Strict Rules)
+Role: You are a Mobile-First UX Engineer.
+Directives for Code Generation:
+
+The "Thumb Zone" Rule:
+NEVER place primary actions (Save, Start Job) at the top left of the screen.
+ALWAYS place primary actions in a Fixed Bottom Bar, Floating Action Button (FAB), or the bottom 30% of the screen.
+
+The "Touch Target" Rule:
+All interactive elements (buttons, inputs, icons) MUST have a minimum height/width of 44px (or h-11/p-3 in Tailwind).
+Reason: Preventing mis-taps with gloves or fingers.
+
+Input Zoom Prevention (iOS):
+IF creating an <input> or <select> for mobile...
+THEN you MUST ensure the font size is text-base (16px).
+Reason: Prevents the OS from auto-zooming when the input is focused.
+
+No Hover States:
+Do not rely on hover: for critical information (tooltips). Mobile users cannot hover.
+Use active: states to provide immediate feedback on tap.
+
+3. Layout & Grid Strategy (Responsive Breakpoints)
+
+3.1 Breakpoint Philosophy
+We write code Mobile-First. The base classes apply to mobile, and md: applies to tablet/desktop.
+
+Breakpoint		Width		Usage Context
+Default		< 640px		Phone (Portrait). Stacked layout, mobile bottom nav.
+sm			640px+		Large Phone / Small Tablet. 2-column grids allowed.
+md			768px+		Tablet (Portrait). Sidebar appears (collapsible).
+lg			1024px+		Tablet (Landscape) / Laptop. Full Dashboard Grid.
+
+3.2 The "Stack-to-Grid" Pattern
+Agent Instruction: Convert complex dashboard widgets into linear stacks for mobile.
+
+Desktop: 3 Columns (Widget A | Widget B | Widget C).
+Mobile: Vertical Stack with vertical spacing space-y-4.
+
+4. Navigation Patterns (Light Mode)
+
+4.1 Mobile Bottom Navigation Bar
+Instead of a sidebar, use a sticky bottom nav for core routes on mobile.
+
+Height: h-16 (64px).
+Background: bg-white + border-t border-gray-200.
+Z-Index: z-50.
+Icons: text-gray-600 (inactive), text-gray-900 (active).
+Safe Area: Ensure pb-safe (Tailwind safe-area plugin) is used for iPhone Home bars.
+
+4.2 Sidebar (Desktop Only, Brand Accent)
+On desktop (md: breakpoint), use the lime sidebar:
+
+Background: bg-brand (#CCFF00).
+Icons/Text: text-graphite-900.
+Border: border-r border-brand-hover.
+
+4.3 Bottom Sheets (The "Drawer")
+Do not use center-screen modals on mobile (they are hard to reach). Use Slide-up Bottom Sheets for forms or filters.
+
+Trigger: Tap action.
+Animation: Slide up from bottom (translate-y-0).
+Backdrop: bg-gray-900/80 backdrop-blur-sm (for light mode contrast).
+Drag Handle: A small w-12 h-1.5 bg-gray-300 rounded-full centered at the top of the sheet.
+
+5. Component Adaptations (Copy-Paste Patterns)
+
+5.1 The "Mobile Card" (Compact Widget)
+Reduces padding and font sizes slightly to fit narrow screens.
+
+JavaScript
+<div className="
+  bg-white
+  border border-gray-200 md:rounded-xl
+  p-4 md:p-6
   flex flex-col gap-3
 ">
   {/* Header: Flex row for alignment */}
   <div className="flex justify-between items-center">
-    <h3 className="font-display font-medium text-white text-base">
+    <h3 className="font-display font-medium text-gray-900 text-base">
       Recent Jobs
     </h3>
-    <button className="text-brand text-sm font-medium p-2">
+    <button className="text-gray-700 text-sm font-medium p-2">
       View All
     </button>
   </div>
-  
+
   {/* Content */}
   <div className="flex flex-col gap-2">
     {/* List Items... */}
   </div>
 </div>
-5.2 The Sticky Action Bar (Form Footer)Ensures the "Save" button is always accessible without scrolling.JavaScript<div className="
+
+5.2 The Sticky Action Bar (Form Footer)
+Ensures the "Save" button is always accessible without scrolling.
+
+JavaScript
+<div className="
   fixed bottom-0 left-0 right-0 z-40
-  bg-graphite-900/95 backdrop-blur-md 
-  border-t border-graphite-700 
+  bg-white/95 backdrop-blur-md
+  border-t border-gray-200
   p-4 pb-safe
 ">
   <button className="
-    w-full 
-    bg-brand text-graphite-900 font-semibold 
-    h-12 rounded-lg 
-    shadow-glow active:scale-[0.98] transition-transform
+    w-full
+    bg-gray-700 hover:bg-gray-600 text-white font-semibold
+    h-12 rounded-lg
+    shadow-lg active:scale-[0.98] transition-transform
   ">
     Save Changes
   </button>
 </div>
-5.3 Large Input Fields (Touch Friendly)Increases tap area for mechanics wearing gloves.JavaScript<div>
-  <label className="text-xs font-medium uppercase tracking-wider text-graphite-400 mb-1 block">
+
+5.3 Large Input Fields (Touch Friendly)
+Increases tap area for mechanics wearing gloves.
+
+JavaScript
+<div>
+  <label className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1 block">
     Odometer Reading
   </label>
-  <input 
-    type="number" 
+  <input
+    type="number"
     pattern="[0-9]*" /* Triggers numeric keypad on iOS/Android */
     className="
-      w-full bg-graphite-900 
-      border border-graphite-600 focus:border-brand focus:ring-1 focus:ring-brand
-      text-white text-base font-mono 
+      w-full bg-white
+      border border-gray-300 focus:border-gray-400 focus:ring-2 focus:ring-brand/50
+      text-gray-900 text-base font-mono
       h-12 px-4 rounded-lg
     "
   />
 </div>
-6. Typography AdjustmentsMobile typography must be tighter to prevent excessive scrolling, but data must remain legible.ElementDesktop SizeMobile SizeTailwind Class (Mobile)Page Title (H1)text-3xltext-2xltext-2xl font-bold font-displaySection (H2)text-xltext-lgtext-lg font-semibold font-displayBody Texttext-smtext-smtext-sm font-sans (No change)Inputstext-sm16pxtext-base (Prevent Zoom)7. Touch & Gestures7.1 Swipe ActionsIn lists (e.g., Parts List), implement Swipe-to-Reveal actions.Swipe Left: Reveal "Delete" (Red/Error background).Swipe Right: Reveal "Mark Complete" (Teal/Success background).7.2 Active States (Feedback)Since there is no hover, every tap must have visual feedback.Utility: active:scale-[0.98] or active:bg-graphite-700.Rule: Apply this to every clickable card or list item.8. Accessibility (Mobile Specifics)System Font Scaling: Ensure layouts do not break if the user has their OS font size set to "Large." Use flexible heights (h-auto or min-h-[44px]) rather than fixed heights.Dark Mode Outdoor Visibility: The bg-graphite-900 provides good contrast, but ensure borders (border-graphite-600) are sufficient to define button edges in bright sunlight (e.g., checking a car outdoors).Keypad Triggers:For VINs: Use inputmode="text".For Mileage/Price: Use inputmode="decimal" or numeric.For Email: Use inputmode="email".
+
+5.4 Editable Info Item (Mobile)
+Settings-style rows that are tappable.
+
+JavaScript
+<div
+  className="
+    group flex items-center justify-between
+    py-4 px-4 -mx-4
+    bg-white
+    active:bg-gray-100
+    cursor-pointer min-h-[44px]
+    border-b border-gray-200 last:border-b-0
+  "
+>
+  <div className="flex items-center gap-3">
+    <Icon className="w-5 h-5 text-gray-500" />
+    <div>
+      <p className="text-sm font-medium text-gray-900">Label</p>
+      <p className="text-xs text-gray-600">Secondary info</p>
+    </div>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="text-sm text-gray-900">Value</span>
+    <ChevronRight className="w-5 h-5 text-gray-400" />
+  </div>
+</div>
+
+6. Typography Adjustments (Mobile)
+Mobile typography must be tighter to prevent excessive scrolling, but data must remain legible.
+
+Element			Desktop Size		Mobile Size		Tailwind Class (Mobile)
+Page Title (H1)		text-3xl		text-2xl		text-2xl font-bold font-display
+Section (H2)		text-xl		text-lg		text-lg font-semibold font-display
+Body Text		text-sm		text-sm		text-sm font-sans text-gray-700
+Inputs			text-sm		16px			text-base (Prevent Zoom)
+Data Values		text-sm		text-sm		text-sm font-mono text-gray-900
+
+7. Touch & Gestures
+
+7.1 Swipe Actions
+In lists (e.g., Parts List), implement Swipe-to-Reveal actions.
+
+Swipe Left: Reveal "Delete" (Red/Error background).
+Swipe Right: Reveal "Mark Complete" (Teal/Success background).
+
+7.2 Active States (Feedback)
+Since there is no hover, every tap must have visual feedback.
+
+Utility: active:scale-[0.98] or active:bg-gray-100.
+Rule: Apply this to every clickable card or list item.
+
+8. Mobile Color Reference (Light Mode)
+
+Element			Color Class			Hex Value
+App Background		custom (#ecf0f5)		#ecf0f5
+Card Background		bg-white			#FFFFFF
+Card Border		border-gray-200		#E5E7EB
+Bottom Nav		bg-white			#FFFFFF
+Bottom Nav Border	border-gray-200		#E5E7EB
+Text Primary		text-gray-900		#111827
+Text Secondary		text-gray-600		#4B5563
+Text Muted		text-gray-400		#9CA3AF
+Input Background	bg-white			#FFFFFF
+Input Border		border-gray-300		#D1D5DB
+Button (Dark)		bg-gray-700		#374151
+Button (Dark Hover)	hover:bg-gray-600	#4B5563
+Focus Ring		ring-brand		#CCFF00
+
+9. Accessibility (Mobile Specifics)
+
+System Font Scaling: Ensure layouts do not break if the user has their OS font size set to "Large." Use flexible heights (h-auto or min-h-[44px]) rather than fixed heights.
+
+Light Mode Outdoor Visibility: The white cards with gray-900 text provide excellent contrast for outdoor use. Ensure borders (border-gray-200 or border-gray-300) are sufficient to define button edges in bright sunlight.
+
+Keypad Triggers:
+For VINs: Use inputmode="text".
+For Mileage/Price: Use inputmode="decimal" or numeric.
+For Email: Use inputmode="email".
+For URL: Use inputmode="url".
+
+10. Mobile-Specific Patterns
+
+10.1 Profile Card (Mobile)
+JavaScript
+<div className="
+  bg-white border border-gray-200 rounded-xl overflow-hidden
+">
+  {/* Header with gradient accent */}
+  <div className="h-1 bg-gradient-to-r from-brand via-brand/80 to-transparent" />
+
+  <div className="p-4 flex items-center gap-4">
+    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center border-2 border-gray-300">
+      <User className="h-8 w-8 text-gray-700" />
+    </div>
+
+    <div className="flex-1">
+      <h2 className="text-xl font-bold text-gray-900">John Doe</h2>
+      <p className="text-sm text-gray-600 flex items-center gap-1">
+        <Building className="h-4 w-4" />
+        Garage Name
+      </p>
+    </div>
+  </div>
+</div>
+
+10.2 Loading State (Mobile)
+JavaScript
+<div className="min-h-screen flex items-center justify-center bg-[#dfe5ef]">
+  <div className="text-center">
+    <div className="inline-block h-16 w-16 relative">
+      <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
+      <div className="absolute inset-0 rounded-full border-4 border-t-gray-600 border-r-transparent border-b-transparent animate-spin" />
+    </div>
+    <p className="mt-6 text-gray-600 font-medium">
+      Loading...
+    </p>
+  </div>
+</div>
+
+10.3 Error Card (Mobile)
+JavaScript
+<div className="
+  max-w-md w-full bg-white/70 backdrop-blur-sm
+  rounded-2xl border border-red-500/50 p-8 shadow-2xl
+">
+  <div className="flex items-center gap-3 mb-4">
+    <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+      <AlertCircle className="h-6 w-6 text-red-500" />
+    </div>
+    <div>
+      <h2 className="text-xl font-semibold text-gray-900">Error</h2>
+      <p className="text-sm text-gray-600 mt-0.5">{error}</p>
+    </div>
+  </div>
+
+  <button className="
+    w-full bg-gray-700 text-white font-semibold
+    py-3.5 px-4 rounded-xl hover:bg-gray-600
+    transition-all duration-200 shadow-lg
+  ">
+    Back to Login
+  </button>
+</div>

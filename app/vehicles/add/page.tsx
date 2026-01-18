@@ -159,7 +159,7 @@ export default function AddVehiclePage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleBack}
-            className="flex items-center justify-center h-10 w-10 bg-graphite-800 text-white rounded-xl hover:bg-graphite-700 transition-all duration-200 shadow-md border border-graphite-700"
+            className="flex items-center justify-center h-10 w-10 bg-white text-gray-700 rounded-xl hover:bg-gray-100 transition-all duration-200 shadow-md border border-gray-300"
           >
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
@@ -182,30 +182,30 @@ export default function AddVehiclePage() {
         transition={{ duration: 0.5, delay: 0.1 }}
         onSubmit={handleSubmit}
       >
-        <div className="bg-graphite-800 backdrop-blur-sm rounded-xl shadow-lg border border-graphite-700">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200">
           {/* Customer Information */}
-          <div className="p-6 border-b border-graphite-700">
+          <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 bg-brand/20 rounded-xl flex items-center justify-center">
-                <User className="h-5 w-5 text-brand" />
+              <div className="h-10 w-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <User className="h-5 w-5 text-gray-700" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Customer Information</h2>
-                <p className="text-sm text-graphite-400">Owner details</p>
+                <h2 className="text-lg font-semibold text-gray-900">Customer Information</h2>
+                <p className="text-sm text-gray-600">Owner details</p>
               </div>
             </div>
 
             <div className="space-y-4">
               {/* Customer Select */}
               <div>
-                <label htmlFor="customer" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="customer" className="block text-sm font-semibold text-gray-900 mb-2">
                   Customer <span className="text-red-400">*</span>
                 </label>
                 <select
                   id="customer"
                   value={formData.customerId}
                   onChange={(e) => handleInputChange('customerId', e.target.value)}
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer"
                   required
                 >
                   <option value="">Select Customer</option>
@@ -228,7 +228,7 @@ export default function AddVehiclePage() {
                     id="customerName"
                     value={formData.customerName}
                     readOnly
-                    className="w-full px-4 py-3 bg-graphite-900/50 border-2 border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none transition-all cursor-not-allowed opacity-75"
+                    className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none transition-all cursor-not-allowed opacity-75"
                     placeholder="Auto-filled from customer selection"
                   />
                 </div>
@@ -242,7 +242,7 @@ export default function AddVehiclePage() {
                     id="customerPhone"
                     value={formData.customerPhone}
                     readOnly
-                    className="w-full px-4 py-3 bg-graphite-900/50 border-2 border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none transition-all cursor-not-allowed opacity-75"
+                    className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none transition-all cursor-not-allowed opacity-75"
                     placeholder="Auto-filled from customer selection"
                   />
                 </div>
@@ -251,28 +251,28 @@ export default function AddVehiclePage() {
           </div>
 
           {/* Vehicle Information */}
-          <div className="p-6 border-b border-graphite-700">
+          <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 bg-brand/20 rounded-xl flex items-center justify-center">
-                <MotorcycleIcon className="h-5 w-5 text-brand" />
+              <div className="h-10 w-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <MotorcycleIcon className="h-5 w-5 text-gray-700" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Vehicle Information</h2>
-                <p className="text-sm text-graphite-400">Make, model, and year from service scope</p>
+                <h2 className="text-lg font-semibold text-gray-900">Vehicle Information</h2>
+                <p className="text-sm text-gray-600">Make, model, and year from service scope</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               {/* Make */}
               <div>
-                <label htmlFor="make" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="make" className="block text-sm font-semibold text-gray-900 mb-2">
                   Make <span className="text-red-400">*</span>
                 </label>
                 <select
                   id="make"
                   value={formData.make}
                   onChange={(e) => handleInputChange('make', e.target.value)}
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer"
                   required
                 >
                   <option value="">Select Make</option>
@@ -294,7 +294,7 @@ export default function AddVehiclePage() {
                   value={formData.model}
                   onChange={(e) => handleInputChange('model', e.target.value)}
                   disabled={!formData.make}
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 >
                   <option value="">Select Model</option>
@@ -315,7 +315,7 @@ export default function AddVehiclePage() {
                   id="year"
                   value={formData.year}
                   onChange={(e) => handleInputChange('year', e.target.value)}
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer"
                   required
                 >
                   <option value="">Select Year</option>
@@ -337,7 +337,7 @@ export default function AddVehiclePage() {
                 id="category"
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
-                className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer"
               >
                 <option value="">Select Category</option>
                 {categories.map((category) => (
@@ -350,21 +350,21 @@ export default function AddVehiclePage() {
           </div>
 
           {/* Vehicle Identification */}
-          <div className="p-6 border-b border-graphite-700">
+          <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 bg-graphite-700 rounded-xl flex items-center justify-center">
-                <Hash className="h-5 w-5 text-graphite-300" />
+              <div className="h-10 w-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                <Hash className="h-5 w-5 text-gray-700" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Vehicle Identification</h2>
-                <p className="text-sm text-graphite-400">Engine and chassis numbers</p>
+                <h2 className="text-lg font-semibold text-gray-900">Vehicle Identification</h2>
+                <p className="text-sm text-gray-600">Engine and chassis numbers</p>
               </div>
             </div>
 
             <div className="space-y-4">
               {/* Engine Number */}
               <div>
-                <label htmlFor="engineNumber" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="engineNumber" className="block text-sm font-semibold text-gray-900 mb-2">
                   Engine Number <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -373,14 +373,14 @@ export default function AddVehiclePage() {
                   value={formData.engineNumber}
                   onChange={(e) => handleInputChange('engineNumber', e.target.value)}
                   placeholder="e.g., HC23E41001234"
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all font-mono"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all font-mono"
                   required
                 />
               </div>
 
               {/* Chassis Number */}
               <div>
-                <label htmlFor="chassisNumber" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="chassisNumber" className="block text-sm font-semibold text-gray-900 mb-2">
                   Chassis Number (VIN) <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -389,14 +389,14 @@ export default function AddVehiclePage() {
                   value={formData.chassisNumber}
                   onChange={(e) => handleInputChange('chassisNumber', e.target.value)}
                   placeholder="e.g., MH2JC2323PK000001"
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all font-mono"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all font-mono"
                   required
                 />
               </div>
 
               {/* Notes */}
               <div>
-                <label htmlFor="notes" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 mb-2">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -405,7 +405,7 @@ export default function AddVehiclePage() {
                   onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder="Any additional notes about this bike..."
                   rows={3}
-                  className="w-full px-4 py-3 bg-graphite-900 border-2 border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all resize-none"
                 />
               </div>
             </div>
@@ -434,7 +434,7 @@ export default function AddVehiclePage() {
                 disabled={isSubmitting}
                 whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                 whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                className="flex items-center justify-center gap-2 px-8 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]"
+                className="flex items-center justify-center gap-2 px-8 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg shadow-gray-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]"
               >
                 {isSubmitting ? (
                   <>

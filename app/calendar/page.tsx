@@ -250,6 +250,55 @@ export default function CalendarManagementPage() {
     return days
   }
 
+  // Get week dates for week view
+  const getWeekDates = (date: Date) => {
+    const d = new Date(date)
+    const day = d.getDay()
+    const diff = d.getDate() - day
+    const weekStart = new Date(d.setDate(diff))
+    const weekDates = []
+
+    for (let i = 0; i < 7; i++) {
+      const nextDate = new Date(weekStart)
+      nextDate.setDate(weekStart.getDate() + i)
+      weekDates.push(nextDate)
+    }
+
+    return weekDates
+  }
+
+  // Generate time slots for day/week views (8 AM to 6 PM)
+  const generateTimeSlots = () => {
+    const slots = []
+    for (let hour = 8; hour <= 18; hour++) {
+      slots.push(hour)
+    }
+    return slots
+  }
+
+  // Calculate position and height for time blocks
+  const calculateTimeBlockStyle = (startTime: string, endTime?: string) => {
+    if (!startTime) return null
+
+    const startHour = parseInt(startTime.split(':')[0])
+    const startMin = parseInt(startTime.split(':')[1])
+    const startOffset = (startHour - 8) * 60 + startMin // Minutes from 8 AM
+
+    let height = 60 // Default 1 hour height in pixels
+    if (endTime) {
+      const endHour = parseInt(endTime.split(':')[0])
+      const endMin = parseInt(endTime.split(':')[1])
+      const endOffset = (endHour - 8) * 60 + endMin
+      height = Math.max(endOffset - startOffset, 30) // Minimum 30 min height
+      height = (height / 60) * 60 // Convert to pixels (60px per hour)
+    }
+
+    return {
+      top: `${(startOffset / 60) * 60}px`, // 60px per hour
+      height: `${height}px`,
+    }
+  }
+
   // Get filtered activities
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch =
@@ -380,12 +429,12 @@ export default function CalendarManagementPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-1 bg-graphite-800 rounded-xl p-1 border border-graphite-700">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 border border-gray-200">
                 <button
                   onClick={() => setViewMode('month')}
                   className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    viewMode === 'month' ? 'bg-brand text-graphite-900' : 'text-white hover:bg-graphite-700'
+                    'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all',
+                    viewMode === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/50'
                   )}
                 >
                   Month
@@ -393,8 +442,8 @@ export default function CalendarManagementPage() {
                 <button
                   onClick={() => setViewMode('week')}
                   className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    viewMode === 'week' ? 'bg-brand text-graphite-900' : 'text-white hover:bg-graphite-700'
+                    'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all',
+                    viewMode === 'week' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/50'
                   )}
                 >
                   Week
@@ -402,8 +451,8 @@ export default function CalendarManagementPage() {
                 <button
                   onClick={() => setViewMode('day')}
                   className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    viewMode === 'day' ? 'bg-brand text-graphite-900' : 'text-white hover:bg-graphite-700'
+                    'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all',
+                    viewMode === 'day' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/50'
                   )}
                 >
                   Day
@@ -418,23 +467,25 @@ export default function CalendarManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6 bg-graphite-800 backdrop-blur-sm rounded-xl p-4 border border-graphite-700"
+          className="mb-6 bg-white backdrop-blur-sm rounded-xl p-4 border border-gray-200 shadow-card"
         >
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigateDate('prev')}
-              className="p-2 text-white hover:bg-graphite-700 rounded-lg transition-all"
+              className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-bold text-white">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              <h2 className="text-xl font-bold text-gray-900">
+                {viewMode === 'month' && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+                {viewMode === 'week' && `Week of ${getWeekDates(currentDate)[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${getWeekDates(currentDate)[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                {viewMode === 'day' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
               </h2>
             </div>
             <button
               onClick={() => navigateDate('next')}
-              className="p-2 text-white hover:bg-graphite-700 rounded-lg transition-all"
+              className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -448,99 +499,433 @@ export default function CalendarManagementPage() {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="mb-8"
         >
-          <div className="bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden">
-            {/* Weekday Headers */}
-            <div className="grid grid-cols-7 border-b border-graphite-700">
-              {weekDays.map((day) => (
-                <div
-                  key={day}
-                  className="p-3 text-center text-sm font-semibold text-graphite-400 border-r border-graphite-700 last:border-r-0"
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7">
-              {getDaysInMonth(currentDate).map((date, index) => {
-                if (!date) {
-                  return <div key={`empty-${index}`} className="min-h-[100px] bg-graphite-800/50" />
-                }
-
-                const dayActivities = getActivitiesForDate(date)
-                const dayShifts = getShiftsForDate(date)
-                const isToday = formatDate(date) === formatDate(new Date())
-                const isSelected = selectedDate && formatDate(date) === formatDate(selectedDate)
-
-                return (
-                  <motion.div
-                    key={index}
-                    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
-                    className={cn(
-                      'min-h-[100px] p-2 border-r border-b border-graphite-700 last:border-r-0 cursor-pointer transition-all',
-                      isToday && 'bg-brand/5',
-                      isSelected && 'bg-brand/10'
-                    )}
-                    onClick={() => setSelectedDate(date)}
+          {/* Month View */}
+          {viewMode === 'month' && (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-card">
+              {/* Weekday Headers */}
+              <div className="grid grid-cols-7 border-b border-gray-200">
+                {weekDays.map((day) => (
+                  <div
+                    key={day}
+                    className="p-3 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Days */}
+              <div className="grid grid-cols-7">
+                {getDaysInMonth(currentDate).map((date, index) => {
+                  if (!date) {
+                    return <div key={`empty-${index}`} className="min-h-[100px] bg-gray-50/50" />
+                  }
+
+                  const dayActivities = getActivitiesForDate(date)
+                  const dayShifts = getShiftsForDate(date)
+                  const isToday = formatDate(date) === formatDate(new Date())
+                  const isSelected = selectedDate && formatDate(date) === formatDate(selectedDate)
+
+                  return (
+                    <motion.div
+                      key={index}
+                      whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+                      className={cn(
+                        'min-h-[100px] p-2 border-r border-b border-gray-200 last:border-r-0 cursor-pointer transition-all',
+                        isToday && 'bg-brand/5',
+                        isSelected && 'bg-brand/10'
+                      )}
+                      onClick={() => setSelectedDate(date)}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span
+                          className={cn(
+                            'text-sm font-medium',
+                            isToday ? 'bg-brand text-graphite-900 rounded-full w-7 h-7 flex items-center justify-center' : 'text-gray-900'
+                          )}
+                        >
+                          {date.getDate()}
+                        </span>
+                        <div className="flex gap-1">
+                          {dayShifts.length > 0 && (
+                            <div className="h-2 w-2 rounded-full bg-blue-400" title={`${dayShifts.length} shift(s)`} />
+                          )}
+                          {dayActivities.length > 0 && (
+                            <div className="h-2 w-2 rounded-full bg-brand" title={`${dayActivities.length} activit(y/ies)`} />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Activities Preview */}
+                      <div className="space-y-1">
+                        {dayActivities.slice(0, 2).map((activity) => {
+                          const StatusIcon = getStatusIcon(activity.status)
+                          return (
+                            <div
+                              key={activity.id}
+                              className="flex items-center gap-1 text-xs truncate"
+                            >
+                              <StatusIcon className="h-3 w-3 shrink-0 text-brand" />
+                              <span className="text-gray-700 truncate">{activity.title}</span>
+                            </div>
+                          )
+                        })}
+                        {dayActivities.length > 2 && (
+                          <div className="text-xs text-gray-500 pl-4">
+                            +{dayActivities.length - 2} more
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Add button for mobile */}
+                      <div className="md:hidden mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleAddActivity(date)
+                          }}
+                          className="w-full py-1 bg-brand/10 hover:bg-brand/20 rounded text-xs text-brand font-medium transition-all"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Week View */}
+          {viewMode === 'week' && (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-card">
+              {/* Weekday Headers */}
+              <div className="grid grid-cols-8 border-b border-gray-200">
+                <div className="p-3 text-center text-sm font-semibold text-gray-400 border-r border-gray-200 w-20 shrink-0">
+                  Time
+                </div>
+                {getWeekDates(currentDate).map((date, index) => {
+                  const isToday = formatDate(date) === formatDate(new Date())
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        'p-3 text-center border-r border-gray-200 last:border-r-0',
+                        isToday ? 'bg-brand/5' : ''
+                      )}
+                    >
+                      <div className="text-xs font-semibold text-gray-600">
+                        {weekDays[index]}
+                      </div>
+                      <div
                         className={cn(
-                          'text-sm font-medium',
-                          isToday ? 'bg-brand text-graphite-900 rounded-full w-7 h-7 flex items-center justify-center' : 'text-white'
+                          'text-lg font-bold mt-1',
+                          isToday ? 'text-brand' : 'text-gray-900'
                         )}
                       >
                         {date.getDate()}
-                      </span>
-                      <div className="flex gap-1">
-                        {dayShifts.length > 0 && (
-                          <div className="h-2 w-2 rounded-full bg-blue-400" title={`${dayShifts.length} shift(s)`} />
-                        )}
-                        {dayActivities.length > 0 && (
-                          <div className="h-2 w-2 rounded-full bg-brand" title={`${dayActivities.length} activit(y/ies)`} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Time Grid */}
+              <div className="overflow-y-auto max-h-[800px]">
+                {generateTimeSlots().map((hour) => (
+                  <div key={hour} className="grid grid-cols-8 border-b border-gray-100">
+                    {/* Time Label */}
+                    <div className="p-2 text-xs text-gray-500 text-right pr-3 border-r border-gray-200 w-20 shrink-0">
+                      {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                    </div>
+
+                    {/* Time Slots for Each Day */}
+                    {getWeekDates(currentDate).map((date, dayIndex) => {
+                      const dateStr = formatDate(date)
+                      const dayActivities = activities.filter(a => a.date === dateStr && a.startTime)
+                      const dayShifts = shifts.filter(s => s.date === dateStr)
+
+                      return (
+                        <div
+                          key={dayIndex}
+                          className="relative min-h-[60px] border-r border-gray-100 last:border-r-0 hover:bg-gray-50/50 transition-colors"
+                        >
+                          {/* Activities and Shifts */}
+                          {dayActivities.map((activity) => {
+                            const activityHour = parseInt(activity.startTime!.split(':')[0])
+                            if (activityHour !== hour) return null
+
+                            const style = calculateTimeBlockStyle(activity.startTime!, activity.endTime)
+                            const StatusIcon = getStatusIcon(activity.status)
+
+                            return (
+                              <motion.div
+                                key={activity.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={cn(
+                                  'absolute left-1 right-1 p-2 rounded-lg border cursor-pointer hover:shadow-md transition-all',
+                                  'bg-brand/5 border-brand/20 hover:bg-brand/10'
+                                )}
+                                style={style || undefined}
+                                onClick={() => setSelectedDate(date)}
+                              >
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <StatusIcon className="h-3 w-3 shrink-0 text-brand" />
+                                  <span className="text-xs font-semibold text-gray-900 truncate">
+                                    {activity.title}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-gray-600">
+                                  <Users className="h-3 w-3" />
+                                  <span className="truncate">{activity.assignedToName}</span>
+                                </div>
+                                {activity.bay && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {activity.bay}
+                                  </div>
+                                )}
+                              </motion.div>
+                            )
+                          })}
+
+                          {dayShifts.map((shift) => {
+                            const shiftHour = parseInt(shift.startTime.split(':')[0])
+                            if (shiftHour !== hour) return null
+
+                            const style = calculateTimeBlockStyle(shift.startTime, shift.endTime)
+                            const StatusIcon = getStatusIcon(shift.status)
+
+                            return (
+                              <motion.div
+                                key={shift.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={cn(
+                                  'absolute left-1 right-1 p-2 rounded-lg border cursor-pointer hover:shadow-md transition-all',
+                                  'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                                )}
+                                style={style || undefined}
+                                onClick={() => setSelectedDate(date)}
+                              >
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Clock className="h-3 w-3 shrink-0 text-blue-500" />
+                                  <span className="text-xs font-semibold text-gray-900 truncate">
+                                    {shift.employeeName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-gray-600">
+                                  <StatusIcon className="h-3 w-3" />
+                                  <span>{shift.status}</span>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {shift.startTime} - {shift.endTime}
+                                </div>
+                              </motion.div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Day View */}
+          {viewMode === 'day' && (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-card">
+              {/* Day Header */}
+              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-600">
+                      {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mt-1">
+                      {currentDate.getDate()}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {getShiftsForDate(currentDate).length > 0 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                        <Clock className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {getShiftsForDate(currentDate).length} Shifts
+                        </span>
+                      </div>
+                    )}
+                    {getActivitiesForDate(currentDate).length > 0 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-brand/10 border border-brand/20 rounded-lg">
+                        <CalendarIcon className="h-4 w-4 text-brand" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {getActivitiesForDate(currentDate).length} Activities
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Time Slots */}
+              <div className="overflow-y-auto max-h-[800px]">
+                {generateTimeSlots().map((hour) => {
+                  const dateStr = formatDate(currentDate)
+                  const hourActivities = activities.filter(a => {
+                    if (a.date !== dateStr || !a.startTime) return false
+                    const activityHour = parseInt(a.startTime.split(':')[0])
+                    return activityHour === hour
+                  })
+                  const hourShifts = shifts.filter(s => {
+                    if (s.date !== dateStr) return false
+                    const shiftHour = parseInt(s.startTime.split(':')[0])
+                    return shiftHour === hour
+                  })
+
+                  const hasEvents = hourActivities.length > 0 || hourShifts.length > 0
+
+                  return (
+                    <div
+                      key={hour}
+                      className={cn(
+                        'flex border-b border-gray-100 min-h-[60px] hover:bg-gray-50/30 transition-colors',
+                        hasEvents && 'bg-gray-50/50'
+                      )}
+                    >
+                      {/* Time Label */}
+                      <div className="w-20 shrink-0 p-3 text-sm text-gray-500 text-right pr-4 border-r border-gray-200">
+                        {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                      </div>
+
+                      {/* Events */}
+                      <div className="flex-1 p-2 space-y-2">
+                        {/* Activities */}
+                        {hourActivities.map((activity) => {
+                          const StatusIcon = getStatusIcon(activity.status)
+                          return (
+                            <motion.div
+                              key={activity.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className={cn(
+                                'p-3 rounded-lg border hover:shadow-md transition-all cursor-pointer',
+                                'bg-brand/5 border-brand/20 hover:bg-brand/10'
+                              )}
+                              onClick={() => setSelectedDate(currentDate)}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <StatusIcon className="h-4 w-4 text-brand shrink-0" />
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-gray-900">
+                                      {activity.title}
+                                    </h4>
+                                    <p className="text-xs text-gray-600 mt-0.5">
+                                      {activity.description}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {activity.bay && (
+                                    <span className="px-2 py-1 bg-gray-200 rounded text-xs text-gray-900">
+                                      {activity.bay}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={cn(
+                                      'px-2 py-1 rounded text-xs font-semibold border',
+                                      getStatusColor(activity.status)
+                                    )}
+                                  >
+                                    {activity.status}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  <span>{activity.assignedToName}</span>
+                                </div>
+                                {activity.startTime && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    <span>
+                                      {activity.startTime} {activity.endTime && `- ${activity.endTime}`}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )
+                        })}
+
+                        {/* Shifts */}
+                        {hourShifts.map((shift) => {
+                          const StatusIcon = getStatusIcon(shift.status)
+                          return (
+                            <motion.div
+                              key={shift.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className={cn(
+                                'p-3 rounded-lg border hover:shadow-md transition-all cursor-pointer',
+                                'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                              )}
+                              onClick={() => setSelectedDate(currentDate)}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-gray-900">
+                                      {shift.employeeName}
+                                    </h4>
+                                    <p className="text-xs text-gray-600 mt-0.5">
+                                      {shift.startTime} - {shift.endTime}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={cn(
+                                      'px-2 py-1 rounded text-xs font-semibold border',
+                                      getStatusColor(shift.status)
+                                    )}
+                                  >
+                                    <StatusIcon className="h-3 w-3 inline mr-1" />
+                                    {shift.status}
+                                  </span>
+                                </div>
+                              </div>
+                              {shift.breakTime && (
+                                <div className="text-xs text-gray-500 mt-2">
+                                  Break: {shift.breakTime} minutes
+                                </div>
+                              )}
+                            </motion.div>
+                          )
+                        })}
+
+                        {/* Empty slot indicator */}
+                        {!hasEvents && (
+                          <div className="flex items-center justify-center h-full min-h-[40px] text-xs text-gray-400">
+                            <button
+                              onClick={() => handleAddActivity(currentDate)}
+                              className="flex items-center gap-1 px-3 py-1.5 text-gray-400 hover:text-brand hover:bg-brand/5 rounded-lg transition-all border border-dashed border-gray-300 hover:border-brand/30"
+                            >
+                              <Plus className="h-3 w-3" />
+                              <span>Add Activity</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
-
-                    {/* Activities Preview */}
-                    <div className="space-y-1">
-                      {dayActivities.slice(0, 2).map((activity) => {
-                        const StatusIcon = getStatusIcon(activity.status)
-                        return (
-                          <div
-                            key={activity.id}
-                            className="flex items-center gap-1 text-xs truncate"
-                          >
-                            <StatusIcon className="h-3 w-3 shrink-0 text-brand" />
-                            <span className="text-graphite-300 truncate">{activity.title}</span>
-                          </div>
-                        )
-                      })}
-                      {dayActivities.length > 2 && (
-                        <div className="text-xs text-graphite-500 pl-4">
-                          +{dayActivities.length - 2} more
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Add button for mobile */}
-                    <div className="md:hidden mt-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleAddActivity(date)
-                        }}
-                        className="w-full py-1 bg-brand/10 hover:bg-brand/20 rounded text-xs text-brand font-medium transition-all"
-                      >
-                        + Add
-                      </button>
-                    </div>
-                  </motion.div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </motion.div>
 
         {/* Selected Date Details */}
@@ -591,15 +976,15 @@ export default function CalendarManagementPage() {
                       key={shift.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-graphite-800 rounded-xl border border-graphite-700 p-4"
+                      className="bg-white rounded-xl border border-gray-200 p-4"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <Users className="h-5 w-5 text-blue-400" />
                             <div>
-                              <h4 className="text-white font-medium">{shift.employeeName}</h4>
-                              <p className="text-sm text-graphite-400">
+                              <h4 className="text-gray-900 font-medium">{shift.employeeName}</h4>
+                              <p className="text-sm text-gray-600">
                                 {shift.startTime} - {shift.endTime}
                               </p>
                             </div>
@@ -615,7 +1000,7 @@ export default function CalendarManagementPage() {
                               {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
                             </span>
                             {shift.breakTime && (
-                              <span className="text-xs text-graphite-400">
+                              <span className="text-xs text-gray-500">
                                 Break: {shift.breakTime} min
                               </span>
                             )}
@@ -625,14 +1010,14 @@ export default function CalendarManagementPage() {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                            className="p-2 text-gray-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
                           >
                             <Edit className="h-4 w-4" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                            className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                           >
                             <Trash2 className="h-4 w-4" />
                           </motion.button>
@@ -642,9 +1027,9 @@ export default function CalendarManagementPage() {
                   )
                 })}
                 {getShiftsForDate(selectedDate).length === 0 && (
-                  <div className="text-center py-8 bg-graphite-800 rounded-xl border border-graphite-700">
-                    <Clock className="h-12 w-12 text-graphite-600 mx-auto mb-3" />
-                    <p className="text-graphite-400">No shifts scheduled for this day</p>
+                  <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
+                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600">No shifts scheduled for this day</p>
                   </div>
                 )}
               </div>
@@ -664,28 +1049,28 @@ export default function CalendarManagementPage() {
                       key={activity.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-graphite-800 rounded-xl border border-graphite-700 p-4"
+                      className="bg-white rounded-xl border border-gray-200 p-4"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <StatusIcon className="h-5 w-5 text-brand" />
                             <div>
-                              <h4 className="text-white font-medium">{activity.title}</h4>
-                              <p className="text-sm text-graphite-400">{activity.description}</p>
+                              <h4 className="text-gray-900 font-medium">{activity.title}</h4>
+                              <p className="text-sm text-gray-600">{activity.description}</p>
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 ml-8 text-sm">
-                            <span className="text-graphite-400">
-                              Assigned to: <span className="text-white">{activity.assignedToName}</span>
+                            <span className="text-gray-600">
+                              Assigned to: <span className="text-gray-900">{activity.assignedToName}</span>
                             </span>
                             {activity.bay && (
-                              <span className="px-2 py-1 bg-graphite-700 rounded text-xs text-white">
+                              <span className="px-2 py-1 bg-gray-200 rounded text-xs text-gray-900">
                                 {activity.bay}
                               </span>
                             )}
                             {activity.startTime && (
-                              <span className="text-graphite-400">
+                              <span className="text-gray-600">
                                 {activity.startTime} {activity.endTime && `- ${activity.endTime}`}
                               </span>
                             )}
@@ -703,14 +1088,14 @@ export default function CalendarManagementPage() {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                            className="p-2 text-gray-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
                           >
                             <Edit className="h-4 w-4" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                            className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                           >
                             <Trash2 className="h-4 w-4" />
                           </motion.button>
@@ -720,9 +1105,9 @@ export default function CalendarManagementPage() {
                   )
                 })}
                 {getActivitiesForDate(selectedDate).length === 0 && (
-                  <div className="text-center py-8 bg-graphite-800 rounded-xl border border-graphite-700">
-                    <CalendarIcon className="h-12 w-12 text-graphite-600 mx-auto mb-3" />
-                    <p className="text-graphite-400">No activities scheduled for this day</p>
+                  <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
+                    <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600">No activities scheduled for this day</p>
                   </div>
                 )}
               </div>
@@ -737,14 +1122,14 @@ export default function CalendarManagementPage() {
           transition={{ duration: 0.5, delay: 0.25 }}
           className="md:hidden"
         >
-          <h2 className="text-xl font-bold text-white mb-4">All Activities</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">All Activities</h2>
           <div className="space-y-3">
             {filteredActivities.map((activity) => {
               const StatusIcon = getStatusIcon(activity.status)
               return (
                 <motion.div
                   key={activity.id}
-                  className="bg-graphite-800 rounded-xl border border-graphite-700 p-4"
+                  className="bg-white rounded-xl border border-gray-200 p-4"
                 >
                   <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
@@ -752,7 +1137,7 @@ export default function CalendarManagementPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-white font-medium truncate">{activity.title}</h3>
+                        <h3 className="text-gray-900 font-medium truncate">{activity.title}</h3>
                         <span
                           className={cn(
                             'px-2 py-0.5 rounded-md text-xs font-semibold border flex-shrink-0',
@@ -762,8 +1147,8 @@ export default function CalendarManagementPage() {
                           {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
                         </span>
                       </div>
-                      <p className="text-sm text-graphite-400 mb-2">{activity.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-graphite-500">
+                      <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Users className="h-3 w-3" />
                         <span>{activity.assignedToName}</span>
                         {activity.bay && (

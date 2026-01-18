@@ -18,10 +18,10 @@ export function SidebarLogo() {
   return (
     <a
       href="/"
-      className="relative z-20 flex items-center text-sm font-normal text-white group"
+      className="relative z-20 flex items-center text-sm font-normal text-graphite-900 group"
     >
       <motion.div
-        className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-brand to-brand/80 flex items-center justify-center shadow-lg shadow-brand/20 group-hover:shadow-brand/40 transition-shadow duration-300"
+        className="h-8 w-8 shrink-0 rounded-lg bg-graphite-900 flex items-center justify-center shadow-lg shadow-graphite-900/20 group-hover:shadow-graphite-900/40 transition-shadow duration-300"
         animate={{
           scale: open ? 1 : 1.1,
         }}
@@ -30,7 +30,7 @@ export function SidebarLogo() {
           ease: [0.25, 0.1, 0.25, 1],
         }}
       >
-        <span className="text-graphite-900 font-bold text-xl">R</span>
+        <span className="text-brand font-bold text-xl">R</span>
       </motion.div>
       <motion.span
         initial={false}
@@ -43,7 +43,7 @@ export function SidebarLogo() {
           ease: [0.25, 0.1, 0.25, 1],
           delay: animate && open ? 0.05 : 0,
         }}
-        className="font-bold text-lg whitespace-pre text-white inline-block tracking-tight ml-2"
+        className="font-bold text-lg whitespace-pre text-graphite-900 inline-block tracking-tight ml-2"
         style={{
           display: animate && !open ? 'none' : 'inline-block',
         }}

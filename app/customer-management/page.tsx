@@ -419,7 +419,7 @@ export default function CustomerManagementPage() {
       case 'inactive':
         return 'text-status-error bg-status-error/10 border-status-error/30'
       default:
-        return 'text-graphite-400'
+        return 'text-gray-400'
     }
   }
 
@@ -432,8 +432,8 @@ export default function CustomerManagementPage() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-brand mx-auto mb-4" />
-          <p className="text-graphite-600 font-medium">Loading customers...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading customers...</p>
         </motion.div>
       </div>
     )
@@ -449,8 +449,8 @@ export default function CustomerManagementPage() {
           className="max-w-md w-full bg-white/70 backdrop-blur-sm rounded-2xl border border-red-500/50 p-8 shadow-2xl"
         >
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-graphite-900 text-center mb-2">Error Loading Customers</h2>
-          <p className="text-sm text-graphite-600 text-center">{error}</p>
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">Error Loading Customers</h2>
+          <p className="text-sm text-gray-600 text-center">{error}</p>
         </motion.div>
       </div>
     )
@@ -468,12 +468,12 @@ export default function CustomerManagementPage() {
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-1 bg-graphite-600 rounded-full" />
+              <div className="h-10 w-1 bg-gray-700 rounded-full" />
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+                <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900 tracking-tight">
                   Customer Management
                 </h1>
-                <p className="text-sm md:text-base text-graphite-600 mt-1">
+                <p className="text-sm md:text-base text-gray-600 mt-1">
                   Manage your garage customers
                 </p>
               </div>
@@ -482,7 +482,7 @@ export default function CustomerManagementPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAddCustomer}
-              className="flex items-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+              className="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg"
             >
               <UserPlus className="h-5 w-5" />
               <span className="hidden sm:inline">Add Customer</span>
@@ -496,28 +496,28 @@ export default function CustomerManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6 bg-graphite-800 backdrop-blur-sm rounded-xl p-4 border border-graphite-700"
+          className="mb-6 bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
         >
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search customers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
               />
             </div>
 
             {/* Status Filter */}
             <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -534,9 +534,9 @@ export default function CustomerManagementPage() {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="mb-6 flex items-center justify-between"
         >
-          <p className="text-sm text-graphite-700">
-            Showing <span className="font-semibold text-graphite-900">{startIndex + 1}-{Math.min(endIndex, filteredCustomers.length)}</span> of{' '}
-            <span className="font-semibold text-graphite-900">{filteredCustomers.length}</span> customers
+          <p className="text-sm text-gray-700">
+            Showing <span className="font-semibold text-gray-900">{startIndex + 1}-{Math.min(endIndex, filteredCustomers.length)}</span> of{' '}
+            <span className="font-semibold text-gray-900">{filteredCustomers.length}</span> customers
           </p>
         </motion.div>
 
@@ -555,13 +555,13 @@ export default function CustomerManagementPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
-                className="bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden"
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
               >
                 {/* Card Header - Name, Status & Actions */}
-                <div className="p-4 border-b border-graphite-700/50">
+                <div className="p-4 border-b border-gray-200">
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center border border-gray-300 flex-shrink-0">
                       {customer.profilePicture ? (
                         <img
                           src={customer.profilePicture}
@@ -569,14 +569,14 @@ export default function CustomerManagementPage() {
                           className="h-full w-full rounded-xl object-cover"
                         />
                       ) : (
-                        <Users className="h-6 w-6 text-brand" />
+                        <Users className="h-6 w-6 text-gray-600" />
                       )}
                     </div>
 
                     {/* Name & Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-white truncate">
+                        <h3 className="text-base font-semibold text-gray-900 truncate">
                           {customer.firstName} {customer.lastName}
                         </h3>
                         <span
@@ -588,7 +588,7 @@ export default function CustomerManagementPage() {
                           {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
                         </span>
                       </div>
-                      <p className="text-sm text-graphite-400">Customer since {customer.customerSince || 'N/A'}</p>
+                      <p className="text-sm text-gray-500">Customer since {customer.customerSince || 'N/A'}</p>
                     </div>
 
                     {/* Actions */}
@@ -596,14 +596,14 @@ export default function CustomerManagementPage() {
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleViewCustomer(customer)}
-                        className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
                       >
                         <Eye className="h-4 w-4" />
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleDeleteCustomer(customer)}
-                        className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                        className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                       >
                         <Trash2 className="h-4 w-4" />
                       </motion.button>
@@ -614,7 +614,7 @@ export default function CustomerManagementPage() {
                 {/* Card Body - Details */}
                 <div className="p-4 space-y-3">
                   {/* Location */}
-                  <div className="flex items-center gap-2 text-sm text-graphite-400">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
                     <MapPin className="h-4 w-4 shrink-0" />
                     <span className="truncate">
                       {customer.city}{customer.city && customer.state ? ', ' : ''}{customer.state}
@@ -623,21 +623,21 @@ export default function CustomerManagementPage() {
 
                   {/* Vehicle Count */}
                   {customer.totalVehicles !== undefined && (
-                    <div className="flex items-center gap-2 text-sm text-graphite-400">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MotorcycleIcon className="h-4 w-4 shrink-0" />
                       <span>{customer.totalVehicles} Vehicle{customer.totalVehicles !== 1 ? 's' : ''}</span>
                     </div>
                   )}
 
                   {/* Contact Info */}
-                  <div className="space-y-2 pt-2 border-t border-graphite-700/30">
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
                     <div className="flex items-center gap-3 text-sm">
-                      <Mail className="h-4 w-4 text-graphite-500 shrink-0" />
-                      <span className="text-graphite-300 truncate flex-1">{customer.email}</span>
+                      <Mail className="h-4 w-4 text-gray-500 shrink-0" />
+                      <span className="text-gray-700 truncate flex-1">{customer.email}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
-                      <Phone className="h-4 w-4 text-graphite-500 shrink-0" />
-                      <span className="text-graphite-300">{customer.phoneNumber}</span>
+                      <Phone className="h-4 w-4 text-gray-500 shrink-0" />
+                      <span className="text-gray-700">{customer.phoneNumber}</span>
                     </div>
                   </div>
                 </div>
@@ -646,43 +646,43 @@ export default function CustomerManagementPage() {
           </div>
 
           {/* Desktop Table Layout */}
-          <div className="hidden md:block bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden">
+          <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-graphite-700/50">
+                <tr className="border-b border-gray-200">
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Customer</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Contact</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Location</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Vehicles</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Vehicles</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Status</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</span>
                   </th>
                   <th className="px-6 py-4 text-right">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Actions</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-graphite-700/30">
+              <tbody className="divide-y divide-gray-100">
                 {paginatedCustomers.map((customer, index) => (
                   <motion.tr
                     key={customer.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.03 }}
-                    className="hover:bg-graphite-700/30 transition-colors duration-150"
+                    className="hover:bg-gray-50 transition-colors duration-150"
                   >
                     {/* Customer Name & Avatar */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center border border-gray-300 flex-shrink-0">
                           {customer.profilePicture ? (
                             <img
                               src={customer.profilePicture}
@@ -690,12 +690,12 @@ export default function CustomerManagementPage() {
                               className="h-full w-full rounded-lg object-cover"
                             />
                           ) : (
-                            <Users className="h-5 w-5 text-brand" />
+                            <Users className="h-5 w-5 text-gray-600" />
                           )}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">{customer.firstName} {customer.lastName}</div>
-                          <div className="text-xs text-graphite-400">Since {customer.customerSince || 'N/A'}</div>
+                          <div className="text-sm font-medium text-gray-900">{customer.firstName} {customer.lastName}</div>
+                          <div className="text-xs text-gray-500">Since {customer.customerSince || 'N/A'}</div>
                         </div>
                       </div>
                     </td>
@@ -703,11 +703,11 @@ export default function CustomerManagementPage() {
                     {/* Contact */}
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-graphite-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Mail className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate max-w-[200px]">{customer.email}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-graphite-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Phone className="h-3.5 w-3.5 shrink-0" />
                           <span>{customer.phoneNumber}</span>
                         </div>
@@ -716,7 +716,7 @@ export default function CustomerManagementPage() {
 
                     {/* Location */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-graphite-400">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
                         <span>{customer.city}{customer.city && customer.state ? ', ' : ''}{customer.state}</span>
                       </div>
@@ -724,8 +724,8 @@ export default function CustomerManagementPage() {
 
                     {/* Vehicles */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-white">
-                        <MotorcycleIcon className="h-4 w-4 text-brand" />
+                      <div className="flex items-center gap-2 text-sm text-gray-900">
+                        <MotorcycleIcon className="h-4 w-4 text-gray-600" />
                         <span>{customer.totalVehicles !== undefined ? customer.totalVehicles : 0}</span>
                       </div>
                     </td>
@@ -749,7 +749,7 @@ export default function CustomerManagementPage() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleViewCustomer(customer)}
-                          className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
                           title="View"
                         >
                           <Eye className="h-4 w-4" />
@@ -758,7 +758,7 @@ export default function CustomerManagementPage() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleDeleteCustomer(customer)}
-                          className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                          className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -773,10 +773,10 @@ export default function CustomerManagementPage() {
 
           {/* Empty State */}
           {paginatedCustomers.length === 0 && (
-            <div className="text-center py-16 bg-graphite-800 rounded-xl border border-graphite-700">
-              <Users className="h-16 w-16 text-graphite-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No customers found</h3>
-              <p className="text-graphite-400 mb-6">
+            <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+              <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No customers found</h3>
+              <p className="text-gray-600 mb-6">
                 {searchQuery || statusFilter !== 'all'
                   ? 'Try adjusting your search or filters'
                   : 'Get started by adding your first customer'}
@@ -786,7 +786,7 @@ export default function CustomerManagementPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleAddCustomer}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg"
                 >
                   <UserPlus className="h-5 w-5" />
                   Add Your First Customer
@@ -804,9 +804,9 @@ export default function CustomerManagementPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-6 flex items-center justify-between"
           >
-            <div className="text-sm text-graphite-700">
-              Page <span className="font-medium text-graphite-900">{currentPage}</span> of{' '}
-              <span className="font-medium text-graphite-900">{totalPages}</span>
+            <div className="text-sm text-gray-700">
+              Page <span className="font-medium text-gray-900">{currentPage}</span> of{' '}
+              <span className="font-medium text-gray-900">{totalPages}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -815,7 +815,7 @@ export default function CustomerManagementPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Previous
               </motion.button>
@@ -836,7 +836,7 @@ export default function CustomerManagementPage() {
                     return (
                       <React.Fragment key={page}>
                         {showEllipsis && (
-                          <span className="px-2 text-graphite-500">...</span>
+                          <span className="px-2 text-gray-500">...</span>
                         )}
                         <motion.button
                           whileHover={{ scale: currentPage !== page ? 1.05 : 1 }}
@@ -845,8 +845,8 @@ export default function CustomerManagementPage() {
                           className={cn(
                             'min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all',
                             currentPage === page
-                              ? 'bg-brand text-graphite-900'
-                              : 'bg-graphite-800 border border-graphite-700 text-white hover:bg-graphite-700'
+                              ? 'bg-gray-700 text-white'
+                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                           )}
                         >
                           {page}
@@ -861,7 +861,7 @@ export default function CustomerManagementPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next
               </motion.button>
@@ -924,9 +924,9 @@ function DeleteConfirmationModal({ isOpen, onClose, customerName, onConfirm }: D
 
         {/* Title and Message */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-graphite-900 mb-2">Delete Customer?</h2>
-          <p className="text-graphite-600">
-            Are you sure you want to delete <span className="font-semibold text-graphite-900">{customerName}</span>? This action cannot be undone.
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Customer?</h2>
+          <p className="text-gray-600">
+            Are you sure you want to delete <span className="font-semibold text-gray-900">{customerName}</span>? This action cannot be undone.
           </p>
         </div>
 
@@ -935,7 +935,7 @@ function DeleteConfirmationModal({ isOpen, onClose, customerName, onConfirm }: D
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

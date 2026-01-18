@@ -153,7 +153,7 @@ export default function EmployeeProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#efffb1]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#dfe5ef' }}>
         <div className="text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -162,8 +162,8 @@ export default function EmployeeProfilePage() {
             className="relative"
           >
             <div className="inline-block h-16 w-16 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-brand/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-brand border-r-transparent border-b-transparent animate-spin" />
+              <div className="absolute inset-0 rounded-full border-4 border-graphite-900/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-graphite-900 border-r-transparent border-b-transparent animate-spin" />
             </div>
           </motion.div>
           <motion.p
@@ -181,7 +181,7 @@ export default function EmployeeProfilePage() {
 
   if (error || !employee) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#efffb1] p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#dfe5ef' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -201,7 +201,7 @@ export default function EmployeeProfilePage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/employee-management')}
-            className="w-full bg-brand text-graphite-900 font-semibold py-3.5 px-4 rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20 mt-6 flex items-center justify-center gap-2"
+            className="w-full bg-graphite-900 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-graphite-800 transition-all duration-200 shadow-lg shadow-graphite-900/20 mt-6 flex items-center justify-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Employees
@@ -213,7 +213,7 @@ export default function EmployeeProfilePage() {
 
   return (
     <React.Fragment>
-      <main className="flex-1 overflow-y-auto bg-[#efffb1] pb-safe md:pb-0">
+      <main className="flex-1 overflow-y-auto pb-safe md:pb-0" style={{ backgroundColor: '#dfe5ef' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Header */}
           <motion.header
@@ -249,8 +249,8 @@ export default function EmployeeProfilePage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mb-6 md:mb-8"
           >
-            <div className="hidden md:block relative overflow-hidden rounded-2xl bg-graphite-800 backdrop-blur-sm border border-graphite-700 shadow-2xl">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-graphite-600 via-graphite-600/80 to-transparent" />
+            <div className="hidden md:block relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-2xl">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gray-200 via-gray-200/80 to-transparent" />
 
               <div className="relative p-4 md:p-8">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 md:gap-6">
@@ -260,7 +260,7 @@ export default function EmployeeProfilePage() {
                     whileTap={{ scale: 0.95 }}
                     className="relative group mx-auto lg:mx-0"
                   >
-                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border-2 border-brand/30 shadow-lg shadow-brand/20 overflow-hidden">
+                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-gradient-to-br from-graphite-900/20 to-graphite-900/5 flex items-center justify-center border-2 border-graphite-900/30 shadow-lg shadow-graphite-900/20 overflow-hidden">
                       {employee.profilePicture ? (
                         <img
                           src={employee.profilePicture}
@@ -268,11 +268,11 @@ export default function EmployeeProfilePage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <User className="h-10 w-10 md:h-12 md:w-12 text-brand" />
+                        <User className="h-10 w-10 md:h-12 md:w-12 text-graphite-900" />
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-brand flex items-center justify-center shadow-lg">
-                      <CheckCircle2 className="h-4 w-4 text-graphite-900" />
+                    <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-graphite-900 flex items-center justify-center shadow-lg">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
                     </div>
                   </motion.div>
 
@@ -280,19 +280,19 @@ export default function EmployeeProfilePage() {
                   <div className="flex-1 text-center lg:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 md:gap-4">
                       <div>
-                        <h2 className="text-xl md:text-2xl font-bold text-brand mb-1">
+                        <h2 className="text-xl md:text-2xl font-bold text-graphite-900 mb-1">
                           {employee.firstName} {employee.lastName}
                         </h2>
-                        <p className="text-sm md:text-base text-graphite-300 flex items-center justify-center lg:justify-start gap-2">
-                          <Building className="h-4 w-4 text-brand" />
+                        <p className="text-sm md:text-base text-gray-700 flex items-center justify-center lg:justify-start gap-2">
+                          <Building className="h-4 w-4 text-graphite-900" />
                           {employee.garageName}
                         </p>
                       </div>
 
                       {/* Role Badge */}
-                      <div className="flex items-center justify-center lg:justify-start gap-2 px-3 md:px-4 py-2 bg-brand/10 border border-brand/30 rounded-xl">
-                        <Shield className="h-4 w-4 text-brand" />
-                        <span className="text-brand font-semibold text-sm capitalize">
+                      <div className="flex items-center justify-center lg:justify-start gap-2 px-3 md:px-4 py-2 bg-graphite-900/10 border border-graphite-900/30 rounded-xl">
+                        <Shield className="h-4 w-4 text-graphite-900" />
+                        <span className="text-graphite-900 font-semibold text-sm capitalize">
                           {employee.userRole}
                         </span>
                       </div>
@@ -303,15 +303,15 @@ export default function EmployeeProfilePage() {
             </div>
 
             {/* Mobile version */}
-            <div className="md:hidden relative overflow-hidden rounded-2xl bg-graphite-800 backdrop-blur-sm border border-graphite-700 shadow-2xl">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-graphite-600 via-graphite-600/80 to-transparent" />
+            <div className="md:hidden relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-2xl">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gray-200 via-gray-200/80 to-transparent" />
               <div className="relative p-6">
                 <div className="flex flex-col gap-4">
                   <motion.div
                     whileTap={{ scale: 0.95 }}
                     className="relative group mx-auto"
                   >
-                    <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border-2 border-brand/30 shadow-lg shadow-brand/20 overflow-hidden">
+                    <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-graphite-900/20 to-graphite-900/5 flex items-center justify-center border-2 border-graphite-900/30 shadow-lg shadow-graphite-900/20 overflow-hidden">
                       {employee.profilePicture ? (
                         <img
                           src={employee.profilePicture}
@@ -319,26 +319,26 @@ export default function EmployeeProfilePage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <User className="h-12 w-12 text-brand" />
+                        <User className="h-12 w-12 text-graphite-900" />
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-brand flex items-center justify-center shadow-lg border-2 border-graphite-800">
-                      <CheckCircle2 className="h-4 w-4 text-graphite-900" />
+                    <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-graphite-900 flex items-center justify-center shadow-lg border-2 border-graphite-800">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
                     </div>
                   </motion.div>
 
                   <div className="text-center">
-                    <h2 className="text-xl font-bold text-brand mb-2">
+                    <h2 className="text-xl font-bold text-graphite-900 mb-2">
                       {employee.firstName} {employee.lastName}
                     </h2>
-                    <p className="text-sm text-graphite-300 flex items-center justify-center gap-2 mb-3">
-                      <Building className="h-4 w-4 text-brand" />
+                    <p className="text-sm text-gray-700 flex items-center justify-center gap-2 mb-3">
+                      <Building className="h-4 w-4 text-graphite-900" />
                       {employee.garageName}
                     </p>
 
-                    <div className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand/10 border border-brand/30 rounded-xl min-h-[44px]">
-                      <Shield className="h-4 w-4 text-brand" />
-                      <span className="text-brand font-semibold text-sm capitalize">
+                    <div className="flex items-center justify-center gap-2 px-4 py-2.5 bg-graphite-900/10 border border-graphite-900/30 rounded-xl min-h-[44px]">
+                      <Shield className="h-4 w-4 text-graphite-900" />
+                      <span className="text-graphite-900 font-semibold text-sm capitalize">
                         {employee.userRole}
                       </span>
                     </div>
@@ -356,27 +356,52 @@ export default function EmployeeProfilePage() {
             className="mb-4 md:mb-6"
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full md:w-auto md:justify-start justify-center bg-graphite-800/80 border border-graphite-700 gap-1 md:gap-1">
+              <TabsList className="hidden md:flex items-center gap-1">
                 <TabsTrigger
                   value="employee-information"
-                  className="flex-1 md:flex-none flex items-center justify-center md:justify-start gap-1.5 md:gap-2 min-h-[44px] px-3 md:px-4 active:scale-[0.98] data-[state=active]:bg-brand data-[state=active]:text-graphite-900"
+                  className="flex items-center gap-2"
                 >
-                  <User className="hidden md:block h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-xs md:text-sm font-medium">Employee Information</span>
+                  <User className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>Employee Information</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="work-allocation"
-                  className="flex-1 md:flex-none flex items-center justify-center md:justify-start gap-1.5 md:gap-2 min-h-[44px] px-3 md:px-4 active:scale-[0.98] data-[state=active]:bg-brand data-[state=active]:text-graphite-900"
+                  className="flex items-center gap-2"
                 >
-                  <Briefcase className="hidden md:block h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-xs md:text-sm font-medium">Work Allocation</span>
+                  <Briefcase className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>Work Allocation</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="productivity"
-                  className="flex-1 md:flex-none flex items-center justify-center md:justify-start gap-1.5 md:gap-2 min-h-[44px] px-3 md:px-4 active:scale-[0.98] data-[state=active]:bg-brand data-[state=active]:text-graphite-900"
+                  className="flex items-center gap-2"
                 >
-                  <TrendingUp className="hidden md:block h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-xs md:text-sm font-medium">Productivity</span>
+                  <TrendingUp className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>Productivity</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Mobile Tabs - Full Width */}
+              <TabsList className="md:hidden flex w-full">
+                <TabsTrigger
+                  value="employee-information"
+                  className="flex-1 flex items-center justify-center gap-1.5"
+                >
+                  <User className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span className="text-xs font-medium">Employee</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="work-allocation"
+                  className="flex-1 flex items-center justify-center gap-1.5"
+                >
+                  <Briefcase className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span className="text-xs font-medium">Work</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="productivity"
+                  className="flex-1 flex items-center justify-center gap-1.5"
+                >
+                  <TrendingUp className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span className="text-xs font-medium">Productivity</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -393,8 +418,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Personal Information"
                       icon={User}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <InfoItem label="First Name" value={employee.firstName} field="firstName" onEdit={openEditModal} />
                       <InfoItem label="Last Name" value={employee.lastName} field="lastName" onEdit={openEditModal} />
@@ -425,8 +450,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Location Information"
                       icon={MapPin}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                       className="h-full"
                     >
                       <InfoItem label="Street Address" value={employee.address} field="address" onEdit={openEditModal} />
@@ -483,8 +508,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Identity Verification"
                       icon={Shield}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                       className="h-full"
                     >
                       <InfoItem
@@ -506,8 +531,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Account Details"
                       icon={Calendar}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <InfoItem
                         label="Account Status"
@@ -553,19 +578,19 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Active Jobs"
                       icon={Briefcase}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       {/* Job Item 1 */}
-                      <div className="py-3 px-3 -mx-3 border-b border-graphite-700">
+                      <div className="py-3 px-3 -mx-3 border-b border-gray-200">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white font-medium truncate">Job #2024-001</span>
+                              <span className="text-gray-900 font-medium truncate">Job #2024-001</span>
                               <span className="px-2 py-0.5 bg-status-success/20 text-status-success text-xs font-medium rounded-full">In Progress</span>
                             </div>
-                            <p className="text-sm text-graphite-400 mb-2">BMW R 1250 GS - Brake Pad Replacement</p>
-                            <div className="flex items-center gap-2 text-xs text-graphite-500">
+                            <p className="text-sm text-gray-600 mb-2">BMW R 1250 GS - Brake Pad Replacement</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
                               <Clock className="h-3 w-3" />
                               <span>Started 2 hours ago</span>
                             </div>
@@ -574,15 +599,15 @@ export default function EmployeeProfilePage() {
                       </div>
 
                       {/* Job Item 2 */}
-                      <div className="py-3 px-3 -mx-3 border-b border-graphite-700">
+                      <div className="py-3 px-3 -mx-3 border-b border-gray-200">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white font-medium truncate">Job #2024-003</span>
-                              <span className="px-2 py-0.5 bg-brand/20 text-brand text-xs font-medium rounded-full">Assigned</span>
+                              <span className="text-gray-900 font-medium truncate">Job #2024-003</span>
+                              <span className="px-2 py-0.5 bg-graphite-900/20 text-graphite-900 text-xs font-medium rounded-full">Assigned</span>
                             </div>
-                            <p className="text-sm text-graphite-400 mb-2">Honda CBR 600RR - Oil Change & Filter</p>
-                            <div className="flex items-center gap-2 text-xs text-graphite-500">
+                            <p className="text-sm text-gray-600 mb-2">Honda CBR 600RR - Oil Change & Filter</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
                               <Calendar className="h-3 w-3" />
                               <span>Scheduled for tomorrow</span>
                             </div>
@@ -595,11 +620,11 @@ export default function EmployeeProfilePage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white font-medium truncate">Job #2024-005</span>
-                              <span className="px-2 py-0.5 bg-brand/20 text-brand text-xs font-medium rounded-full">Assigned</span>
+                              <span className="text-gray-900 font-medium truncate">Job #2024-005</span>
+                              <span className="px-2 py-0.5 bg-graphite-900/20 text-graphite-900 text-xs font-medium rounded-full">Assigned</span>
                             </div>
-                            <p className="text-sm text-graphite-400 mb-2">Kawasaki Ninja 400 - Chain Adjustment</p>
-                            <div className="flex items-center gap-2 text-xs text-graphite-500">
+                            <p className="text-sm text-gray-600 mb-2">Kawasaki Ninja 400 - Chain Adjustment</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
                               <Calendar className="h-3 w-3" />
                               <span>Scheduled for Jan 20</span>
                             </div>
@@ -618,8 +643,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Weekly Schedule"
                       icon={Calendar}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                       className="h-full"
                     >
                       <div className="space-y-2">
@@ -630,19 +655,19 @@ export default function EmployeeProfilePage() {
                           { day: 'Thursday', date: 'Jan 16', hours: '9:00 AM - 6:00 PM', jobs: 6 },
                           { day: 'Friday', date: 'Jan 17', hours: '9:00 AM - 6:00 PM', jobs: 4 },
                         ].map((schedule, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-2 px-3 -mx-3 rounded-lg hover:bg-graphite-700/30 transition-colors">
+                          <div key={idx} className="flex items-center justify-between py-2 px-3 -mx-3 rounded-lg hover:bg-gray-50 transition-colors">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
-                                <span className="text-brand text-xs font-semibold">{schedule.day.slice(0, 3)}</span>
+                              <div className="w-10 h-10 rounded-lg bg-graphite-900/10 flex items-center justify-center">
+                                <span className="text-graphite-900 text-xs font-semibold">{schedule.day.slice(0, 3)}</span>
                               </div>
                               <div>
-                                <p className="text-sm text-white font-medium">{schedule.day}</p>
-                                <p className="text-xs text-graphite-500">{schedule.date}</p>
+                                <p className="text-sm text-gray-900 font-medium">{schedule.day}</p>
+                                <p className="text-xs text-gray-500">{schedule.date}</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs text-graphite-400">{schedule.hours}</p>
-                              <p className="text-xs text-brand font-medium">{schedule.jobs} jobs</p>
+                              <p className="text-xs text-gray-600">{schedule.hours}</p>
+                              <p className="text-xs text-graphite-900 font-medium">{schedule.jobs} jobs</p>
                             </div>
                           </div>
                         ))}
@@ -664,21 +689,21 @@ export default function EmployeeProfilePage() {
                       className="h-full"
                     >
                       <div className="grid grid-cols-2 gap-4 p-2">
-                        <div className="text-center p-3 bg-graphite-700/30 rounded-xl">
+                        <div className="text-center p-3 bg-gray-50 rounded-xl">
                           <p className="text-2xl font-bold text-status-success mb-1">24</p>
-                          <p className="text-xs text-graphite-400">Completed</p>
+                          <p className="text-xs text-gray-600">Completed</p>
                         </div>
-                        <div className="text-center p-3 bg-graphite-700/30 rounded-xl">
-                          <p className="text-2xl font-bold text-brand mb-1">8</p>
-                          <p className="text-xs text-graphite-400">In Progress</p>
+                        <div className="text-center p-3 bg-gray-50 rounded-xl">
+                          <p className="text-2xl font-bold text-graphite-900 mb-1">8</p>
+                          <p className="text-xs text-gray-600">In Progress</p>
                         </div>
-                        <div className="text-center p-3 bg-graphite-700/30 rounded-xl">
-                          <p className="text-2xl font-bold text-graphite-400 mb-1">5</p>
-                          <p className="text-xs text-graphite-400">Pending</p>
+                        <div className="text-center p-3 bg-gray-50 rounded-xl">
+                          <p className="text-2xl font-bold text-gray-400 mb-1">5</p>
+                          <p className="text-xs text-gray-600">Pending</p>
                         </div>
-                        <div className="text-center p-3 bg-graphite-700/30 rounded-xl">
+                        <div className="text-center p-3 bg-gray-50 rounded-xl">
                           <p className="text-2xl font-bold text-status-error mb-1">1</p>
-                          <p className="text-xs text-graphite-400">Overdue</p>
+                          <p className="text-xs text-gray-600">Overdue</p>
                         </div>
                       </div>
                     </InfoCard>
@@ -698,35 +723,35 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Performance Overview"
                       icon={BarChart3}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <div className="space-y-4">
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-graphite-400">Job Completion Rate</span>
-                            <span className="text-sm text-white font-semibold">94%</span>
+                            <span className="text-sm text-gray-600">Job Completion Rate</span>
+                            <span className="text-sm text-gray-900 font-semibold">94%</span>
                           </div>
-                          <div className="h-2 bg-graphite-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-brand to-status-success rounded-full" style={{ width: '94%' }} />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-graphite-400">On-Time Delivery</span>
-                            <span className="text-sm text-white font-semibold">89%</span>
-                          </div>
-                          <div className="h-2 bg-graphite-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-brand to-status-success rounded-full" style={{ width: '89%' }} />
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-graphite-900 to-status-success rounded-full" style={{ width: '94%' }} />
                           </div>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-graphite-400">Customer Satisfaction</span>
-                            <span className="text-sm text-white font-semibold">4.7/5.0</span>
+                            <span className="text-sm text-gray-600">On-Time Delivery</span>
+                            <span className="text-sm text-gray-900 font-semibold">89%</span>
                           </div>
-                          <div className="h-2 bg-graphite-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-brand to-status-success rounded-full" style={{ width: '94%' }} />
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-graphite-900 to-status-success rounded-full" style={{ width: '89%' }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-gray-600">Customer Satisfaction</span>
+                            <span className="text-sm text-gray-900 font-semibold">4.7/5.0</span>
+                          </div>
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-graphite-900 to-status-success rounded-full" style={{ width: '94%' }} />
                           </div>
                         </div>
                       </div>
@@ -742,8 +767,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Weekly Performance"
                       icon={Activity}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <div className="space-y-3">
                         {[
@@ -754,20 +779,20 @@ export default function EmployeeProfilePage() {
                           { day: 'Fri', jobs: 4, completed: 4 },
                         ].map((item) => (
                           <div key={item.day} className="flex items-center gap-3">
-                            <span className="text-xs text-graphite-400 w-8">{item.day}</span>
-                            <div className="flex-1 h-8 bg-graphite-700/30 rounded-lg flex items-end gap-1 p-1">
+                            <span className="text-xs text-gray-600 w-8">{item.day}</span>
+                            <div className="flex-1 h-8 bg-gray-100 rounded-lg flex items-end gap-1 p-1">
                               {Array.from({ length: item.jobs }).map((_, i) => (
                                 <div
                                   key={i}
                                   className={cn(
                                     "flex-1 rounded-sm",
-                                    i < item.completed ? "bg-brand" : "bg-graphite-600"
+                                    i < item.completed ? "bg-graphite-900" : "bg-gray-300"
                                   )}
                                   style={{ height: '100%' }}
                                 />
                               ))}
                             </div>
-                            <span className="text-xs text-white font-medium w-12 text-right">{item.completed}/{item.jobs}</span>
+                            <span className="text-xs text-gray-900 font-medium w-12 text-right">{item.completed}/{item.jobs}</span>
                           </div>
                         ))}
                       </div>
@@ -783,28 +808,28 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Key Metrics"
                       icon={Target}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between py-2 px-3 bg-graphite-700/20 rounded-xl">
+                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
                           <div className="flex items-center gap-2">
-                            <Briefcase className="h-4 w-4 text-brand" />
-                            <span className="text-sm text-graphite-400">Total Jobs</span>
+                            <Briefcase className="h-4 w-4 text-graphite-900" />
+                            <span className="text-sm text-gray-600">Total Jobs</span>
                           </div>
-                          <span className="text-lg font-bold text-white">156</span>
+                          <span className="text-lg font-bold text-gray-900">156</span>
                         </div>
-                        <div className="flex items-center justify-between py-2 px-3 bg-graphite-700/20 rounded-xl">
+                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
                           <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-brand" />
-                            <span className="text-sm text-graphite-400">Avg. Job Time</span>
+                            <Clock className="h-4 w-4 text-graphite-900" />
+                            <span className="text-sm text-gray-600">Avg. Job Time</span>
                           </div>
-                          <span className="text-lg font-bold text-white">2.4h</span>
+                          <span className="text-lg font-bold text-gray-900">2.4h</span>
                         </div>
-                        <div className="flex items-center justify-between py-2 px-3 bg-graphite-700/20 rounded-xl">
+                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
                           <div className="flex items-center gap-2">
-                            <Award className="h-4 w-4 text-brand" />
-                            <span className="text-sm text-graphite-400">Efficiency Score</span>
+                            <Award className="h-4 w-4 text-graphite-900" />
+                            <span className="text-sm text-gray-600">Efficiency Score</span>
                           </div>
                           <span className="text-lg font-bold text-status-success">92%</span>
                         </div>
@@ -822,8 +847,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Monthly Trends"
                       icon={TrendingUp}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                         {[
@@ -834,12 +859,12 @@ export default function EmployeeProfilePage() {
                           { month: 'Feb', jobs: 0, trend: 'neutral' },
                           { month: 'Mar', jobs: 0, trend: 'neutral' },
                         ].map((item) => (
-                          <div key={item.month} className="text-center p-3 bg-graphite-700/20 rounded-xl">
-                            <p className="text-xs text-graphite-400 mb-1">{item.month}</p>
-                            <p className="text-lg font-bold text-white mb-1">{item.jobs}</p>
+                          <div key={item.month} className="text-center p-3 bg-gray-50 rounded-xl">
+                            <p className="text-xs text-gray-600 mb-1">{item.month}</p>
+                            <p className="text-lg font-bold text-gray-900 mb-1">{item.jobs}</p>
                             <div className={cn(
                               "flex items-center justify-center gap-1 text-xs",
-                              item.trend === 'up' ? "text-status-success" : item.trend === 'down' ? "text-status-error" : "text-graphite-500"
+                              item.trend === 'up' ? "text-status-success" : item.trend === 'down' ? "text-status-error" : "text-gray-500"
                             )}>
                               {item.trend === 'up' && <TrendingUp className="h-3 w-3" />}
                               {item.trend === 'down' && <TrendingUp className="h-3 w-3 rotate-180" />}
@@ -860,8 +885,8 @@ export default function EmployeeProfilePage() {
                     <InfoCard
                       title="Top Skills"
                       icon={Award}
-                      iconBg="bg-brand/10"
-                      iconColor="text-brand"
+                      iconBg="bg-graphite-900/10"
+                      iconColor="text-graphite-900"
                     >
                       <div className="space-y-2">
                         {[
@@ -872,13 +897,13 @@ export default function EmployeeProfilePage() {
                         ].map((skill) => (
                           <div key={skill.skill} className="py-2 px-3 -mx-3">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm text-white">{skill.skill}</span>
-                              <span className="text-xs text-brand font-semibold">{skill.rating}%</span>
+                              <span className="text-sm text-gray-900">{skill.skill}</span>
+                              <span className="text-xs text-graphite-900 font-semibold">{skill.rating}%</span>
                             </div>
-                            <div className="h-1.5 bg-graphite-700 rounded-full overflow-hidden">
-                              <div className="h-full bg-brand rounded-full transition-all" style={{ width: `${skill.rating}%` }} />
+                            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-graphite-900 rounded-full transition-all" style={{ width: `${skill.rating}%` }} />
                             </div>
-                            <p className="text-xs text-graphite-500 mt-1">{skill.jobs} jobs completed</p>
+                            <p className="text-xs text-gray-500 mt-1">{skill.jobs} jobs completed</p>
                           </div>
                         ))}
                       </div>
@@ -919,14 +944,14 @@ interface InfoCardProps {
 
 function InfoCard({ title, icon: Icon, iconBg, iconColor, children, className }: InfoCardProps) {
   return (
-    <div className={cn("h-full bg-graphite-800 backdrop-blur-sm rounded-xl border border-graphite-700 overflow-hidden active:border-brand/40 transition-colors duration-300 shadow-card flex flex-col", className)}>
+    <div className={cn("h-full bg-white rounded-xl border border-gray-200 overflow-hidden active:border-graphite-900/40 transition-colors duration-300 shadow-card flex flex-col", className)}>
       {/* Card Header */}
-      <div className="px-5 py-3.5 border-b border-graphite-700 bg-gradient-to-r from-graphite-900 to-graphite-800 shrink-0">
+      <div className="px-5 py-3.5 border-b border-gray-200 bg-gray-50 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", iconBg)}>
             <Icon className={cn("h-5 w-5", iconColor)} />
           </div>
-          <h3 className="text-base font-semibold text-brand">{title}</h3>
+          <h3 className="text-base font-semibold text-graphite-900">{title}</h3>
         </div>
       </div>
 
@@ -956,18 +981,18 @@ function InfoItem({ label, value, icon: Icon, iconColor, valueColor, field, fiel
   return (
     <div
       className={cn(
-        "group flex flex-col md:flex-row md:items-start md:justify-between py-3 md:py-4 px-3 -mx-3 rounded-xl active:bg-graphite-700/50 transition-colors duration-200 gap-1 md:gap-0",
+        "group flex flex-col md:flex-row md:items-start md:justify-between py-3 md:py-4 px-3 -mx-3 rounded-xl active:bg-gray-50 transition-colors duration-200 gap-1 md:gap-0",
         isEditable && "cursor-pointer min-h-[44px]"
       )}
       onClick={() => isEditable && onEdit(field, label, fieldType)}
     >
       <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
         {Icon && (
-          <div className="hidden md:flex h-8 w-8 rounded-lg bg-graphite-700/50 items-center justify-center shrink-0 active:bg-graphite-700 transition-colors duration-200">
-            <Icon className={cn("h-4 w-4", iconColor || "text-graphite-400")} />
+          <div className="hidden md:flex h-8 w-8 rounded-lg bg-gray-100 items-center justify-center shrink-0 active:bg-gray-200 transition-colors duration-200">
+            <Icon className={cn("h-4 w-4", iconColor || "text-gray-600")} />
           </div>
         )}
-        <span className="text-sm md:text-base text-graphite-400 font-medium">{label}</span>
+        <span className="text-sm md:text-base text-gray-600 font-medium">{label}</span>
       </div>
 
       <div
@@ -977,14 +1002,14 @@ function InfoItem({ label, value, icon: Icon, iconColor, valueColor, field, fiel
         )}
       >
         {value ? (
-          <span className={cn("text-sm md:text-base text-white font-medium text-left md:text-right break-words", valueColor)}>
+          <span className={cn("text-sm md:text-base text-gray-900 font-medium text-left md:text-right break-words", valueColor)}>
             {value}
           </span>
         ) : (
-          <span className="text-sm md:text-base text-graphite-500 italic text-left md:text-right">Not provided</span>
+          <span className="text-sm md:text-base text-gray-400 italic text-left md:text-right">Not provided</span>
         )}
         {isEditable && (
-          <Edit className="h-4 w-4 text-graphite-500 group-active:text-brand transition-colors duration-200 shrink-0" />
+          <Edit className="h-4 w-4 text-gray-400 group-active:text-graphite-900 transition-colors duration-200 shrink-0" />
         )}
       </div>
     </div>

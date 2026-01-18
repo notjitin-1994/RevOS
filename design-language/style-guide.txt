@@ -1,37 +1,273 @@
-The Precision Volt System: Frontend ArchitectureVersion: 1.0Design Identity: Industrial Precision meets Digital Velocity.Core Philosophy: A "Dark Mode Native" environment optimized for high-contrast legibility in variable lighting (garage bays). The interface balances high data density (for parts/diagnostics) with large touch targets (for tablet-based workflow).1. Foundations1.1 Color System: "The Digital Volt"Derived from 1111A high-contrast dark mode palette using deep blue-greys to reduce eye strain and vivid Lime to drive action.TokenRoleHex / ClassUsage RuleBrand PrimaryAction#CCFF00 (bg-brand)Strict Rule: Text on this must be #0F172A (text-graphite-900)22.Brand HoverInteraction#B2DE00 (bg-brand-hover)Hover state for primary buttons3.App BackgroundCanvas#0F172A (bg-graphite-900)The darkest shade. Never use pure black #000000444.Card SurfaceContainer#1E293B (bg-graphite-800)Main container for widgets and forms5.Elevated SurfaceOverlay#334155 (bg-graphite-700)Modals, dropdowns, and sticky headers6.Border SubtleDivider#334155 (border-graphite-700)Table rows and section dividers7.Status SuccessFeedback#2DD4BF (text-status-success)Use Teal/Emerald. Never Green, to avoid conflict with Brand Lime888.Status ErrorFeedback#EF4444 (text-status-error)Critical failures or destructive actions9.1.2 Typography: "Precision Industrial"Derived from 10101010A tri-font system designed to distinguish data types instantly.Headings (font-display): Barlow. Used for structure and branding. Always distinct from UI text11.UI Text (font-sans): Inter. Invisible, highly legible interface text1212.Data (font-mono): JetBrains Mono. CRITICAL RULE: Must be used for VINs, License Plates, IP Addresses, and columnar prices to distinguish 0 vs O13131313.1.3 Iconography: "Schematic Stroke"Derived from 141414Library: Lucide React (Preferred)15.Style: 2px Stroke, Rounded Joints16.Behavior: Icons are text-graphite-400 by default. On hover/active, they transition to text-brand (Lime)171717.2. Space & Layout Strategy (New & Expanded)Research-based expansion for "Garage Management" workflow.2.1 Spacing Scale (The 4px Standard)We utilize a tight 4px base grid to maintain density without clutter.TokenSizeRolegap-14pxTightest grouping (e.g., Tag text vs Icon).gap-28pxComponent internal spacing (e.g., Button icon vs Label).gap-416pxStandard Component Spacing. Distance between inputs in a form.gap-624pxContainer padding for Cards (p-6)1818.gap-832pxSection separation (e.g., Header vs Content).2.2 The "Bay View" Layout GridUnlike standard SaaS, garage apps need a Sidebar-first approach for tablet accessibility.Sidebar (w-64): Fixed width, collapsible. Contains Core Navigation icons (<Wrench />, <LayoutGrid />)19.Sticky Header (h-16): Contains global search (VIN lookup) and user profile. z-index: 50.Main Canvas: Fluid width.Dashboard Mode: 12-Column Grid (grid-cols-12). Widgets span 3, 4, or 6 columns.Data Mode: Single column, full-width tables for inventory/parts.2.3 Depth & Elevation (Dark Mode Physics)Since we cannot use dark shadows on a dark background effectively, we use Light & Overlay to create depth.Level 0 (Base): App Background (bg-graphite-900)20.Level 1 (Card): Surface (bg-graphite-800) + 1px Border (border-graphite-700).Level 2 (Float): Elevated (bg-graphite-700) + Glow Shadow.Glow: shadow-glow (defined as 0 0 15px rgba(204, 255, 0, 0.3)) for active states21.3. UI Component Patterns3.1 Buttons & ActionsDerived from 22Primary (The "Volt" Button):bg-brand text text-graphite-900 font font-semibold.Interaction: hover:bg-brand-hover + shadow-glow23.Secondary (Ghost):border border-graphite-600 text text-white.Interaction: hover:bg-graphite-80024.Icon-Only Actions:Rule: Must have aria-label25.Target Size: Parent container must have p-2 to create minimum 44x44px touch target26.3.2 Data Displays (The "VIN" Pattern)Derived from 27272727272727For every instance of technical data, follow the Label + Mono Value structure:JavaScript<div className="flex flex-col gap-1">
-  {/* LABEL: Uppercase, tracking-wider, graphite-400 */}
-  <span className="text-xs font-medium uppercase tracking-wider text-graphite-400">
+The Precision Volt System: Frontend Architecture
+Version: 2.0 (Light Mode)
+Design Identity: Industrial Precision meets Digital Velocity.
+Core Philosophy: A "Light Mode" environment optimized for high-contrast legibility and clarity. The interface balances high data density (for parts/diagnostics) with large touch targets (for tablet-based workflow).
+
+1. Foundations
+
+1.1 Color System: "The Precision Volt"
+A high-contrast light mode palette using clean white cards on light gray-blue backgrounds with vivid Lime sidebar for brand identity.
+
+Token		Role			Hex / Class				Usage Rule
+
+1		Brand Primary		Sidebar/Action			#CCFF00 (bg-brand)		Sidebar background, accent lines
+2		Brand Hover		Interaction			#B2DE00 (bg-brand-hover)	Sidebar border, hover states
+3		App Background		Canvas				#ecf0f5 (custom)		Global <body> background
+4		Settings Background	Canvas				#dfe5ef (custom)		Settings pages
+5		Card Surface		Container			#FFFFFF (bg-white)		Main container for widgets and forms
+6		Icon Container		Icon Background		#F3F4F6 (bg-gray-100)		Icon backgrounds in cards
+7		Heading Text		Typography			#111827 (text-gray-900)	Page titles, headings
+8		Primary Text		Typography			#374151 (text-gray-700)	Body text, icons
+9		Secondary Text		Typography			#4B5563 (text-gray-600)	Labels, descriptions
+10		Sidebar Text		Typography			#0F172A (text-graphite-900)	Sidebar icons and labels
+11		Border Subtle		Divider			#E5E7EB (border-gray-200)	Cards, section dividers
+12		Status Success		Feedback			#2DD4BF (text-status-success)	Use Teal. Never Green
+
+1.2 Typography: "Precision Industrial"
+A tri-font system designed to distinguish data types instantly.
+
+Headings (font-display): Barlow. Used for structure and branding. Always distinct from UI text.
+UI Text (font-sans): Inter. Invisible, highly legible interface text.
+Data (font-mono): JetBrains Mono. CRITICAL RULE: Must be used for VINs, License Plates, IP Addresses, and columnar prices to distinguish 0 vs O.
+
+1.3 Iconography: "Schematic Stroke"
+Library: Lucide React (Preferred)
+Style: 2px Stroke, Rounded Joints
+Behavior: Icons are text-gray-700 by default. Sidebar icons are text-graphite-900. On hover/active, they maintain dark colors on light backgrounds.
+
+2. Space & Layout Strategy (Updated for Light Mode)
+
+2.1 Spacing Scale (The 4px Standard)
+We utilize a tight 4px base grid to maintain density without clutter.
+
+Token		Size		Role
+gap-1		4px		Tightest grouping (e.g., Tag text vs Icon).
+gap-2		8px		Component internal spacing (e.g., Button icon vs Label).
+gap-4		16px		Standard Component Spacing. Distance between inputs in a form.
+gap-6		24px		Container padding for Cards (p-6).
+gap-8		32px		Section separation (e.g., Header vs Content).
+
+2.2 The "Bay View" Layout Grid
+Unlike standard SaaS, garage apps need a Sidebar-first approach for tablet accessibility.
+
+Sidebar (w-64): Fixed width, collapsible. Contains Core Navigation icons with bg-brand background.
+Sticky Header (h-16): Contains global search (VIN lookup) and user profile. z-index: 50.
+Main Canvas: Fluid width.
+
+Dashboard Mode: 12-Column Grid (grid-cols-12). Widgets span 3, 4, or 6 columns.
+Data Mode: Single column, full-width tables for inventory/parts.
+
+2.3 Depth & Elevation (Light Mode Physics)
+In light mode, we use shadows and borders to create depth on white cards.
+
+Level 0 (Base): App Background (#ecf0f5)
+Level 1 (Card): White Surface (bg-white) + Border (border-gray-200) + Shadow (shadow-card).
+Level 2 (Float): Elevated with Shadow (shadow-lg or shadow-2xl).
+
+3. UI Component Patterns (Light Mode)
+
+3.1 Buttons & Actions
+
+Primary (Dark Button):
+bg-gray-700 text-white hover:bg-gray-600 font-semibold.
+
+Secondary (Light Button):
+border border-gray-300 text-gray-700 hover:bg-gray-100.
+
+Sidebar Links (Brand Background):
+bg-brand hover:bg-brand-hover/30 text-graphite-900.
+
+Icon-Only Actions:
+Rule: Must have aria-label
+Target Size: Parent container must have p-2 to create minimum 44x44px touch target.
+
+3.2 Data Displays (The "VIN" Pattern)
+For every instance of technical data, follow the Label + Mono Value structure:
+
+JavaScript
+<div className="flex flex-col gap-1">
+  {/* LABEL: Uppercase, tracking-wider, gray-600 */}
+  <span className="text-xs font-medium uppercase tracking-wider text-gray-600">
     VIN / Serial
   </span>
-  {/* VALUE: Font-Mono, White, Tracking-wide */}
-  <span className="font-mono text-sm text-white tracking-wide">
+  {/* VALUE: Font-Mono, Gray-900, Tracking-wide */}
+  <span className="font-mono text-sm text-gray-900 tracking-wide">
     1HG CM8 263 3A 004352
   </span>
 </div>
-3.3 Status IndicatorsDerived from 282828Badge Style: inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium.Background: 10-15% opacity of the status color (bg-status-success/10).Border: 20% opacity border (border-status-success/20).Icon: Precede text with a 12px status icon (<CheckCircle2 className="w-3 h-3 mr-1" />)29.4. Motion & Micro-interactions (New)Research-based: "Industrial Smoothness".To feel "World Class," the app uses specific timing functions. We avoid "bouncy" springs (too playful). We use "Hydraulic" Easing (fast start, smooth stop).Global Transition: transition-all duration-200 ease-out.Hover Lift: Cards do not move up; they brighten.hover:border-graphite-500 (Lighten border).The "Volt" Pulse:When a critical action completes (e.g., "Job Done"), the button emits a single ring pulse of brand color.5. Unified Agent Directives (For LLMs)Role: You are a UX Engineer specialized in React, Next.js, and Tailwind.Strict Directives:Dark Mode Default: Never generate dark: prefixes. The app is dark by default (bg-graphite-900)30.The "VIN" Rule: If data is alphanumeric (VIN, Part #, Price), you MUST use font-mono31313131.The "Label" Rule: Metadata labels must be text-xs uppercase tracking-wider text-graphite-40032323232.No Pure Black: Never use #000000. Use #0F172A33.Icon Library: Always import from lucide-react34.Accessibility:Inputs must be text-base (16px) to prevent iOS zoom35.Contrast: Never put white text on Lime backgrounds36.Headers: Always use font-display (Barlow) for H1-H3. Never font-sans37.6. Implementation Checklist6.1 tailwind.config.js UpdateEnsure your config includes the new spacing and semantic mappings.JavaScriptmodule.exports = {
+
+3.3 Status Indicators
+Badge Style: inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium.
+Background: 10% opacity of the status color (bg-status-success/10).
+Border: 20% opacity border (border-status-success/20).
+Icon: Precede text with a 12px status icon (<CheckCircle2 className="w-3 h-3 mr-1" />).
+
+4. Motion & Micro-interactions
+Research-based: "Industrial Smoothness".
+To feel "World Class," the app uses specific timing functions. We avoid "bouncy" springs (too playful). We use "Hydraulic" Easing (fast start, smooth stop).
+
+Global Transition: transition-all duration-200 ease-out.
+Hover Effects: Cards brighten or darken borders slightly. hover:border-gray-300.
+Active States: active:scale-[0.98] for tactile feedback.
+
+5. Unified Agent Directives (For LLMs)
+Role: You are a UX Engineer specialized in React, Next.js, and Tailwind.
+
+Strict Directives:
+
+Light Mode Default: The app is light by default (bg-[#ecf0f5], bg-white for cards).
+The "VIN" Rule: If data is alphanumeric (VIN, Part #, Price), you MUST use font-mono.
+The "Label" Rule: Metadata labels must be text-xs uppercase tracking-wider text-gray-600.
+No Pure Black: Never use #000000. Use #111827 (gray-900) or #0F172A (graphite-900).
+Icon Library: Always import from lucide-react.
+Accessibility:
+- Inputs must be text-base (16px) to prevent iOS zoom.
+- Contrast: Ensure text-gray-700 or darker on white backgrounds.
+- Headers: Always use font-display (Barlow) for H1-H3. Never font-sans.
+
+6. Implementation Checklist
+
+6.1 tailwind.config.js Update
+Ensure your config includes the light mode color mappings.
+
+JavaScript
+module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#CCFF00', hover: '#B2DE00' }, // 
-        graphite: { 900: '#0F172A', 800: '#1E293B', 700: '#334155', 600: '#475569', 400: '#94A3B8' }, // 
-        status: { error: '#EF4444', warning: '#F59E0B', success: '#2DD4BF', info: '#38BDF8' } // [cite: 15, 16]
+        brand: {
+          DEFAULT: '#CCFF00', // Lime
+          hover: '#B2DE00',
+        },
+        graphite: {
+          900: '#0F172A', // Sidebar text, darkest
+          700: '#334155', // Borders (rare)
+          600: '#475569', // Muted text
+          400: '#94A3B8', // Light muted
+        },
+        gray: {
+          900: '#111827', // Headings, primary text
+          700: '#374151', // Body text, icons
+          600: '#4B5563', // Secondary text, labels
+          400: '#9CA3AF', // Muted text, placeholders
+          200: '#E5E7EB', // Card borders, dividers
+          100: '#F3F4F6', // Icon containers
+        },
+        status: {
+          error: '#EF4444',
+          warning: '#F59E0B',
+          success: '#2DD4BF', // Teal (Not Green)
+          info: '#38BDF8',
+        }
       },
       fontFamily: {
-        display: ['var(--font-barlow)', 'sans-serif'], // [cite: 6]
+        display: ['var(--font-barlow)', 'sans-serif'],
         sans: ['var(--font-inter)', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
       },
       boxShadow: {
-        'glow': '0 0 15px rgba(204, 255, 0, 0.3)', // 
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        'glow': '0 0 15px rgba(204, 255, 0, 0.3)',
       }
     }
   }
 }
-6.2 Global CSS ResetAdd to globals.css to enforce the industrial base.CSS@layer base {
+
+6.2 Global CSS Reset
+Add to globals.css to enforce the light mode base.
+
+CSS
+@layer base {
   body {
-    @apply bg-graphite-900 text-white font-sans antialiased; /* [cite: 6] */
+    @apply bg-[#ecf0f5] text-gray-900 font-sans antialiased;
   }
+
   h1, h2, h3 {
-    @apply font-display tracking-tight; /*  */
+    @apply font-display tracking-tight;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-gray-900;
   }
 }
+
+7. Light Mode Component Patterns
+
+7.1 Sidebar (Brand Accent)
+The sidebar uses the brand lime color with dark graphite text for high contrast.
+
+JavaScript
+<div className="
+  bg-brand w-[300px] shrink-0
+  border-r border-brand-hover
+">
+  {/* Sidebar links */}
+  <a className="
+    flex items-center rounded-lg
+    hover:bg-brand-hover/30
+    text-graphite-900
+  ">
+    <Icon className="h-5 w-5 text-graphite-900" />
+    <span className="text-sm font-medium text-graphite-900">
+      Dashboard
+    </span>
+  </a>
+</div>
+
+7.2 InfoCard (Settings Pattern)
+White cards with gray borders and gradient headers.
+
+JavaScript
+<div className="
+  bg-white backdrop-blur-sm
+  rounded-xl md:rounded-2xl
+  border border-gray-200
+  shadow-card
+">
+  {/* Header */}
+  <div className="
+    px-4 md:px-6 py-3 md:py-4
+    border-b border-gray-200
+    bg-gradient-to-r from-gray-50 to-white
+  ">
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-gray-100">
+        <Icon className="h-5 w-5 text-gray-700" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900">
+        Card Title
+      </h3>
+    </div>
+  </div>
+
+  {/* Body */}
+  <div className="p-4 md:p-6">
+    {/* Content */}
+  </div>
+</div>
+
+7.3 Editable Info Item
+Clickable rows with hover states.
+
+JavaScript
+<div className="
+  flex items-center justify-between
+  py-3 md:py-4 px-3 -mx-3 rounded-xl
+  cursor-pointer min-h-[44px]
+  hover:bg-gray-100
+  active:bg-gray-100
+">
+  <div className="flex items-center gap-3">
+    <Icon className="h-4 w-4 text-gray-500" />
+    <span className="text-sm md:text-base text-gray-600 font-medium">
+      Label
+    </span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="text-sm md:text-base text-gray-900 font-medium">
+      Value
+    </span>
+    <Edit className="h-4 w-4 text-gray-400 group-hover:text-gray-700" />
+  </div>
+</div>

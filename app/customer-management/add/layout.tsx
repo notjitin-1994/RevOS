@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { AppLayout } from '@/components/layout/app-layout'
 
 export const metadata: Metadata = {
   title: 'RevOS - Add Customer',
@@ -11,5 +10,5 @@ export default function AddCustomerLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <AppLayout>{children}</AppLayout>
+  return <>{children}</>
 }

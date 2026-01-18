@@ -153,8 +153,8 @@ export default function PartDetailPage() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-brand mx-auto mb-4" />
-          <p className="text-graphite-600 font-medium">Loading part details...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading part details...</p>
         </motion.div>
       </div>
     )
@@ -167,11 +167,11 @@ export default function PartDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="max-w-md w-full bg-white/70 backdrop-blur-sm rounded-2xl border border-red-500/50 p-8 shadow-2xl"
+          className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 shadow-card"
         >
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-graphite-900 text-center mb-2">Error Loading Part</h2>
-          <p className="text-sm text-graphite-600 text-center">{error || 'Part not found'}</p>
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">Error Loading Part</h2>
+          <p className="text-sm text-gray-600 text-center">{error || 'Part not found'}</p>
         </motion.div>
       </div>
     )
@@ -180,87 +180,68 @@ export default function PartDetailPage() {
   return (
     <>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-6 md:mb-8"
-        >
-          <button
-            onClick={() => router.push('/inventory')}
-            className="flex items-center gap-2 text-graphite-600 hover:text-graphite-900 transition-colors mb-4"
+        {/* Header - Aligned with main content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="lg:col-span-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm font-medium">Back to Inventory</span>
-          </button>
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push('/inventory')}
+                className="flex items-center justify-center h-10 w-10 bg-graphite-800 text-white rounded-xl hover:bg-graphite-700 transition-all duration-200 shadow-md border border-graphite-700"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </motion.button>
 
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20">
-                <Package className="h-6 w-6 text-brand" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                   {part.partName}
                 </h1>
-                <p className="text-sm md:text-base text-graphite-600 mt-1 font-mono">
+                <p className="text-sm md:text-base text-gray-600 mt-1 font-mono">
                   {part.partNumber}
                 </p>
               </div>
             </div>
+          </motion.div>
+        </div>
 
-            <div className="flex items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit</span>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 bg-status-error text-white font-semibold rounded-xl hover:bg-status-error/90 transition-all"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Delete</span>
-              </motion.button>
+        {/* Status Banner - Aligned with main content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="lg:col-span-2"
+          >
+            <div className={cn(
+              'p-4 rounded-xl border flex items-center justify-between',
+              getStatusColor(part.status)
+            )}>
+              <div className="flex items-center gap-3">
+                <Package className="h-5 w-5" />
+                <div>
+                  <span className="font-semibold text-gray-900">
+                    {part.status === 'in-stock' ? 'In Stock' : part.status === 'low-stock' ? 'Low Stock Alert' : 'Out of Stock'}
+                  </span>
+                  {part.status === 'low-stock' && (
+                    <span className="ml-2 text-sm text-gray-600">
+                      - Below threshold of {part.lowStockThreshold} units
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-600">Total Stock</div>
+                <div className="text-lg font-bold text-gray-900">{part.onHandStock + part.warehouseStock}</div>
+              </div>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Status Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className={cn(
-            'mb-6 p-4 rounded-xl border flex items-center justify-between',
-            getStatusColor(part.status)
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <Package className="h-5 w-5" />
-            <div>
-              <span className="font-semibold">
-                {part.status === 'in-stock' ? 'In Stock' : part.status === 'low-stock' ? 'Low Stock Alert' : 'Out of Stock'}
-              </span>
-              {part.status === 'low-stock' && (
-                <span className="ml-2 text-sm opacity-80">
-                  - Below threshold of {part.lowStockThreshold} units
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm opacity-80">Total Stock</div>
-            <div className="text-lg font-bold">{part.onHandStock + part.warehouseStock}</div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
         {/* Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -272,36 +253,36 @@ export default function PartDetailPage() {
             className="lg:col-span-2 space-y-6"
           >
             {/* Basic Information */}
-            <div className="bg-white rounded-2xl shadow-lg border border-graphite-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-graphite-200">
-                <h3 className="text-lg font-semibold text-graphite-900">Basic Information</h3>
+            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
               </div>
               <div className="p-6">
                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1">Category</dt>
-                    <dd className="text-base font-medium text-graphite-900">{part.category}</dd>
+                    <dt className="text-sm text-gray-600 mb-1">Category</dt>
+                    <dd className="text-base font-medium text-gray-900">{part.category}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1">Used For</dt>
-                    <dd className="text-base font-medium text-graphite-900">{part.usedFor}</dd>
+                    <dt className="text-sm text-gray-600 mb-1">Used For</dt>
+                    <dd className="text-base font-medium text-gray-900">{part.usedFor}</dd>
                   </div>
                   {part.make && (
                     <div>
-                      <dt className="text-sm text-graphite-600 mb-1">Make</dt>
-                      <dd className="text-base font-medium text-graphite-900">{part.make}</dd>
+                      <dt className="text-sm text-gray-600 mb-1">Make</dt>
+                      <dd className="text-base font-medium text-gray-900">{part.make}</dd>
                     </div>
                   )}
                   {part.model && (
                     <div>
-                      <dt className="text-sm text-graphite-600 mb-1">Model</dt>
-                      <dd className="text-base font-medium text-graphite-900">{part.model}</dd>
+                      <dt className="text-sm text-gray-600 mb-1">Model</dt>
+                      <dd className="text-base font-medium text-gray-900">{part.model}</dd>
                     </div>
                   )}
                   {part.description && (
                     <div className="md:col-span-2">
-                      <dt className="text-sm text-graphite-600 mb-1">Description</dt>
-                      <dd className="text-base text-graphite-900">{part.description}</dd>
+                      <dt className="text-sm text-gray-600 mb-1">Description</dt>
+                      <dd className="text-base text-gray-900">{part.description}</dd>
                     </div>
                   )}
                 </dl>
@@ -309,69 +290,69 @@ export default function PartDetailPage() {
             </div>
 
             {/* Stock Information */}
-            <div className="bg-white rounded-2xl shadow-lg border border-graphite-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-graphite-200">
-                <h3 className="text-lg font-semibold text-graphite-900">Stock Information</h3>
+            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Stock Information</h3>
               </div>
               <div className="p-6">
                 <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <Package className="h-4 w-4" />
                       On-Hand Stock
                     </dt>
-                    <dd className="text-2xl font-bold text-graphite-900">{part.onHandStock}</dd>
-                    <dt className="text-xs text-graphite-500 mt-1">Available in workshop</dt>
+                    <dd className="text-2xl font-bold text-gray-900">{part.onHandStock}</dd>
+                    <dt className="text-xs text-gray-500 mt-1">Available in workshop</dt>
                   </div>
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <Package className="h-4 w-4" />
                       Warehouse Stock
                     </dt>
-                    <dd className="text-2xl font-bold text-graphite-900">{part.warehouseStock}</dd>
-                    <dt className="text-xs text-graphite-500 mt-1">In deep storage</dt>
+                    <dd className="text-2xl font-bold text-gray-900">{part.warehouseStock}</dd>
+                    <dt className="text-xs text-gray-500 mt-1">In deep storage</dt>
                   </div>
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1">Low Stock Alert</dt>
+                    <dt className="text-sm text-gray-600 mb-1">Low Stock Alert</dt>
                     <dd className="text-2xl font-bold text-status-warning">{part.lowStockThreshold}</dd>
-                    <dt className="text-xs text-graphite-500 mt-1">Alert threshold</dt>
+                    <dt className="text-xs text-gray-500 mt-1">Alert threshold</dt>
                   </div>
                 </dl>
               </div>
             </div>
 
             {/* Pricing Information */}
-            <div className="bg-white rounded-2xl shadow-lg border border-graphite-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-graphite-200">
-                <h3 className="text-lg font-semibold text-graphite-900">Pricing Information</h3>
+            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Pricing Information</h3>
               </div>
               <div className="p-6">
                 <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
                       Purchase Price
                     </dt>
-                    <dd className="text-2xl font-bold text-graphite-900">₹{part.purchasePrice.toFixed(2)}</dd>
-                    <dt className="text-xs text-graphite-500 mt-1">Cost per unit</dt>
+                    <dd className="text-2xl font-bold text-gray-900">₹{part.purchasePrice.toFixed(2)}</dd>
+                    <dt className="text-xs text-gray-500 mt-1">Cost per unit</dt>
                   </div>
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
                       Selling Price
                     </dt>
-                    <dd className="text-2xl font-bold text-brand">₹{part.sellingPrice.toFixed(2)}</dd>
-                    <dt className="text-xs text-graphite-500 mt-1">Retail per unit</dt>
+                    <dd className="text-2xl font-bold text-gray-700">₹{part.sellingPrice.toFixed(2)}</dd>
+                    <dt className="text-xs text-gray-500 mt-1">Retail per unit</dt>
                   </div>
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1">Profit Margin</dt>
+                    <dt className="text-sm text-gray-600 mb-1">Profit Margin</dt>
                     <dd className={cn(
                       "text-2xl font-bold",
                       part.margin >= 30 ? "text-status-success" : part.margin >= 20 ? "text-status-warning" : "text-status-error"
                     )}>
                       {part.margin.toFixed(1)}%
                     </dd>
-                    <dt className="text-xs text-graphite-500 mt-1">
+                    <dt className="text-xs text-gray-500 mt-1">
                       ₹{(part.sellingPrice - part.purchasePrice).toFixed(2)} profit
                     </dt>
                   </div>
@@ -388,36 +369,36 @@ export default function PartDetailPage() {
             className="space-y-6"
           >
             {/* Location & Supplier */}
-            <div className="bg-white rounded-2xl shadow-lg border border-graphite-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-graphite-200">
-                <h3 className="text-lg font-semibold text-graphite-900">Additional Details</h3>
+            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Additional Details</h3>
               </div>
               <div className="p-6 space-y-4">
                 {part.location && (
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
                       Location
                     </dt>
-                    <dd className="text-base font-medium text-graphite-900">{part.location}</dd>
+                    <dd className="text-base font-medium text-gray-900">{part.location}</dd>
                   </div>
                 )}
                 {part.supplier && (
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <Truck className="h-4 w-4" />
                       Supplier
                     </dt>
-                    <dd className="text-base font-medium text-graphite-900">{part.supplier}</dd>
+                    <dd className="text-base font-medium text-gray-900">{part.supplier}</dd>
                   </div>
                 )}
                 {part.lastRestocked && (
                   <div>
-                    <dt className="text-sm text-graphite-600 mb-1 flex items-center gap-2">
+                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       Last Restocked
                     </dt>
-                    <dd className="text-base font-medium text-graphite-900">
+                    <dd className="text-base font-medium text-gray-900">
                       {new Date(part.lastRestocked).toLocaleDateString('en-IN', {
                         day: 'numeric',
                         month: 'short',
@@ -430,38 +411,30 @@ export default function PartDetailPage() {
             </div>
 
             {/* Part Number Card */}
-            <div className="bg-graphite-900 rounded-2xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-sm font-semibold text-graphite-400 mb-2 flex items-center gap-2">
-                  <Barcode className="h-4 w-4" />
+                <h3 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
+                  <Barcode className="h-4 w-4 text-gray-700" />
                   Part Number
                 </h3>
-                <p className="text-2xl font-bold text-brand font-mono">{part.partNumber}</p>
+                <p className="text-2xl font-bold text-gray-900 font-mono">{part.partNumber}</p>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-lg border border-graphite-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-graphite-200">
-                <h3 className="text-lg font-semibold text-graphite-900">Quick Actions</h3>
+            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
               </div>
               <div className="p-4 space-y-2">
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   onClick={handleEdit}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-graphite-50 rounded-xl hover:bg-graphite-100 transition-all"
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
                 >
-                  <Edit className="h-4 w-4 text-graphite-600" />
-                  <span className="text-sm font-medium text-graphite-900">Edit Part</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-graphite-50 rounded-xl hover:bg-graphite-100 transition-all"
-                >
-                  <Truck className="h-4 w-4 text-graphite-600" />
-                  <span className="text-sm font-medium text-graphite-900">Restock</span>
+                  <Edit className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-900">Edit Part</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.01 }}
@@ -521,7 +494,7 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-200"
       >
         {/* Warning Icon */}
         <div className="flex justify-center mb-4">
@@ -532,9 +505,9 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
 
         {/* Title and Message */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-graphite-900 mb-2">Delete Part?</h2>
-          <p className="text-graphite-600">
-            Are you sure you want to delete <span className="font-semibold text-graphite-900">{partName}</span>? This action cannot be undone.
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Part?</h2>
+          <p className="text-gray-600">
+            Are you sure you want to delete <span className="font-semibold text-gray-900">{partName}</span>? This action cannot be undone.
           </p>
         </div>
 
@@ -543,7 +516,7 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
@@ -569,3 +542,4 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
     </div>
   )
 }
+

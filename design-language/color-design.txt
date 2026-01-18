@@ -1,56 +1,199 @@
-1. System Identity & Agent DirectivesTheme Name: The Digital VoltRole: Dark Mode Native Automotive SaaSPrimary Tech Stack: React, Next.js, Tailwind CSS🤖 Agent Instructions (Strict Rules)When generating UI components or modifying styles, you MUST adhere to the following directives:Dark Mode Default: Assume the application is always in dark mode. Do not generate dark: prefixes; use dark colors as the base.Contrast Enforcement:NEVER use white text on brand (Lime) backgrounds. Always use text-graphite-900.NEVER use brand (Lime) text on light backgrounds.No Pure Black: Do not use #000000 or bg-black. Use bg-graphite-900 (#0F172A) as the darkest shade.Semantic Fallbacks: If a specific color is not specified for a "Success" state, default to Teal/Emerald, never Green (to avoid conflict with Brand Lime).Interactive Glow: For primary actions, append shadow-glow (defined in config) to the button class.2. The Color Palette (Token Map)2.1 Primary Brand (The Volt)High Energy, Action-Oriented.Token NameHex ValueTailwind ClassSemantic RoleBrand Primary#CCFF00bg-brandPrimary CTAs, Toggles, Active Tabs.Brand Hover#B2DE00bg-brand-hoverHover state for Brand Primary.Brand Surface#CCFF00 (15%)bg-brand/15Active list item background, subtle highlights.Brand Text#0F172Atext-graphite-900REQUIRED text color on Brand Primary buttons.2.2 Neutrals (The Graphite)Cool Slate Tones. No warm greys.Token NameHex ValueTailwind ClassSemantic RoleApp Bg#0F172Abg-graphite-900Global <body> background.Card Surface#1E293Bbg-graphite-800Cards, Sidebars, Panels.Elevated Surface#334155bg-graphite-700Dropdowns, Modals, Popovers.Border Subtle#334155border-graphite-700Dividers, Table rows.Border Strong#475569border-graphite-600Inputs, Checkboxes, Active Borders.2.3 Semantic States (Functional)Standardized feedback colors.Token NameHex ValueTailwind ClassSemantic RoleError#EF4444text-status-errorCritical failures, Destructive actions.Warning#F59E0Btext-status-warningPending actions, Low stock.Success#2DD4BFtext-status-successUse Teal. Completion, Validations.Info#38BDF8text-status-infoLinks, Help text.3. Component Patterns (Code Snippets)Agents: Use these exact structures when generating components.3.1 Primary ButtonUsage: The main "Call to Action" on a page (e.g., "Create Job", "Save Invoice").JavaScript<button className="
-  flex items-center justify-center gap-2 
-  bg-brand hover:bg-brand-hover 
-  text-graphite-900 font-semibold 
-  px-6 py-3 rounded-lg 
-  shadow-glow transition-all duration-200
+1. System Identity & Agent Directives
+Theme Name: The Precision Volt (Light Mode)
+Role: Light Mode Automotive SaaS
+Primary Tech Stack: React, Next.js, Tailwind CSS
+
+🤖 Agent Instructions (Strict Rules)
+When generating UI components or modifying styles, you MUST adhere to the following directives:
+
+Light Mode Default: Assume the application is always in light mode. Use light backgrounds with white cards and dark text.
+
+Contrast Enforcement:
+- Sidebar (Lime background): Always use text-graphite-900 for icons and labels
+- White Cards: Use gray-900, gray-700, gray-600 for text hierarchy
+- No pure white text on light backgrounds (except for special overlays like profile pictures)
+
+No Pure Black: Do not use #000000. Use graphite-900 (#0F172A) or gray-900 (#111827) as the darkest shades.
+
+Semantic Fallbacks: If a specific color is not specified for a "Success" state, default to Teal/Emerald, never Green (to avoid conflict with Brand Lime).
+
+2. The Color Palette (Token Map)
+
+2.1 Primary Brand (The Volt)
+High Energy, Action-Oriented - Used primarily for sidebar and accent elements.
+
+Token Name		Hex Value		Tailwind Class		Semantic Role
+Brand Primary		#CCFF00			bg-brand			Sidebar background, accent lines
+Brand Hover		#B2DE00			bg-brand-hover		Sidebar border, hover states
+Brand Surface		#CCFF00 (10%)		bg-brand/10		Subtle highlights
+Brand Text		#0F172A			text-graphite-900	REQUIRED text color on Brand (sidebar)
+
+2.2 Backgrounds (Light Mode Foundation)
+Clean, light backgrounds for maximum readability.
+
+Token Name		Hex Value		Tailwind Class		Semantic Role
+App Background		#ecf0f5			custom class		Global <body> background
+Settings Background	#dfe5ef			custom class		Settings page background
+Card Surface		#FFFFFF			bg-white			Data cards, panels, forms
+Icon Container		#F3F4F6			bg-gray-100		Icon backgrounds
+
+2.3 Neutrals (The Gray & Graphite Scale)
+Cool Slate Tones for text and borders on light backgrounds.
+
+Token Name		Hex Value		Tailwind Class		Semantic Role
+Heading Text		#111827			text-gray-900		Page titles, headings
+Primary Text		#374151			text-gray-700		Body text, icons
+Secondary Text		#4B5563			text-gray-600		Labels, descriptions
+Muted Text		#9CA3AF			text-gray-400		Placeholders, disabled
+Sidebar Text		#0F172A			text-graphite-900	Sidebar icons and labels
+Border Subtle		#E5E7EB			border-gray-200	Card borders, dividers
+Border Default		#D1D5DB			border-gray-300	Input fields
+Border Medium		#9CA3AF			border-gray-400	Focus states
+Border Strong		#4B5563			border-gray-600	Emphasized dividers
+
+2.4 Semantic States (Functional)
+Standardized feedback colors.
+
+Token Name		Hex Value		Tailwind Class		Semantic Role
+Error			#EF4444			text-status-error	Critical failures
+Warning			#F59E0B			text-status-warning	Pending actions, alerts
+Success			#2DD4BF			text-status-success	Completion, validations
+Info			#38BDF8			text-status-info	Links, help text
+
+3. Component Patterns (Code Snippets)
+Agents: Use these exact structures when generating components.
+
+3.1 Primary Button (Brand)
+Usage: The main "Call to Action" on a page (e.g., "Create Job", "Save Invoice").
+
+JavaScript
+<button className="
+  flex items-center justify-center gap-2
+  bg-gray-700 hover:bg-gray-600
+  text-white font-semibold
+  px-6 py-3 rounded-lg
+  shadow-lg transition-all duration-200
 ">
   <IconName className="w-5 h-5" />
   <span>Action Label</span>
 </button>
-3.2 Secondary ButtonUsage: Cancel, Back, or secondary options.JavaScript<button className="
-  px-6 py-3 rounded-lg 
-  border border-graphite-600 hover:bg-graphite-800 
-  text-white font-medium 
+
+3.2 Secondary Button
+Usage: Cancel, Back, or secondary options.
+
+JavaScript
+<button className="
+  px-6 py-3 rounded-lg
+  border border-gray-300 hover:bg-gray-100
+  text-gray-700 font-medium
   transition-colors
 ">
   Cancel
 </button>
-3.3 Dashboard Card (Data Widget)Usage: Displaying metrics or lists.JavaScript<div className="
-  bg-graphite-800 
-  border border-graphite-700 
-  rounded-xl p-6 
-  shadow-sm
+
+3.3 Dashboard Card (Data Widget)
+Usage: Displaying metrics or lists.
+
+JavaScript
+<div className="
+  bg-white
+  border border-gray-200
+  rounded-xl p-6
+  shadow-card
 ">
   <h3 className="text-status-info text-sm font-medium uppercase tracking-wider mb-2">
     Revenue
   </h3>
-  <p className="text-3xl font-bold text-white">
+  <p className="text-3xl font-bold text-gray-900">
     $12,450
   </p>
 </div>
-3.4 Status BadgeUsage: Displaying job status (e.g., "In Progress").JavaScript// Example: Success State
+
+3.4 InfoCard Component (Settings Pattern)
+Usage: Structured information cards with headers.
+
+JavaScript
+<div className="
+  bg-white backdrop-blur-sm
+  rounded-xl md:rounded-2xl
+  border border-gray-200
+  overflow-hidden
+  shadow-card flex flex-col
+">
+  {/* Card Header */}
+  <div className="
+    px-4 md:px-6 py-3 md:py-4
+    border-b border-gray-200
+    bg-gradient-to-r from-gray-50 to-white
+    shrink-0
+  ">
+    <div className="flex items-center gap-2 md:gap-3">
+      <div className="
+        h-8 w-8 md:h-10 md:w-10
+        rounded-lg md:rounded-xl
+        flex items-center justify-center
+        bg-gray-100
+      ">
+        <Icon className="h-4 w-4 md:h-5 md:w-5 text-gray-700" />
+      </div>
+      <h3 className="text-base md:text-lg font-semibold text-gray-900">
+        Card Title
+      </h3>
+    </div>
+  </div>
+
+  {/* Card Body */}
+  <div className="p-4 md:p-6 space-y-1 flex-1">
+    {/* Content */}
+  </div>
+</div>
+
+3.5 Status Badge
+Usage: Displaying job status (e.g., "In Progress").
+
+JavaScript
+// Example: Success State
 <span className="
-  inline-flex items-center px-2.5 py-0.5 rounded-full 
-  text-xs font-medium 
+  inline-flex items-center px-2.5 py-0.5 rounded-full
+  text-xs font-medium
   bg-status-success/10 text-status-success border border-status-success/20
 ">
   Completed
 </span>
-4. Typography RulesAgents: strictly enforce font weights and colors.Headings (H1-H3): text-white, font-bold, tracking-tight.Body Text: text-slate-300 (Tailwind standard) or text-white/80.Meta Data (Dates/Labels): text-slate-400.Numbers (Prices/VINs): Use font-mono or tabular-nums for alignment.5. Tailwind Configuration (Copy/Paste)Agents: Ensure this configuration exists in tailwind.config.js before styling.JavaScriptmodule.exports = {
+
+4. Typography Rules
+Agents: strictly enforce font weights and colors.
+
+Headings (H1-H3): text-gray-900 or text-graphite-900, font-bold/semibold, tracking-tight.
+Body Text: text-gray-700 or text-gray-600.
+Meta Data (Dates/Labels): text-gray-600 or text-gray-400.
+Numbers (Prices/VINs): Use font-mono or tabular-nums for alignment.
+
+5. Tailwind Configuration (Copy/Paste)
+Agents: Ensure this configuration exists in tailwind.config.js before styling.
+
+JavaScript
+module.exports = {
   theme: {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#CCFF00', // Volt Lime
+          DEFAULT: '#CCFF00', // Lime
           hover: '#B2DE00',
-          dim: 'rgba(204, 255, 0, 0.1)',
         },
         graphite: {
-          900: '#0F172A', // Main Bg
-          800: '#1E293B', // Card Bg
-          700: '#334155', // Border/Modal
-          600: '#475569', // Input Border
+          900: '#0F172A', // Darkest text, sidebar icons
+          700: '#334155', // Borders (rare)
+          600: '#475569', // Muted text
+          400: '#94A3B8', // Light muted
+        },
+        gray: {
+          900: '#111827', // Headings, primary text
+          700: '#374151', // Body text, icons
+          600: '#4B5563', // Secondary text, labels
+          400: '#9CA3AF', // Muted text, placeholders
+          200: '#E5E7EB', // Card borders, dividers
+          100: '#F3F4F6', // Icon containers, light backgrounds
         },
         status: {
           error: '#EF4444',
@@ -60,10 +203,53 @@
         }
       },
       boxShadow: {
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         'glow': '0 0 15px rgba(204, 255, 0, 0.3)',
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
       }
     },
   },
 }
-6. Accessibility (A11y) ChecksAgents: Perform these checks on generated code.Check: Is text-graphite-900 used on bg-brand?If Yes: ✅ Pass.If No: ❌ Fail. Correct to dark text.Check: Is the font size on inputs at least text-base (16px)?Reason: Prevents auto-zoom on mobile devices in garage settings.Check: Do icon-only buttons have an aria-label?Reason: Mechanics using screen readers or voice control.
+
+6. Global CSS Configuration
+CSS
+@layer base {
+  body {
+    @apply bg-[#ecf0f5] text-gray-900 font-sans antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-gray-900;
+  }
+}
+
+7. Accessibility (A11y) Checks
+Agents: Perform these checks on generated code.
+
+Check: Is text-graphite-900 used on bg-brand (sidebar)?
+If Yes: ✅ Pass.
+If No: ❌ Fail. Correct to dark text.
+
+Check: Is the font size on inputs at least text-base (16px)?
+Reason: Prevents auto-zoom on mobile devices.
+
+Check: Do icon-only buttons have an aria-label?
+Reason: Mechanics using screen readers or voice control.
+
+Check: Is there sufficient contrast on white cards?
+Reason: Ensure text-gray-700 or darker for body text on white backgrounds.
+
+8. Light Mode Color Quick Reference
+
+| Element | Background | Text | Border |
+|---------|------------|------|--------|
+| App Body | #ecf0f5 | gray-900 | - |
+| Sidebar | #CCFF00 | graphite-900 | #B2DE00 |
+| Data Card | #FFFFFF | gray-900/700/600 | #E5E7EB |
+| Icon Container | #F3F4F6 | gray-700 | - |
+| Input | #FFFFFF | gray-900 | #D1D5DB |
+| Button (Primary) | #374151 | #FFFFFF | - |
+| Button (Secondary) | #FFFFFF | gray-700 | #D1D5DB |

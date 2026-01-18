@@ -1,19 +1,39 @@
 # RevOS - Automotive SaaS Platform
 
-RevOS is a modern, dark-mode native Automotive SaaS application built with Next.js 14, featuring the "Digital Volt" design system.
+RevOS is a modern **light mode** Automotive SaaS application built with Next.js 14, featuring the "Precision Volt" design system.
 
 ## 🎨 Design System
 
-### Color Palette - "Digital Volt"
+### Color Palette - "Precision Volt" (Light Mode)
 
-- **Brand Primary**: `#CCFF00` (Lime) - Used for CTAs and interactive elements
-- **Brand Hover**: `#B2DE00` - Hover state for primary actions
-- **App Background**: `#0F172A` (Graphite-900) - Main background
-- **Card Surface**: `#1E293B` (Graphite-800) - Cards and panels
-- **Border Subtle**: `#334155` (Graphite-700) - Dividers and borders
-- **Border Strong**: `#475569` (Graphite-600) - Input borders
-- **Status Error**: `#EF4444` - Error states
+#### Brand Colors
+- **Brand Primary**: `#CCFF00` (Lime) - Sidebar background, accent elements
+- **Brand Hover**: `#B2DE00` - Hover state for sidebar and interactive elements
+
+#### Background Colors
+- **App Background**: `#ecf0f5` (Light gray-blue) - Main application background
+- **Settings Background**: `#dfe5ef` - Settings page background
+- **Card Surface**: `#FFFFFF` (White) - Data cards and panels
+- **Icon Container**: `#F3F4F6` (Gray-100) - Icon backgrounds
+
+#### Text Colors
+- **Heading**: `#111827` (Gray-900) - Main headings
+- **Primary Text**: `#374151` (Gray-700) - Body text, icons
+- **Secondary Text**: `#4B5563` (Gray-600) - Labels, descriptions
+- **Muted Text**: `#9CA3AF` (Gray-400) - Placeholder, disabled text
+- **Sidebar Text**: `#0F172A` (Graphite-900) - Sidebar icons and labels
+
+#### Border Colors
+- **Border Subtle**: `#E5E7EB` (Gray-200) - Card borders, dividers
+- **Border Default**: `#D1D5DB` (Gray-300) - Input fields
+- **Border Medium**: `#9CA3AF` (Gray-400) - Focus states
+- **Border Strong**: `#4B5563` (Gray-600) - Emphasized dividers
+
+#### Status Colors
 - **Status Success**: `#2DD4BF` (Teal) - Success states
+- **Status Error**: `#EF4444` (Red) - Error states
+- **Status Warning**: `#F59E0B` (Orange) - Warning states
+- **Status Info**: `#38BDF8` (Blue) - Informational states
 
 ### Typography
 
@@ -94,6 +114,7 @@ RevOS/
 
 - **"Grease-Proof Interface"** - High contrast, high legibility for garage environments
 - **"Industrial Smoothness"** - Hydraulic easing (ease-out), no bouncy springs
+- **Light Mode Native** - Clean white cards on light gray-blue background with brand accent lime sidebar
 - **Mobile-First** - Minimum touch targets of 44x44px
 - **Type Safety** - Full TypeScript coverage
 
@@ -167,14 +188,39 @@ Edit `tailwind.config.ts` to customize the color palette:
 ```typescript
 colors: {
   brand: {
-    DEFAULT: '#CCFF00',    // Volt Lime
+    DEFAULT: '#CCFF00',    // Lime (sidebar background)
     hover: '#B2DE00',      // Hover state
   },
   graphite: {
-    900: '#0F172A',        // Main background
-    800: '#1E293B',        // Card surface
-    // ... more shades
+    900: '#0F172A',        // Darkest text, sidebar icons
+    700: '#334155',        // Borders (rare)
+    600: '#475569',        // Muted text
+    400: '#94A3B8',        // Light muted
   },
+  gray: {
+    900: '#111827',        // Headings, primary text
+    700: '#374151',        // Body text, icons
+    600: '#4B5563',        // Secondary text, labels
+    400: '#9CA3AF',        // Muted text, placeholders
+    200: '#E5E7EB',        // Card borders, dividers
+    100: '#F3F4F6',        // Icon containers, light backgrounds
+  },
+  status: {
+    success: '#2DD4BF',    // Positive states
+    error: '#EF4444',      // Error states
+    warning: '#F59E0B',    // Warning states
+    info: '#38BDF8',       // Informational states
+  },
+}
+```
+
+### Light Mode Background
+
+Edit `app/globals.css` to change the main app background:
+
+```css
+body {
+  @apply bg-[#ecf0f5];  /* Light gray-blue */
 }
 ```
 
@@ -201,9 +247,11 @@ const barlow = Barlow({
 
 - Semantic HTML: `<form>`, `<label>`, `<button>`
 - ARIA attributes: `aria-invalid`, `aria-describedby`, `aria-pressed`, `aria-label`
-- Focus states: `focus:ring-2 focus:ring-brand`
+- Focus states: `focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-graphite-900`
 - Keyboard navigation: All elements reachable via Tab
 - Screen reader support: Proper role attributes and labels
+- WCAG 2.1 AA compliant contrast ratios
+- Minimum touch targets: 44x44px for mobile accessibility
 
 ## 🔒 Security Considerations
 

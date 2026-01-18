@@ -98,7 +98,7 @@ export const DesktopSidebar = ({
     <>
       <motion.div
         className={cn(
-          "h-full py-4 hidden md:flex md:flex-col bg-graphite-900 w-[300px] shrink-0 border-r border-gray-800 sidebar-scroll-hide",
+          "h-full py-4 hidden md:flex md:flex-col bg-brand w-[300px] shrink-0 border-r border-brand-hover sidebar-scroll-hide",
           className
         )}
         animate={{
@@ -139,14 +139,14 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-16 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-graphite-900 w-full border-b border-gray-800"
+          "h-16 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-brand w-full border-b border-brand-hover"
         )}
         {...props}
       >
         <div className="flex justify-between z-20 w-full items-center">
-          <span className="text-brand font-bold text-lg">RevOS</span>
+          <span className="text-graphite-900 font-bold text-lg">RevOS</span>
           <IconMenu2
-            className="text-brand cursor-pointer"
+            className="text-graphite-900 cursor-pointer"
             onClick={() => setOpen?.(!open)}
           />
         </div>
@@ -160,12 +160,12 @@ export const MobileSidebar = ({
               ease: "easeInOut",
             }}
             className={cn(
-              "fixed h-full w-[280px] inset-0 top-16 left-0 bg-graphite-900 z-[100] flex flex-col justify-between p-6 border-r border-gray-800",
+              "fixed h-full w-[280px] inset-0 top-16 left-0 bg-brand z-[100] flex flex-col justify-between p-6 border-r border-brand-hover",
               className
             )}
           >
             <div
-              className="absolute right-6 top-6 text-brand cursor-pointer"
+              className="absolute right-6 top-6 text-graphite-900 cursor-pointer"
               onClick={() => setOpen?.(!open)}
             >
               <IconX size={24} />
@@ -207,7 +207,7 @@ export const SidebarLink = ({
       href={link.href}
       onClick={handleClick}
       className={cn(
-        "flex items-center rounded-lg hover:bg-graphite-800 transition-all duration-300 cursor-pointer overflow-hidden min-w-0",
+        "flex items-center rounded-lg hover:bg-brand-hover/30 transition-all duration-300 cursor-pointer overflow-hidden min-w-0",
         open ? "justify-start gap-3 px-3 py-3" : "justify-center py-3",
         className
       )}
@@ -240,7 +240,7 @@ export const SidebarLink = ({
           duration: 0.3,
           ease: [0.25, 0.1, 0.25, 1],
         }}
-        className="text-white text-sm group-hover/sidebar:translate-x-1 transition-transform duration-200 whitespace-nowrap font-medium overflow-hidden"
+        className="text-graphite-900 text-sm group-hover/sidebar:translate-x-1 transition-transform duration-200 whitespace-nowrap font-medium overflow-hidden"
         style={{
           display: animate && !open ? 'none' : 'block',
           overflow: 'hidden',

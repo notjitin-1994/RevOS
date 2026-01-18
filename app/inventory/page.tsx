@@ -259,8 +259,8 @@ export default function InventoryManagementPage() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-brand mx-auto mb-4" />
-          <p className="text-graphite-600 font-medium">Loading inventory...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading inventory...</p>
         </motion.div>
       </div>
     )
@@ -273,11 +273,11 @@ export default function InventoryManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="max-w-md w-full bg-white/70 backdrop-blur-sm rounded-2xl border border-red-500/50 p-8 shadow-2xl"
+          className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 shadow-card"
         >
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-graphite-900 text-center mb-2">Error Loading Inventory</h2>
-          <p className="text-sm text-graphite-600 text-center">{error}</p>
+          <AlertCircle className="h-12 w-12 text-status-error mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">Error Loading Inventory</h2>
+          <p className="text-sm text-gray-600 text-center">{error}</p>
         </motion.div>
       </div>
     )
@@ -295,12 +295,12 @@ export default function InventoryManagementPage() {
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-1 bg-graphite-600 rounded-full" />
+              <div className="h-10 w-1 bg-gray-700 rounded-full" />
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                   Parts & Inventory
                 </h1>
-                <p className="text-sm md:text-base text-graphite-600 mt-1">
+                <p className="text-sm md:text-base text-gray-600 mt-1">
                   Manage your garage parts and stock levels
                 </p>
               </div>
@@ -309,7 +309,7 @@ export default function InventoryManagementPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAddPart}
-              className="flex items-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+              className="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200"
             >
               <Plus className="h-5 w-5" />
               <span className="hidden sm:inline">Add Part</span>
@@ -327,7 +327,7 @@ export default function InventoryManagementPage() {
             >
               <AlertTriangle className="h-5 w-5 text-status-warning shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-status-warning">
+                <p className="text-sm font-medium text-gray-900">
                   {parts.filter((p) => p.status === 'out-of-stock').length} out of stock,{' '}
                   {parts.filter((p) => p.status === 'low-stock').length} low stock items
                 </p>
@@ -341,28 +341,28 @@ export default function InventoryManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6 bg-graphite-800 backdrop-blur-sm rounded-xl p-4 border border-graphite-700"
+          className="mb-6 bg-white rounded-xl p-4 border border-gray-200 shadow-card"
         >
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search parts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
               />
             </div>
 
             {/* Category Filter */}
             <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="all">All Categories</option>
                 {getCategories().map((cat) => (
@@ -375,11 +375,11 @@ export default function InventoryManagementPage() {
 
             {/* Stock Filter */}
             <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-graphite-400" />
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <select
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value as any)}
-                className="w-full pl-12 pr-4 py-3 bg-graphite-900 border border-graphite-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="all">All Stock Levels</option>
                 <option value="in-stock">In Stock</option>
@@ -397,9 +397,9 @@ export default function InventoryManagementPage() {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="mb-6 flex items-center justify-between"
         >
-          <p className="text-sm text-graphite-700">
-            Showing <span className="font-semibold text-graphite-900">{startIndex + 1}-{Math.min(endIndex, filteredParts.length)}</span> of{' '}
-            <span className="font-semibold text-graphite-900">{filteredParts.length}</span> parts
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-900">{startIndex + 1}-{Math.min(endIndex, filteredParts.length)}</span> of{' '}
+            <span className="font-semibold text-gray-900">{filteredParts.length}</span> parts
           </p>
         </motion.div>
 
@@ -418,20 +418,20 @@ export default function InventoryManagementPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
-                className="bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden"
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-card"
               >
                 {/* Card Header - Part Name, Status & Actions */}
-                <div className="p-4 border-b border-graphite-700/50">
+                <div className="p-4 border-b border-gray-200">
                   <div className="flex items-start gap-3">
                     {/* Icon */}
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
-                      <Package className="h-6 w-6 text-brand" />
+                    <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
+                      <Package className="h-6 w-6 text-gray-700" />
                     </div>
 
                     {/* Name & Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-white truncate">
+                        <h3 className="text-base font-semibold text-gray-900 truncate">
                           {part.partName}
                         </h3>
                         <span
@@ -443,7 +443,7 @@ export default function InventoryManagementPage() {
                           {part.status === 'in-stock' ? 'In Stock' : part.status === 'low-stock' ? 'Low Stock' : 'Out of Stock'}
                         </span>
                       </div>
-                      <p className="text-sm text-graphite-400 font-mono">{part.partNumber}</p>
+                      <p className="text-sm text-gray-500 font-mono">{part.partNumber}</p>
                     </div>
 
                     {/* Actions */}
@@ -451,14 +451,14 @@ export default function InventoryManagementPage() {
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleViewPart(part)}
-                        className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
                       >
                         <Eye className="h-4 w-4" />
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleDeletePart(part)}
-                        className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                        className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                       >
                         <Trash2 className="h-4 w-4" />
                       </motion.button>
@@ -470,11 +470,11 @@ export default function InventoryManagementPage() {
                 <div className="p-4 space-y-3">
                   {/* Category Badge */}
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-blue-500/10 text-blue-400 border-blue-500/30">
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-status-info/10 text-status-info border-status-info/20">
                       {part.category}
                     </span>
                     {part.make && (
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-brand/10 text-brand border-brand/20">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-gray-100 text-gray-700 border-gray-200">
                         {part.make} {part.model || ''}
                       </span>
                     )}
@@ -483,20 +483,20 @@ export default function InventoryManagementPage() {
                   {/* Stock Info */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-graphite-500">On Hand:</span>
-                      <span className="text-white font-medium ml-2">{part.onHandStock}</span>
+                      <span className="text-gray-500">On Hand:</span>
+                      <span className="text-gray-900 font-medium ml-2">{part.onHandStock}</span>
                     </div>
                     <div>
-                      <span className="text-graphite-500">Warehouse:</span>
-                      <span className="text-white font-medium ml-2">{part.warehouseStock}</span>
+                      <span className="text-gray-500">Warehouse:</span>
+                      <span className="text-gray-900 font-medium ml-2">{part.warehouseStock}</span>
                     </div>
                   </div>
 
                   {/* Pricing */}
-                  <div className="pt-2 border-t border-graphite-700/30">
+                  <div className="pt-2 border-t border-gray-200">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-graphite-400">₹{part.sellingPrice}</span>
-                      <span className="text-brand text-xs font-medium">{part.margin.toFixed(1)}% margin</span>
+                      <span className="text-gray-600">₹{part.sellingPrice}</span>
+                      <span className="text-gray-700 text-xs font-medium">{part.margin.toFixed(1)}% margin</span>
                     </div>
                   </div>
                 </div>
@@ -505,51 +505,51 @@ export default function InventoryManagementPage() {
           </div>
 
           {/* Desktop Table Layout */}
-          <div className="hidden md:block bg-graphite-800 rounded-xl border border-graphite-700 overflow-hidden">
+          <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden shadow-card">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-graphite-700/50">
+                <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Part</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Part</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Part Number</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Part Number</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Category</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Stock</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Price</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Status</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</span>
                   </th>
                   <th className="px-6 py-4 text-right">
-                    <span className="text-xs font-semibold text-graphite-400 uppercase tracking-wider">Actions</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-graphite-700/30">
+              <tbody className="divide-y divide-gray-200">
                 {paginatedParts.map((part, index) => (
                   <motion.tr
                     key={part.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.03 }}
-                    className="hover:bg-graphite-700/30 transition-colors duration-150"
+                    className="hover:bg-gray-50 transition-colors duration-150"
                   >
                     {/* Part Name & Icon */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand/20 to-brand/5 flex items-center justify-center border border-brand/20 flex-shrink-0">
-                          <Package className="h-5 w-5 text-brand" />
+                        <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
+                          <Package className="h-5 w-5 text-gray-700" />
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">{part.partName}</div>
-                          <div className="text-xs text-graphite-400">
+                          <div className="text-sm font-medium text-gray-900">{part.partName}</div>
+                          <div className="text-xs text-gray-500">
                             {part.make} {part.model ? `${part.model}` : ''}
                           </div>
                         </div>
@@ -558,12 +558,12 @@ export default function InventoryManagementPage() {
 
                     {/* Part Number */}
                     <td className="px-6 py-4">
-                      <div className="text-sm text-graphite-300 font-mono">{part.partNumber}</div>
+                      <div className="text-sm text-gray-600 font-mono">{part.partNumber}</div>
                     </td>
 
                     {/* Category */}
                     <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-blue-500/10 text-blue-400 border-blue-500/30">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-status-info/10 text-status-info border-status-info/20">
                         {part.category}
                       </span>
                     </td>
@@ -571,11 +571,11 @@ export default function InventoryManagementPage() {
                     {/* Stock */}
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-white">
-                          <span className="text-graphite-400">On Hand:</span>
+                        <div className="flex items-center gap-2 text-sm text-gray-900">
+                          <span className="text-gray-500">On Hand:</span>
                           <span className="font-medium">{part.onHandStock}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-graphite-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
                           <span>Warehouse:</span>
                           <span>{part.warehouseStock}</span>
                         </div>
@@ -585,8 +585,8 @@ export default function InventoryManagementPage() {
                     {/* Price */}
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="text-sm text-white font-medium">₹{part.sellingPrice}</div>
-                        <div className="text-xs text-brand">{part.margin.toFixed(1)}% margin</div>
+                        <div className="text-sm text-gray-900 font-medium">₹{part.sellingPrice}</div>
+                        <div className="text-xs text-gray-600">{part.margin.toFixed(1)}% margin</div>
                       </div>
                     </td>
 
@@ -609,7 +609,7 @@ export default function InventoryManagementPage() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleViewPart(part)}
-                          className="p-2 text-graphite-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-all"
+                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
                           title="View"
                         >
                           <Eye className="h-4 w-4" />
@@ -618,7 +618,7 @@ export default function InventoryManagementPage() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleDeletePart(part)}
-                          className="p-2 text-graphite-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                          className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -633,10 +633,10 @@ export default function InventoryManagementPage() {
 
           {/* Empty State */}
           {paginatedParts.length === 0 && (
-            <div className="text-center py-16 bg-graphite-800 rounded-xl border border-graphite-700">
-              <Package className="h-16 w-16 text-graphite-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No parts found</h3>
-              <p className="text-graphite-400 mb-6">
+            <div className="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-card">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No parts found</h3>
+              <p className="text-gray-600 mb-6">
                 {searchQuery || categoryFilter !== 'all' || stockFilter !== 'all'
                   ? 'Try adjusting your search or filters'
                   : 'Get started by adding your first part'}
@@ -646,7 +646,7 @@ export default function InventoryManagementPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleAddPart}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-brand text-graphite-900 font-semibold rounded-xl hover:bg-brand/90 transition-all duration-200 shadow-lg shadow-brand/20"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200"
                 >
                   <Plus className="h-5 w-5" />
                   Add Your First Part
@@ -664,9 +664,9 @@ export default function InventoryManagementPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-6 flex items-center justify-between"
           >
-            <div className="text-sm text-graphite-700">
-              Page <span className="font-medium text-graphite-900">{currentPage}</span> of{' '}
-              <span className="font-medium text-graphite-900">{totalPages}</span>
+            <div className="text-sm text-gray-600">
+              Page <span className="font-medium text-gray-900">{currentPage}</span> of{' '}
+              <span className="font-medium text-gray-900">{totalPages}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -675,7 +675,7 @@ export default function InventoryManagementPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm font-medium text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Previous
               </motion.button>
@@ -695,7 +695,7 @@ export default function InventoryManagementPage() {
 
                     return (
                       <React.Fragment key={page}>
-                        {showEllipsis && <span className="px-2 text-graphite-500">...</span>}
+                        {showEllipsis && <span className="px-2 text-gray-500">...</span>}
                         <motion.button
                           whileHover={{ scale: currentPage !== page ? 1.05 : 1 }}
                           whileTap={{ scale: currentPage !== page ? 0.95 : 1 }}
@@ -703,8 +703,8 @@ export default function InventoryManagementPage() {
                           className={cn(
                             'min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all',
                             currentPage === page
-                              ? 'bg-brand text-graphite-900'
-                              : 'bg-graphite-800 border border-graphite-700 text-white hover:bg-graphite-700'
+                              ? 'bg-gray-700 text-white'
+                              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                           )}
                         >
                           {page}
@@ -719,7 +719,7 @@ export default function InventoryManagementPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-graphite-800 border border-graphite-700 rounded-lg text-sm font-medium text-white hover:bg-graphite-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm font-medium text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next
               </motion.button>
@@ -771,7 +771,7 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-200"
       >
         {/* Warning Icon */}
         <div className="flex justify-center mb-4">
@@ -782,9 +782,9 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
 
         {/* Title and Message */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-graphite-900 mb-2">Delete Part?</h2>
-          <p className="text-graphite-600">
-            Are you sure you want to delete <span className="font-semibold text-graphite-900">{partName}</span>? This action cannot be undone.
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Part?</h2>
+          <p className="text-gray-600">
+            Are you sure you want to delete <span className="font-semibold text-gray-900">{partName}</span>? This action cannot be undone.
           </p>
         </div>
 
@@ -793,7 +793,7 @@ function DeleteConfirmationModal({ isOpen, onClose, partName, onConfirm }: Delet
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 border border-graphite-300 text-graphite-700 font-semibold rounded-xl hover:bg-graphite-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

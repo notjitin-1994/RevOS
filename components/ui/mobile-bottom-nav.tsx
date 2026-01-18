@@ -83,8 +83,8 @@ export const MobileBottomNav = ({ onLogout }: MobileBottomNavProps) => {
         className={cn(
           "fixed bottom-0 left-0 right-0 z-50",
           "md:hidden", // Only visible on mobile
-          "bg-graphite-900/95 backdrop-blur-md",
-          "border-t border-graphite-700",
+          "bg-brand/95 backdrop-blur-md",
+          "border-t border-brand-hover",
           "h-16 pb-safe" // Safe area for iPhone home bar
         )}
         aria-label="Mobile navigation"
@@ -119,8 +119,8 @@ export const MobileBottomNav = ({ onLogout }: MobileBottomNavProps) => {
         </div>
 
         {/* Fade indicators for scroll */}
-        <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-graphite-900 to-transparent pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-graphite-900 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-brand to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-brand to-transparent pointer-events-none" />
       </nav>
 
       {/* Spacer for content to not be hidden behind nav */}
@@ -168,8 +168,8 @@ const MobileNavItem = ({ link, isActive, itemRef }: MobileNavItemProps) => {
         "snap-start", // Scroll snap
         // Active state styling
         isActive
-          ? "text-brand bg-brand/10"
-          : "text-graphite-400 hover:text-graphite-300 hover:bg-graphite-800"
+          ? "text-graphite-900 bg-graphite-900/10"
+          : "text-graphite-900/70 hover:text-graphite-900 hover:bg-graphite-900/10"
       )}
       aria-label={link.label}
       aria-current={isActive ? 'page' : undefined}
