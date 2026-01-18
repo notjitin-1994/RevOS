@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, User, Hash } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -47,7 +47,7 @@ interface CustomerData {
   phoneNumber: string
 }
 
-export default function AddVehiclePage() {
+function AddVehiclePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const customerIdParam = searchParams.get('customerId')
@@ -542,5 +542,21 @@ export default function AddVehiclePage() {
         </div>
       </motion.form>
     </div>
+  )
+}
+
+// Wrapper component with Suspense boundary
+export default function AddVehiclePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-700" />
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AddVehiclePageContent />
+    </Suspense>
   )
 }
