@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       user: {
-        garageId: authUser.garage_id,
+        garageId: authUser.garage_id, // Now contains valid UUID after database fix
         userUid: authUser.user_uid,
         firstName: authUser.first_name,
         lastName: authUser.last_name,

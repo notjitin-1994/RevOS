@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, User, Hash } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Loader2, User, Hash } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
+import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
 
 /**
  * Add Bike Page - Vehicle Registry
@@ -26,45 +27,37 @@ interface FormData {
   notes: string
 }
 
-// Service scope data
-const serviceScope = {
-  makes: {
-    Honda: ['CBR650R', 'CBR600RR', 'CBR1000RR-R Fireblade', 'Africa Twin', 'NC750X'],
-    Kawasaki: ['Ninja 400', 'Ninja 650', 'Ninja ZX-10R', 'Z900', 'Versys 650'],
-    Yamaha: ['MT-07', 'MT-09', 'YZF-R1', 'YZF-R6', 'Tracer 900'],
-    BMW: ['R 1250 GS', 'R 1250 RT', 'S 1000 RR', 'M 1000 RR', 'G 310 GS'],
-    'Royal Enfield': ['Classic 350', 'Classic 500', 'Himalayan', 'Interceptor 650', 'Continental GT'],
-    Suzuki: ['GSX-R1000', 'GSX-R750', 'Hayabusa', 'V-Strom 650', 'Katana'],
-    Ducati: ['Panigale V4', 'Streetfighter V4', 'Multistrada V4', 'SuperSport 950', 'Scrambler'],
-    KTM: ['Duke 390', 'Duke 790', 'Duke 890', 'RC 390', 'Adventure 390'],
-  },
-  years: [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015],
+interface MakeData {
+  id: string
+  name: string
+  country: string
+  logoUrl: string | null
+  models: {
+    id: string
+    name: string
+    category: string
+    years: number[]
+  }[]
 }
 
-const categories = [
-  'Sport',
-  'Naked',
-  'Cruiser',
-  'Adventure',
-  'Touring',
-  'Dual-Sport',
-  'Scooter',
-  'Other',
-]
-
-// Mock customers
-const mockCustomers = [
-  { id: 'cust-001', name: 'Rahul Sharma', phone: '+91 98765 43210' },
-  { id: 'cust-002', name: 'Priya Patel', phone: '+91 98765 43211' },
-  { id: 'cust-003', name: 'Amit Kumar', phone: '+91 98765 43212' },
-  { id: 'cust-004', name: 'Suresh Reddy', phone: '+91 98765 43213' },
-  { id: 'cust-005', name: 'Anjali Desai', phone: '+91 98765 43214' },
-]
+interface CustomerData {
+  id: string
+  firstName: string
+  lastName: string
+  phoneNumber: string
+}
 
 export default function AddVehiclePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const customerIdParam = searchParams.get('customerId')
+
+  const [makesData, setMakesData] = useState<MakeData[]>([])
+  const [customers, setCustomers] = useState<CustomerData[]>([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
+
   const [formData, setFormData] = useState<FormData>({
-    customerId: '',
+    customerId: customerIdParam || '',
     customerName: '',
     customerPhone: '',
     make: '',
@@ -77,8 +70,59 @@ export default function AddVehiclePage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    if (customerIdParam && customers.length > 0) {
+      const customer = customers.find((c) => c.id === customerIdParam)
+      if (customer) {
+        setFormData((prev) => ({
+          ...prev,
+          customerId: customerIdParam,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          customerPhone: customer.phoneNumber,
+        }))
+      }
+    }
+  }, [customerIdParam, customers])
+
+  const loadData = async () => {
+    try {
+      setIsLoadingData(true)
+
+      // Load makes data
+      const makes = await getMakesDataAction()
+      setMakesData(makes)
+
+      // Load customers
+      const garageId = sessionStorage.getItem('garageId')
+      if (garageId) {
+        const response = await fetch(`/api/customers/list?garageId=${garageId}`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.customers) {
+            setCustomers(result.customers)
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loading data:', err)
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
   // Derived models based on selected make
-  const availableModels = formData.make ? serviceScope.makes[formData.make as keyof typeof serviceScope.makes] || [] : []
+  const availableModels = formData.make
+    ? makesData.find((m) => m.name === formData.make)?.models || []
+    : []
+
+  // Available years based on selected model
+  const availableYears = formData.model
+    ? availableModels.find((m) => m.name === formData.model)?.years || []
+    : []
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
@@ -86,27 +130,50 @@ export default function AddVehiclePage() {
       [field]: value,
     }))
 
-    // If make changes, reset model
+    // If make changes, reset category, model and year
     if (field === 'make') {
       setFormData((prev) => ({
         ...prev,
         make: value,
         model: '',
+        category: '',
+        year: '',
       }))
+    }
+
+    // If model changes, auto-populate category and reset year
+    if (field === 'model') {
+      const newFormData = { ...formData, model: value, year: '' }
+
+      // Auto-set category based on selected model
+      if (formData.make && value) {
+        const models = getAvailableModels(formData.make)
+        const selectedModel = models.find((m) => m.name === value)
+        if (selectedModel) {
+          newFormData.category = selectedModel.category
+        }
+      }
+
+      setFormData(newFormData)
     }
 
     // If customer is selected, auto-fill customer details
     if (field === 'customerId') {
-      const customer = mockCustomers.find((c) => c.id === value)
+      const customer = customers.find((c) => c.id === value)
       if (customer) {
         setFormData((prev) => ({
           ...prev,
           customerId: value,
-          customerName: customer.name,
-          customerPhone: customer.phone,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          customerPhone: customer.phoneNumber,
         }))
       }
     }
+  }
+
+  const getAvailableModels = (makeName: string) => {
+    const make = makesData.find((m) => m.name === makeName)
+    return make?.models || []
   }
 
   const handleBack = () => {
@@ -130,19 +197,54 @@ export default function AddVehiclePage() {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const garageId = sessionStorage.getItem('garageId')
+      if (!garageId) {
+        throw new Error('Garage ID not found')
+      }
 
-      console.log('Vehicle data:', formData)
+      // Create vehicle
+      const response = await fetch('/api/vehicles/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          garageId,
+          customerId: formData.customerId,
+          make: formData.make,
+          model: formData.model,
+          year: parseInt(formData.year),
+          category: formData.category,
+          engineNumber: formData.engineNumber,
+          chassisNumber: formData.chassisNumber,
+          licensePlate: formData.chassisNumber, // Using chassis as license plate for now
+          notes: formData.notes || null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to register vehicle')
+      }
 
       setIsSubmitting(false)
       alert('Bike registered successfully!')
       router.push('/vehicles')
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert('An error occurred. Please try again.')
+      alert(error instanceof Error ? error.message : 'An error occurred. Please try again.')
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -155,20 +257,11 @@ export default function AddVehiclePage() {
         className="mb-6 md:mb-8"
       >
         <div className="flex items-center gap-4">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleBack}
-            className="flex items-center justify-center h-10 w-10 bg-white text-gray-700 rounded-xl hover:bg-gray-100 transition-all duration-200 shadow-md border border-gray-300"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </motion.button>
-
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
               Register New Bike
             </h1>
-            <p className="text-sm md:text-base text-graphite-600 mt-1">
+            <p className="text-sm md:text-base text-gray-600 mt-1">
               Add a customer motorcycle to the registry
             </p>
           </div>
@@ -209,9 +302,9 @@ export default function AddVehiclePage() {
                   required
                 >
                   <option value="">Select Customer</option>
-                  {mockCustomers.map((customer) => (
+                  {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
-                      {customer.name} ({customer.phone})
+                      {customer.firstName} {customer.lastName} ({customer.phoneNumber})
                     </option>
                   ))}
                 </select>
@@ -220,7 +313,7 @@ export default function AddVehiclePage() {
               {/* Customer Name & Phone (Read-only) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="customerName" className="block text-sm font-semibold text-white mb-2">
+                  <label htmlFor="customerName" className="block text-sm font-semibold text-gray-900 mb-2">
                     Customer Name
                   </label>
                   <input
@@ -234,7 +327,7 @@ export default function AddVehiclePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="customerPhone" className="block text-sm font-semibold text-white mb-2">
+                  <label htmlFor="customerPhone" className="block text-sm font-semibold text-gray-900 mb-2">
                     Phone Number
                   </label>
                   <input
@@ -258,7 +351,7 @@ export default function AddVehiclePage() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Vehicle Information</h2>
-                <p className="text-sm text-gray-600">Make, model, and year from service scope</p>
+                <p className="text-sm text-gray-600">Make, model, and year from motorcycle catalog</p>
               </div>
             </div>
 
@@ -276,9 +369,9 @@ export default function AddVehiclePage() {
                   required
                 >
                   <option value="">Select Make</option>
-                  {Object.keys(serviceScope.makes).map((make) => (
-                    <option key={make} value={make}>
-                      {make}
+                  {makesData.map((make) => (
+                    <option key={make.id} value={make.name}>
+                      {make.name}
                     </option>
                   ))}
                 </select>
@@ -286,7 +379,7 @@ export default function AddVehiclePage() {
 
               {/* Model */}
               <div>
-                <label htmlFor="model" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="model" className="block text-sm font-semibold text-gray-900 mb-2">
                   Model <span className="text-red-400">*</span>
                 </label>
                 <select
@@ -299,8 +392,8 @@ export default function AddVehiclePage() {
                 >
                   <option value="">Select Model</option>
                   {availableModels.map((model) => (
-                    <option key={model} value={model}>
-                      {model}
+                    <option key={model.id} value={model.name}>
+                      {model.name}
                     </option>
                   ))}
                 </select>
@@ -308,18 +401,19 @@ export default function AddVehiclePage() {
 
               {/* Year */}
               <div>
-                <label htmlFor="year" className="block text-sm font-semibold text-white mb-2">
+                <label htmlFor="year" className="block text-sm font-semibold text-gray-900 mb-2">
                   Year <span className="text-red-400">*</span>
                 </label>
                 <select
                   id="year"
                   value={formData.year}
                   onChange={(e) => handleInputChange('year', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer"
+                  disabled={!formData.model}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 >
                   <option value="">Select Year</option>
-                  {serviceScope.years.map((year) => (
+                  {availableYears.map((year) => (
                     <option key={year} value={year}>
                       {year}
                     </option>
@@ -330,22 +424,17 @@ export default function AddVehiclePage() {
 
             {/* Category */}
             <div>
-              <label htmlFor="category" className="block text-sm font-semibold text-white mb-2">
-                Category (Optional)
+              <label htmlFor="category" className="block text-sm font-semibold text-gray-900 mb-2">
+                Category
               </label>
-              <select
+              <input
+                type="text"
                 id="category"
                 value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all appearance-none cursor-pointer"
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                placeholder="Auto-populated based on model selection"
+                className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 cursor-default"
+              />
             </div>
           </div>
 
@@ -381,7 +470,7 @@ export default function AddVehiclePage() {
               {/* Chassis Number */}
               <div>
                 <label htmlFor="chassisNumber" className="block text-sm font-semibold text-gray-900 mb-2">
-                  Chassis Number (VIN) <span className="text-red-400">*</span>
+                  VIN (Chassis Number) <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"

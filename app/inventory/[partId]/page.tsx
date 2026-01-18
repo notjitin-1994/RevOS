@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import {
   Package,
-  ArrowLeft,
   Edit,
   Trash2,
   AlertCircle,
@@ -14,16 +13,25 @@ import {
   Calendar,
   DollarSign,
   Barcode,
+  Settings,
+  FileText,
+  Shield,
+  TrendingUp,
+  ExternalLink,
+  Copy,
+  AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 /**
  * Part Detail Page
  *
- * Detailed view of a single part in inventory.
+ * Comprehensive view of a single part in inventory with enhanced
+ * tracking following ACES/PIES automotive industry standards.
  */
 
+// Enhanced Part interface with all required fields
 interface Part {
   id: string
   partNumber: string
@@ -32,17 +40,103 @@ interface Part {
   make?: string | null
   model?: string | null
   usedFor: string
+  description?: string | null
+
+  // Stock Information
   onHandStock: number
   warehouseStock: number
   lowStockThreshold: number
+
+  // Pricing
   purchasePrice: number
   sellingPrice: number
   margin: number
+  wholesalePrice?: number | null
+  coreCharge?: number | null
+  priceLastUpdated?: string | null
+
+  // Identification
+  sku?: string | null
+  oemPartNumber?: string | null
+
+  // Vehicle Fitment - Array of motorcycle catalog IDs
+  compatibleVehicles?: string[] | null
+
+  // Physical Attributes
+  weight?: number | null // kg
+  dimensions?: Dimensions | null
+  quantityPerPackage?: number | null
+  isHazardous?: boolean | null
+
+  // Vendor Information
   location?: string | null
   supplier?: string | null
+  supplierPhone?: string | null
+  supplierEmail?: string | null
+  supplierWebsite?: string | null
+  vendorSku?: string | null
+  leadTimeDays?: number | null
+  minimumOrderQuantity?: number | null
+  secondarySuppliers?: SecondarySupplier[] | null
+
+  // Lifecycle & Tracking
   lastRestocked?: string | null
-  description?: string | null
+  dateAdded?: string | null
+  lastSoldDate?: string | null
+  lastPurchaseDate?: string | null
+  batchNumber?: string | null
+  expirationDate?: string | null
+
+  // Quality & Compliance
+  warrantyMonths?: number | null
+  countryOfOrigin?: string | null
+
+  // Digital Assets
+  technicalDiagramUrl?: string | null
+  installationInstructionsUrl?: string | null
+
   status: 'in-stock' | 'low-stock' | 'out-of-stock'
+}
+
+interface ModelData {
+  id: string
+  name: string
+  category: string
+  years: number[]
+}
+
+interface MakeData {
+  id: string
+  name: string
+  country: string
+  logoUrl: string | null
+  models: ModelData[]
+  createdAt: string
+}
+
+interface FlatMotorcycleData {
+  id: string
+  make: string
+  model: string
+  category: string
+  years: number[]
+  yearRange: string
+}
+
+interface Dimensions {
+  length?: number | null // cm
+  width?: number | null // cm
+  height?: number | null // cm
+}
+
+interface SecondarySupplier {
+  name: string
+  phone?: string | null
+  email?: string | null
+  website?: string | null
+  vendorSku?: string | null
+  leadTimeDays?: number | null
+  minimumOrderQuantity?: number | null
 }
 
 export default function PartDetailPage() {
@@ -54,10 +148,25 @@ export default function PartDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'fitment' | 'vendor' | 'lifecycle' | 'technical'>('overview')
+  const [activeBackupSupplier, setActiveBackupSupplier] = useState(0)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  // Motorcycle catalog data
+  const [motorcycles, setMotorcycles] = useState<FlatMotorcycleData[]>([])
+  const [isMotorcyclesLoading, setIsMotorcyclesLoading] = useState(true)
 
   useEffect(() => {
     loadPart()
+    loadMotorcycles()
   }, [partId])
+
+  useEffect(() => {
+    if (copiedField) {
+      const timer = setTimeout(() => setCopiedField(null), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [copiedField])
 
   const loadPart = async () => {
     try {
@@ -71,24 +180,74 @@ export default function PartDetailPage() {
       // TODO: Fetch part from API
       // const response = await fetch(`/api/inventory/part/${partId}`)
 
-      // Mock data for now
+      // Comprehensive mock data with relevant fields for motorcycle garage in India
       const mockPart: Part = {
         id: partId,
         partNumber: 'OIL-001',
-        partName: 'Engine Oil 10W-40',
+        partName: 'Engine Oil 10W-40 Synthetic',
         category: 'Engine',
-        make: 'Universal',
-        usedFor: 'Engine',
+        make: 'Motul',
+        model: null,
+        usedFor: 'Engine Lubrication',
+        description: 'Premium synthetic engine oil formulated for high-performance motorcycles. Provides superior wear protection, thermal stability, and fuel efficiency. Compatible with both air-cooled and liquid-cooled engines.',
         onHandStock: 25,
         warehouseStock: 50,
         lowStockThreshold: 10,
         purchasePrice: 450,
         sellingPrice: 650,
         margin: 30.8,
+        wholesalePrice: 550,
+        coreCharge: null,
+        priceLastUpdated: '2024-01-15',
+        sku: 'SKU-OIL-10W40-SYN-1L',
+        oemPartNumber: 'OEM-999-888-777',
+        compatibleVehicles: ['mock-motorcycle-id-1', 'mock-motorcycle-id-2'], // Will be replaced with actual IDs
+        weight: 0.95,
+        dimensions: {
+          length: 25,
+          width: 10,
+          height: 10,
+        },
+        quantityPerPackage: 1,
+        isHazardous: false,
         location: 'A1-01',
         supplier: 'AutoParts Ltd',
+        supplierPhone: '+91 98765 43210',
+        supplierEmail: 'orders@autopartsltd.com',
+        supplierWebsite: 'https://autopartsltd.com',
+        vendorSku: 'APL-OIL-SYN-10W40',
+        leadTimeDays: 3,
+        minimumOrderQuantity: 12,
+        secondarySuppliers: [
+          {
+            name: 'Global Moto Spares',
+            phone: '+91 98765 11111',
+            email: 'sales@globalmoto.com',
+            website: 'https://globalmoto.com',
+            vendorSku: 'GMS-OIL-10W40',
+            leadTimeDays: 5,
+            minimumOrderQuantity: 24,
+          },
+          {
+            name: 'SpeedParts Inc',
+            phone: '+91 98765 22222',
+            email: 'orders@speedparts.in',
+            website: 'https://speedparts.in',
+            vendorSku: 'SPI-OIL-SYN-10W40',
+            leadTimeDays: 7,
+            minimumOrderQuantity: 50,
+          },
+        ],
         lastRestocked: '2024-01-10',
-        description: 'High-quality synthetic engine oil suitable for all modern motorcycles. Provides excellent protection and performance.',
+        dateAdded: '2023-06-15',
+        lastSoldDate: '2024-01-16',
+        lastPurchaseDate: '2024-01-08',
+        batchNumber: 'BATCH-2024-01-001',
+        expirationDate: '2026-01-10',
+        warrantyMonths: 24,
+        countryOfOrigin: 'India',
+        technicalDiagramUrl: 'https://example.com/docs/oil-specs.pdf',
+        installationInstructionsUrl: 'https://example.com/docs/oil-install.pdf',
         status: 'in-stock',
       }
 
@@ -100,6 +259,46 @@ export default function PartDetailPage() {
       setError(message)
       setIsLoading(false)
     }
+  }
+
+  const loadMotorcycles = async () => {
+    try {
+      const response = await fetch('/api/motorcycles/list')
+      if (!response.ok) {
+        throw new Error('Failed to fetch motorcycle catalog')
+      }
+      const result = await response.json()
+      if (result.success && result.makes) {
+        // Flatten the makes/models into a single array
+        const flatList: FlatMotorcycleData[] = []
+        result.makes.forEach((make: MakeData) => {
+          make.models.forEach((model: ModelData) => {
+            const yearMin = Math.min(...model.years)
+            const yearMax = Math.max(...model.years)
+            const yearRange = yearMin === yearMax ? `${yearMin}` : `${yearMin} - ${yearMax}`
+
+            flatList.push({
+              id: model.id,
+              make: make.name,
+              model: model.name,
+              category: model.category,
+              years: model.years,
+              yearRange,
+            })
+          })
+        })
+        setMotorcycles(flatList)
+      }
+    } catch (err) {
+      console.error('Error loading motorcycle catalog:', err)
+    } finally {
+      setIsMotorcyclesLoading(false)
+    }
+  }
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
   }
 
   const handleEdit = () => {
@@ -144,6 +343,44 @@ export default function PartDetailPage() {
     }
   }
 
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  const CopyableField = ({ label, value, fieldId }: { label: string; value: string; fieldId: string }) => (
+    <div className="group relative">
+      <dt className="text-sm text-gray-600 mb-1">{label}</dt>
+      <div className="flex items-center gap-2">
+        <dd className="text-base font-mono text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg flex-1">
+          {value}
+        </dd>
+        <button
+          onClick={() => copyToClipboard(value, fieldId)}
+          className="p-2 hover:bg-gray-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+          title="Copy to clipboard"
+        >
+          {copiedField === fieldId ? (
+            <CheckCircle className="h-4 w-4 text-status-success" />
+          ) : (
+            <Copy className="h-4 w-4 text-gray-600" />
+          )}
+        </button>
+      </div>
+    </div>
+  )
+
+  const tabs = [
+    { id: 'overview' as const, label: 'Overview', icon: Package },
+    { id: 'fitment' as const, label: 'Vehicle Fitment', icon: Settings },
+    { id: 'vendor' as const, label: 'Vendor Info', icon: Truck },
+    { id: 'lifecycle' as const, label: 'Lifecycle', icon: TrendingUp },
+    { id: 'technical' as const, label: 'Technical', icon: FileText },
+  ]
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -179,276 +416,621 @@ export default function PartDetailPage() {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        {/* Header - Aligned with main content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        {/* Header Section */}
+        <div className="mb-6">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-2"
           >
-            <div className="flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/inventory')}
-                className="flex items-center justify-center h-10 w-10 bg-graphite-800 text-white rounded-xl hover:bg-graphite-700 transition-all duration-200 shadow-md border border-graphite-700"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </motion.button>
-
-              <div className="flex-1">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                  {part.partName}
-                </h1>
-                <p className="text-sm md:text-base text-gray-600 mt-1 font-mono">
-                  {part.partNumber}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Status Banner - Aligned with main content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-2"
-          >
-            <div className={cn(
-              'p-4 rounded-xl border flex items-center justify-between',
-              getStatusColor(part.status)
-            )}>
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5" />
-                <div>
-                  <span className="font-semibold text-gray-900">
-                    {part.status === 'in-stock' ? 'In Stock' : part.status === 'low-stock' ? 'Low Stock Alert' : 'Out of Stock'}
-                  </span>
-                  {part.status === 'low-stock' && (
-                    <span className="ml-2 text-sm text-gray-600">
-                      - Below threshold of {part.lowStockThreshold} units
+            <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+              {/* Part Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    {part.partName}
+                  </h1>
+                  {part.isHazardous && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Hazardous
                     </span>
                   )}
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-600">Total Stock</div>
-                <div className="text-lg font-bold text-gray-900">{part.onHandStock + part.warehouseStock}</div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Details Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Details */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="lg:col-span-2 space-y-6"
-          >
-            {/* Basic Information */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-              </div>
-              <div className="p-6">
-                <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1">Category</dt>
-                    <dd className="text-base font-medium text-gray-900">{part.category}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1">Used For</dt>
-                    <dd className="text-base font-medium text-gray-900">{part.usedFor}</dd>
-                  </div>
+                <p className="text-sm md:text-base text-gray-600 font-mono mb-2">
+                  {part.partNumber}
+                </p>
+                {part.description && (
+                  <p className="text-sm text-gray-700 line-clamp-2 mb-3">{part.description}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {part.category && (
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 bg-graphite-700/10 rounded-full transform scale-110"></div>
+                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-graphite-50/80 text-graphite-700 border border-graphite-200/50 backdrop-blur-sm">
+                        {part.category}
+                      </span>
+                    </div>
+                  )}
                   {part.make && (
-                    <div>
-                      <dt className="text-sm text-gray-600 mb-1">Make</dt>
-                      <dd className="text-base font-medium text-gray-900">{part.make}</dd>
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 bg-graphite-700/10 rounded-full transform scale-110"></div>
+                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-graphite-50/80 text-graphite-700 border border-graphite-200/50 backdrop-blur-sm">
+                        {part.make}
+                      </span>
                     </div>
                   )}
-                  {part.model && (
-                    <div>
-                      <dt className="text-sm text-gray-600 mb-1">Model</dt>
-                      <dd className="text-base font-medium text-gray-900">{part.model}</dd>
-                    </div>
-                  )}
-                  {part.description && (
-                    <div className="md:col-span-2">
-                      <dt className="text-sm text-gray-600 mb-1">Description</dt>
-                      <dd className="text-base text-gray-900">{part.description}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            </div>
-
-            {/* Stock Information */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Stock Information</h3>
-              </div>
-              <div className="p-6">
-                <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      On-Hand Stock
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900">{part.onHandStock}</dd>
-                    <dt className="text-xs text-gray-500 mt-1">Available in workshop</dt>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      Warehouse Stock
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900">{part.warehouseStock}</dd>
-                    <dt className="text-xs text-gray-500 mt-1">In deep storage</dt>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1">Low Stock Alert</dt>
-                    <dd className="text-2xl font-bold text-status-warning">{part.lowStockThreshold}</dd>
-                    <dt className="text-xs text-gray-500 mt-1">Alert threshold</dt>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
-            {/* Pricing Information */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Pricing Information</h3>
-              </div>
-              <div className="p-6">
-                <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Purchase Price
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900">₹{part.purchasePrice.toFixed(2)}</dd>
-                    <dt className="text-xs text-gray-500 mt-1">Cost per unit</dt>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Selling Price
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-700">₹{part.sellingPrice.toFixed(2)}</dd>
-                    <dt className="text-xs text-gray-500 mt-1">Retail per unit</dt>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1">Profit Margin</dt>
-                    <dd className={cn(
-                      "text-2xl font-bold",
-                      part.margin >= 30 ? "text-status-success" : part.margin >= 20 ? "text-status-warning" : "text-status-error"
-                    )}>
-                      {part.margin.toFixed(1)}%
-                    </dd>
-                    <dt className="text-xs text-gray-500 mt-1">
-                      ₹{(part.sellingPrice - part.purchasePrice).toFixed(2)} profit
-                    </dt>
-                  </div>
-                </dl>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Sidebar Details */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Location & Supplier */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Additional Details</h3>
-              </div>
-              <div className="p-6 space-y-4">
-                {part.location && (
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Location
-                    </dt>
-                    <dd className="text-base font-medium text-gray-900">{part.location}</dd>
-                  </div>
-                )}
-                {part.supplier && (
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <Truck className="h-4 w-4" />
-                      Supplier
-                    </dt>
-                    <dd className="text-base font-medium text-gray-900">{part.supplier}</dd>
-                  </div>
-                )}
-                {part.lastRestocked && (
-                  <div>
-                    <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Last Restocked
-                    </dt>
-                    <dd className="text-base font-medium text-gray-900">
-                      {new Date(part.lastRestocked).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </dd>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Part Number Card */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
-                  <Barcode className="h-4 w-4 text-gray-700" />
-                  Part Number
-                </h3>
-                <p className="text-2xl font-bold text-gray-900 font-mono">{part.partNumber}</p>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-              </div>
-              <div className="p-4 space-y-2">
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={handleEdit}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
-                >
-                  <Edit className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-900">Edit Part</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={handleDelete}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
-                >
-                  <Trash2 className="h-4 w-4 text-status-error" />
-                  <span className="text-sm font-medium text-status-error">Delete Part</span>
-                </motion.button>
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="border-b border-gray-200">
+            <nav className="flex gap-1 -mb-px">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                      activeTab === tab.id
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
+            {/* Main Content Area */}
+            <div className="lg:col-span-2 space-y-6">
+              {activeTab === 'overview' && (
+                <>
+                  {/* Identification Section */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Barcode className="h-5 w-5" />
+                        Part Identification
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <CopyableField label="Part Number" value={part.partNumber} fieldId="partNumber" />
+                        {part.sku && <CopyableField label="SKU" value={part.sku} fieldId="sku" />}
+                        {part.oemPartNumber && <CopyableField label="OEM Part Number" value={part.oemPartNumber} fieldId="oemPartNumber" />}
+                      </dl>
+                    </div>
+                  </div>
+
+                  {/* Stock Information */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Stock Information
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">On-Hand Stock</dt>
+                          <dd className="text-3xl font-bold text-gray-900">{part.onHandStock}</dd>
+                          <dt className="text-xs text-gray-500 mt-1">Available in workshop</dt>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">Warehouse Stock</dt>
+                          <dd className="text-3xl font-bold text-gray-900">{part.warehouseStock}</dd>
+                          <dt className="text-xs text-gray-500 mt-1">In deep storage</dt>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">Low Stock Alert</dt>
+                          <dd className={cn(
+                            "text-3xl font-bold",
+                            part.onHandStock + part.warehouseStock <= part.lowStockThreshold
+                              ? "text-status-warning"
+                              : "text-status-success"
+                          )}>
+                            {part.lowStockThreshold}
+                          </dd>
+                          <dt className="text-xs text-gray-500 mt-1">Alert threshold</dt>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Pricing Information
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">Purchase Price</dt>
+                          <dd className="text-2xl font-bold text-gray-900">₹{part.purchasePrice.toFixed(2)}</dd>
+                          <dt className="text-xs text-gray-500 mt-1">Cost per unit</dt>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">Selling Price</dt>
+                          <dd className="text-2xl font-bold text-gray-700">₹{part.sellingPrice.toFixed(2)}</dd>
+                          <dt className="text-xs text-gray-500 mt-1">Retail per unit</dt>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">Profit Margin</dt>
+                          <dd className={cn(
+                            "text-2xl font-bold",
+                            part.margin >= 30 ? "text-status-success" : part.margin >= 20 ? "text-status-warning" : "text-status-error"
+                          )}>
+                            {part.margin.toFixed(1)}%
+                          </dd>
+                          <dt className="text-xs text-gray-500 mt-1">
+                            ₹{(part.sellingPrice - part.purchasePrice).toFixed(2)} profit
+                          </dt>
+                        </div>
+                        {part.wholesalePrice && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Wholesale Price</dt>
+                            <dd className="text-xl font-bold text-gray-900">₹{part.wholesalePrice.toFixed(2)}</dd>
+                          </div>
+                        )}
+                        {part.coreCharge && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Core Charge</dt>
+                            <dd className="text-xl font-bold text-gray-900">₹{part.coreCharge.toFixed(2)}</dd>
+                          </div>
+                        )}
+                        {part.priceLastUpdated && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Price Updated</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.priceLastUpdated)}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+
+                </>
+              )}
+
+              {activeTab === 'fitment' && part.compatibleVehicles && part.compatibleVehicles.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Motorcycle Fitment
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Compatible motorcycles from vehicle catalog ({part.compatibleVehicles.length})
+                    </p>
+                  </div>
+                  <div className="p-6">
+                    {isMotorcyclesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600">Loading motorcycle catalog...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {part.compatibleVehicles.map((motorcycleId) => {
+                          const motorcycle = motorcycles.find((m) => m.id === motorcycleId)
+                          if (!motorcycle) return null
+                          return (
+                            <div
+                              key={motorcycle.id}
+                              className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border border-gray-200">
+                                  <Package className="h-5 w-5 text-gray-700" />
+                                </div>
+                                <div>
+                                  <p className="text-base font-semibold text-gray-900">
+                                    {motorcycle.make} {motorcycle.model}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <span>{motorcycle.yearRange}</span>
+                                    <span>•</span>
+                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
+                                      {motorcycle.category}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {part.compatibleVehicles.some((id) => !motorcycles.find((m) => m.id === id)) && (
+                          <p className="text-xs text-gray-500 italic">
+                            Some motorcycles could not be found in the catalog
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'fitment' && (!part.compatibleVehicles || part.compatibleVehicles.length === 0) && (
+                <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Motorcycle Fitment
+                    </h3>
+                  </div>
+                  <div className="p-12 text-center">
+                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No compatible motorcycles specified</p>
+                    <p className="text-sm text-gray-500 mt-1">Edit this part to add compatible motorcycles from the catalog</p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'vendor' && (
+                <div className="space-y-6">
+                  {/* Primary Supplier */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Truck className="h-5 w-5" />
+                        Primary Supplier
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="space-y-4">
+                        <div>
+                          <dt className="text-sm text-gray-600 mb-1">Supplier Name</dt>
+                          <dd className="text-lg font-semibold text-gray-900">{part.supplier}</dd>
+                        </div>
+                        {part.supplierPhone && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Phone</dt>
+                            <dd className="text-base font-medium text-gray-900">{part.supplierPhone}</dd>
+                          </div>
+                        )}
+                        {part.supplierEmail && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Email</dt>
+                            <dd className="text-base text-graphite-700">{part.supplierEmail}</dd>
+                          </div>
+                        )}
+                        {part.supplierWebsite && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Website</dt>
+                            <a
+                              href={part.supplierWebsite}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-base text-graphite-700 hover:underline flex items-center gap-1"
+                            >
+                              {part.supplierWebsite}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        )}
+                        {part.vendorSku && <CopyableField label="Vendor SKU" value={part.vendorSku} fieldId="vendorSku" />}
+                        {part.leadTimeDays && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <dt className="text-sm text-gray-600 mb-1">Lead Time</dt>
+                              <dd className="text-base font-medium text-gray-900">{part.leadTimeDays} days</dd>
+                            </div>
+                            {part.minimumOrderQuantity && (
+                              <div>
+                                <dt className="text-sm text-gray-600 mb-1">Min Order Qty</dt>
+                                <dd className="text-base font-medium text-gray-900">{part.minimumOrderQuantity}</dd>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+
+                  {/* Backup Suppliers */}
+                  {part.secondarySuppliers && part.secondarySuppliers.length > 0 && (
+                    <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">Backup Suppliers</h3>
+                          {part.secondarySuppliers.length > 1 && (
+                            <div className="flex gap-1">
+                              {part.secondarySuppliers.map((supplier, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => setActiveBackupSupplier(idx)}
+                                  className={cn(
+                                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                                    activeBackupSupplier === idx
+                                      ? 'bg-graphite-700 text-white'
+                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  )}
+                                >
+                                  {supplier.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <dl className="space-y-4">
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Supplier Name</dt>
+                            <dd className="text-lg font-semibold text-gray-900">{part.secondarySuppliers[activeBackupSupplier].name}</dd>
+                          </div>
+                          {part.secondarySuppliers[activeBackupSupplier].phone && (
+                            <div>
+                              <dt className="text-sm text-gray-600 mb-1">Phone</dt>
+                              <dd className="text-base font-medium text-gray-900">{part.secondarySuppliers[activeBackupSupplier].phone}</dd>
+                            </div>
+                          )}
+                          {part.secondarySuppliers[activeBackupSupplier].email && (
+                            <div>
+                              <dt className="text-sm text-gray-600 mb-1">Email</dt>
+                              <dd className="text-base text-graphite-700">{part.secondarySuppliers[activeBackupSupplier].email}</dd>
+                            </div>
+                          )}
+                          {part.secondarySuppliers[activeBackupSupplier].website && (
+                            <div>
+                              <dt className="text-sm text-gray-600 mb-1">Website</dt>
+                              <a
+                                href={part.secondarySuppliers[activeBackupSupplier].website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-base text-graphite-700 hover:underline flex items-center gap-1"
+                              >
+                                {part.secondarySuppliers[activeBackupSupplier].website}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                          {part.secondarySuppliers[activeBackupSupplier].vendorSku && (
+                            <CopyableField
+                              label="Vendor SKU"
+                              value={part.secondarySuppliers[activeBackupSupplier].vendorSku!}
+                              fieldId={`backup-${activeBackupSupplier}-vendorSku`}
+                            />
+                          )}
+                          {part.secondarySuppliers[activeBackupSupplier].leadTimeDays && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <dt className="text-sm text-gray-600 mb-1">Lead Time</dt>
+                                <dd className="text-base font-medium text-gray-900">{part.secondarySuppliers[activeBackupSupplier].leadTimeDays} days</dd>
+                              </div>
+                              {part.secondarySuppliers[activeBackupSupplier].minimumOrderQuantity && (
+                                <div>
+                                  <dt className="text-sm text-gray-600 mb-1">Min Order Qty</dt>
+                                  <dd className="text-base font-medium text-gray-900">{part.secondarySuppliers[activeBackupSupplier].minimumOrderQuantity}</dd>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </dl>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'lifecycle' && (
+                <div className="space-y-6">
+                  {/* Inventory Metrics */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Inventory Metrics
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {part.batchNumber && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Batch/Lot Number</dt>
+                            <dd className="text-base font-mono text-gray-900 bg-gray-50 px-3 py-2 rounded-lg inline-block">
+                              {part.batchNumber}
+                            </dd>
+                          </div>
+                        )}
+                        {part.location && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
+                              <MapPin className="h-4 w-4" />
+                              Storage Location
+                            </dt>
+                            <dd className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg inline-block">
+                              {part.location}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+
+                  {/* Important Dates */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        Important Dates
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {part.dateAdded && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Date Added</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.dateAdded)}</dd>
+                          </div>
+                        )}
+                        {part.lastRestocked && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Last Restocked</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.lastRestocked)}</dd>
+                          </div>
+                        )}
+                        {part.lastSoldDate && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Last Sold</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.lastSoldDate)}</dd>
+                          </div>
+                        )}
+                        {part.lastPurchaseDate && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Last Purchase</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.lastPurchaseDate)}</dd>
+                          </div>
+                        )}
+                        {part.expirationDate && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Expiration Date</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.expirationDate)}</dd>
+                          </div>
+                        )}
+                        {part.priceLastUpdated && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Price Last Updated</dt>
+                            <dd className="text-base font-medium text-gray-900">{formatDate(part.priceLastUpdated)}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'technical' && (
+                <div className="space-y-6">
+                  {/* Quality & Compliance */}
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Quality & Compliance
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {part.warrantyMonths && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Warranty Period</dt>
+                            <dd className="text-base font-medium text-gray-900">{part.warrantyMonths} months</dd>
+                          </div>
+                        )}
+                        {part.countryOfOrigin && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Country of Origin</dt>
+                            <dd className="text-base font-medium text-gray-900">{part.countryOfOrigin}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+
+                  {/* Digital Assets */}
+                  {(part.technicalDiagramUrl || part.installationInstructionsUrl) && (
+                    <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          Digital Resources
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <dl className="space-y-4">
+                          {part.technicalDiagramUrl && (
+                            <div>
+                              <dt className="text-sm text-gray-600 mb-1">Technical Diagram</dt>
+                              <a
+                                href={part.technicalDiagramUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-base text-graphite-700 hover:underline flex items-center gap-1"
+                              >
+                                View Diagram
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                          {part.installationInstructionsUrl && (
+                            <div>
+                              <dt className="text-sm text-gray-600 mb-1">Installation Instructions</dt>
+                              <a
+                                href={part.installationInstructionsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-base text-graphite-700 hover:underline flex items-center gap-1"
+                              >
+                                View Instructions
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                        </dl>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Quick Actions */}
+              <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden sticky top-4">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                </div>
+                <div className="p-4 space-y-2">
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={handleEdit}
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
+                  >
+                    <Edit className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Edit Part</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={handleDelete}
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
+                  >
+                    <Trash2 className="h-4 w-4 text-status-error" />
+                    <span className="text-sm font-medium text-status-error">Delete Part</span>
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Delete Confirmation Modal */}

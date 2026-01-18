@@ -58,7 +58,7 @@ export const MobileBottomNav = ({ onLogout }: MobileBottomNavProps) => {
     { label: 'Job Cards', href: '/job-cards', icon: ClipboardList },
     { label: 'Employees', href: '/employee-management', icon: Users },
     { label: 'Customers', href: '/customer-management', icon: UserPlus },
-    { label: 'Services', href: '/services', icon: Wrench },
+    { label: 'Catalog', href: '/vehicle-catalog', icon: Wrench },
     { label: 'Vehicles', href: '/vehicles', icon: MotorcycleIcon },
     { label: 'Inventory', href: '/inventory', icon: Package },
     { label: 'Calendar', href: '/calendar', icon: Calendar },

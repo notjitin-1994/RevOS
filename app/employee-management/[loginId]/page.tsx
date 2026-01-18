@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  ArrowLeft,
   Briefcase,
   TrendingUp,
   Clock,
@@ -203,7 +202,6 @@ export default function EmployeeProfilePage() {
             onClick={() => router.push('/employee-management')}
             className="w-full bg-graphite-900 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-graphite-800 transition-all duration-200 shadow-lg shadow-graphite-900/20 mt-6 flex items-center justify-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
             Back to Employees
           </motion.button>
         </motion.div>
@@ -223,13 +221,6 @@ export default function EmployeeProfilePage() {
             className="mb-6 md:mb-8"
           >
             <div className="flex items-center gap-3">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => router.push('/employee-management')}
-                className="p-3 h-11 min-h-[44px] hover:bg-white/50 rounded-xl transition-all active:bg-white/70"
-              >
-                <ArrowLeft className="h-5 w-5 text-graphite-700" />
-              </motion.button>
               <div className="h-10 w-1 bg-graphite-600 rounded-full" />
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">

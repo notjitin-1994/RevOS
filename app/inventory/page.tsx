@@ -14,6 +14,7 @@ import {
   Search,
   X,
   AlertTriangle,
+  Truck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -293,28 +294,16 @@ export default function InventoryManagementPage() {
           transition={{ duration: 0.5 }}
           className="mb-6 md:mb-8"
         >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-1 bg-gray-700 rounded-full" />
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                  Parts & Inventory
-                </h1>
-                <p className="text-sm md:text-base text-gray-600 mt-1">
-                  Manage your garage parts and stock levels
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-1 bg-gray-700 rounded-full" />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                Parts & Inventory
+              </h1>
+              <p className="text-sm md:text-base text-gray-600 mt-1">
+                Manage your garage parts and stock levels
+              </p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleAddPart}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all duration-200"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="hidden sm:inline">Add Part</span>
-              <span className="sm:hidden">Add</span>
-            </motion.button>
           </div>
 
           {/* Low Stock Alerts */}
@@ -343,49 +332,133 @@ export default function InventoryManagementPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mb-6 bg-white rounded-xl p-4 border border-gray-200 shadow-card"
         >
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search parts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
-              />
+          <div className="flex flex-col gap-4">
+            {/* Desktop: Search, Filters, and Action Buttons in same row */}
+            {/* Mobile: Search and Filters only */}
+            <div className="hidden md:flex flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search parts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
+                />
+              </div>
+
+              {/* Category Filter */}
+              <div className="relative">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
+                >
+                  <option value="all">All Categories</option>
+                  {getCategories().map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Stock Filter */}
+              <div className="relative">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <select
+                  value={stockFilter}
+                  onChange={(e) => setStockFilter(e.target.value as any)}
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
+                >
+                  <option value="all">All Stock Levels</option>
+                  <option value="in-stock">In Stock</option>
+                  <option value="low-stock">Low Stock</option>
+                  <option value="out-of-stock">Out of Stock</option>
+                </select>
+              </div>
+
+              {/* Action Buttons - Desktop (inline with filters) */}
+              <button
+                onClick={() => router.push('/inventory/add')}
+                className="px-6 py-3 bg-graphite-700 text-white font-semibold rounded-xl hover:bg-graphite-600 transition-all duration-200 flex items-center gap-2 shadow-lg whitespace-nowrap"
+              >
+                <Plus className="h-5 w-5" />
+                Add Part
+              </button>
+              <button
+                onClick={() => router.push('/suppliers/add')}
+                className="px-6 py-3 bg-white text-graphite-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 border-2 border-graphite-700 flex items-center gap-2 whitespace-nowrap"
+              >
+                <Truck className="h-5 w-5" />
+                Add Supplier
+              </button>
             </div>
 
-            {/* Category Filter */}
-            <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
-              >
-                <option value="all">All Categories</option>
-                {getCategories().map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            {/* Mobile: Search and Filters */}
+            <div className="md:hidden flex flex-col gap-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search parts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
+                  >
+                    <option value="all">All Categories</option>
+                    {getCategories().map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="relative flex-1">
+                  <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value as any)}
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
+                  >
+                    <option value="all">All Stock Levels</option>
+                    <option value="in-stock">In Stock</option>
+                    <option value="low-stock">Low Stock</option>
+                    <option value="out-of-stock">Out of Stock</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            {/* Stock Filter */}
-            <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <select
-                value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value as any)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
+            {/* Mobile: Action Buttons Row (separate from filters) */}
+            <div className="md:hidden flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => router.push('/inventory/add')}
+                className="flex-1 px-6 py-3 bg-graphite-700 text-white font-semibold rounded-xl hover:bg-graphite-600 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
               >
-                <option value="all">All Stock Levels</option>
-                <option value="in-stock">In Stock</option>
-                <option value="low-stock">Low Stock</option>
-                <option value="out-of-stock">Out of Stock</option>
-              </select>
+                <Plus className="h-5 w-5" />
+                Add Part
+              </button>
+              <button
+                onClick={() => router.push('/suppliers/add')}
+                className="flex-1 px-6 py-3 bg-white text-graphite-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 border-2 border-graphite-700 flex items-center justify-center gap-2"
+              >
+                <Truck className="h-5 w-5" />
+                Add Supplier
+              </button>
             </div>
           </div>
         </motion.div>
@@ -513,22 +586,16 @@ export default function InventoryManagementPage() {
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Part</span>
                   </th>
                   <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Part Number</span>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Brand</span>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</span>
-                  </th>
-                  <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</span>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</span>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</span>
-                  </th>
-                  <th className="px-6 py-4 text-right">
-                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -539,7 +606,8 @@ export default function InventoryManagementPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.03 }}
-                    className="hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => handleViewPart(part)}
+                    className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                   >
                     {/* Part Name & Icon */}
                     <td className="px-6 py-4">
@@ -550,15 +618,15 @@ export default function InventoryManagementPage() {
                         <div>
                           <div className="text-sm font-medium text-gray-900">{part.partName}</div>
                           <div className="text-xs text-gray-500">
-                            {part.make} {part.model ? `${part.model}` : ''}
+                            {part.model ? `${part.model}` : ''}
                           </div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Part Number */}
+                    {/* Brand */}
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-600 font-mono">{part.partNumber}</div>
+                      <div className="text-sm text-gray-900">{part.make || '-'}</div>
                     </td>
 
                     {/* Category */}
@@ -566,20 +634,6 @@ export default function InventoryManagementPage() {
                       <span className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-status-info/10 text-status-info border-status-info/20">
                         {part.category}
                       </span>
-                    </td>
-
-                    {/* Stock */}
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-gray-900">
-                          <span className="text-gray-500">On Hand:</span>
-                          <span className="font-medium">{part.onHandStock}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>Warehouse:</span>
-                          <span>{part.warehouseStock}</span>
-                        </div>
-                      </div>
                     </td>
 
                     {/* Price */}
@@ -600,30 +654,6 @@ export default function InventoryManagementPage() {
                       >
                         {part.status === 'in-stock' ? 'In Stock' : part.status === 'low-stock' ? 'Low Stock' : 'Out of Stock'}
                       </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleViewPart(part)}
-                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDeletePart(part)}
-                          className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </motion.button>
-                      </div>
                     </td>
                   </motion.tr>
                 ))}

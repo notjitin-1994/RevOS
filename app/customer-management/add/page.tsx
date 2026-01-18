@@ -3,24 +3,28 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   UserPlus,
   Mail,
   Phone,
   MapPin,
-  Calendar,
   Save,
   Loader2,
   AlertCircle,
+  Plus,
+  X,
+  ChevronDown,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
+import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
+import { createCustomerAction, type CreateCustomerInput } from '@/app/actions/customer-actions'
 
 /**
  * Add Customer Page
  *
  * A comprehensive form for adding new customers to the garage.
- * Collects personal details, contact information, and address.
+ * Collects personal details, contact information, address, and vehicles.
  */
 
 interface CustomerFormData {
@@ -34,8 +38,38 @@ interface CustomerFormData {
   state: string
   zipCode: string
   country: string
-  dateOfBirth: string
   notes: string
+}
+
+interface VehicleFormData {
+  category: string
+  make: string
+  model: string
+  year: string
+  licensePlate: string
+  color: string
+  vin: string
+  engineNumber: string
+  mileage: string
+  notes: string
+}
+
+interface ModelData {
+  id: string
+  name: string
+  category: string
+  years: number[]
+  engine_displacement_cc?: number
+  production_status?: 'In Production' | 'Discontinued' | 'Limited'
+}
+
+interface MakeData {
+  id: string
+  name: string
+  country: string
+  logoUrl: string | null
+  models: ModelData[]
+  createdAt: string
 }
 
 export default function AddCustomerPage() {
@@ -43,6 +77,8 @@ export default function AddCustomerPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [makesData, setMakesData] = useState<MakeData[]>([])
+  const [isLoadingMakes, setIsLoadingMakes] = useState(true)
 
   const [formData, setFormData] = useState<CustomerFormData>({
     firstName: '',
@@ -55,21 +91,117 @@ export default function AddCustomerPage() {
     state: '',
     zipCode: '',
     country: 'India',
-    dateOfBirth: '',
     notes: '',
   })
+
+  const [vehicles, setVehicles] = useState<VehicleFormData[]>([
+    {
+      category: '',
+      make: '',
+      model: '',
+      year: '',
+      licensePlate: '',
+      color: '',
+      vin: '',
+      engineNumber: '',
+      mileage: '',
+      notes: '',
+    },
+  ])
 
   useEffect(() => {
     // Check authentication
     const sessionUser = sessionStorage.getItem('user')
     if (!sessionUser) {
       router.push('/login')
+      return
     }
+
+    // Load motorcycle makes
+    loadMakes()
   }, [router])
+
+  const loadMakes = async () => {
+    try {
+      const makes = await getMakesDataAction()
+      setMakesData(makes)
+    } catch (err) {
+      console.error('Error loading makes:', err)
+    } finally {
+      setIsLoadingMakes(false)
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  // Get available models for a selected make
+  const getAvailableModels = (makeName: string): ModelData[] => {
+    const makeData = makesData.find(m => m.name === makeName)
+    return makeData?.models || []
+  }
+
+  // Get available years for a selected make and model
+  const getAvailableYears = (makeName: string, modelName: string): number[] => {
+    const models = getAvailableModels(makeName)
+    const model = models.find(m => m.name === modelName)
+    return model?.years || []
+  }
+
+  // Handle vehicle field changes
+  const handleVehicleChange = (index: number, field: keyof VehicleFormData, value: string) => {
+    const newVehicles = [...vehicles]
+    newVehicles[index][field] = value
+
+    // If make changes, reset category, model and year
+    if (field === 'make') {
+      newVehicles[index].category = ''
+      newVehicles[index].model = ''
+      newVehicles[index].year = ''
+    }
+
+    // If model changes, auto-populate category and reset year
+    if (field === 'model') {
+      newVehicles[index].year = ''
+      // Auto-set category based on selected model
+      if (newVehicles[index].make && value) {
+        const models = getAvailableModels(newVehicles[index].make)
+        const selectedModel = models.find(m => m.name === value)
+        if (selectedModel) {
+          newVehicles[index].category = selectedModel.category
+        }
+      }
+    }
+
+    setVehicles(newVehicles)
+  }
+
+  // Add a new vehicle
+  const handleAddVehicle = () => {
+    setVehicles([
+      ...vehicles,
+      {
+        category: '',
+        make: '',
+        model: '',
+        year: '',
+        licensePlate: '',
+        color: '',
+        vin: '',
+        engineNumber: '',
+        mileage: '',
+        notes: '',
+      },
+    ])
+  }
+
+  // Remove a vehicle
+  const handleRemoveVehicle = (index: number) => {
+    if (vehicles.length > 1) {
+      setVehicles(vehicles.filter((_, i) => i !== index))
+    }
   }
 
   const validateForm = (): string | null => {
@@ -88,6 +220,15 @@ export default function AddCustomerPage() {
     const phoneRegex = /^[\d\s\+\-\(\)]+$/
     if (!phoneRegex.test(formData.phoneNumber) || formData.phoneNumber.length < 10) {
       return 'Please enter a valid phone number (minimum 10 digits)'
+    }
+
+    // Vehicle validation - at least one vehicle must have make, model, year, and license plate
+    const hasValidVehicle = vehicles.some(
+      v => v.make && v.model && v.year && v.licensePlate.trim()
+    )
+
+    if (!hasValidVehicle) {
+      return 'Please add at least one vehicle with make, model, year, and license plate'
     }
 
     return null
@@ -119,28 +260,52 @@ export default function AddCustomerPage() {
         throw new Error('Invalid user session')
       }
 
-      // TODO: Replace with actual API call when ready
-      // const response = await fetch('/api/customers/create', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     ...formData,
-      //     garageId,
-      //   }),
-      // })
+      // Prepare vehicle data (only include vehicles with required fields)
+      const validVehicles = vehicles
+        .filter(v => v.make && v.model && v.year && v.licensePlate.trim())
+        .map(v => ({
+          make: v.make,
+          model: v.model,
+          year: parseInt(v.year),
+          licensePlate: v.licensePlate,
+          color: v.color || undefined,
+          vin: v.vin || undefined,
+          engineNumber: v.engineNumber || undefined,
+          currentMileage: v.mileage ? parseInt(v.mileage) : undefined,
+          notes: v.notes || undefined,
+        }))
 
-      // const result = await response.json()
+      if (validVehicles.length === 0) {
+        setError('Please add at least one vehicle with make, model, year, and license plate')
+        setIsLoading(false)
+        return
+      }
 
-      // if (!response.ok || !result.success) {
-      //   throw new Error(result.error || 'Failed to create customer')
-      // }
+      // Prepare customer data
+      const customerData: CreateCustomerInput = {
+        garageId,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        alternatePhone: formData.alternatePhone || undefined,
+        address: formData.address || undefined,
+        city: formData.city || undefined,
+        state: formData.state || undefined,
+        zipCode: formData.zipCode || undefined,
+        country: formData.country || undefined,
+        notes: formData.notes || undefined,
+        vehicles: validVehicles,
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Call server action
+      const result = await createCustomerAction(customerData)
 
-      console.log('Customer created successfully:', formData)
+      if (!result.success || !result.customer) {
+        throw new Error(result.error || 'Failed to create customer')
+      }
+
+      console.log('Customer created successfully:', result.customer)
 
       setSuccess(true)
 
@@ -165,14 +330,6 @@ export default function AddCustomerPage() {
         className="mb-6 md:mb-8"
       >
         <div className="flex items-center gap-4 mb-4">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => router.back()}
-            className="p-2 bg-white border border-gray-300 rounded-xl text-gray-900 hover:bg-gray-50 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </motion.button>
           <div>
             <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900 tracking-tight">
               Add New Customer
@@ -319,23 +476,6 @@ export default function AddCustomerPage() {
                   />
                 </div>
               </div>
-
-              {/* Date of Birth */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Date of Birth
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -374,7 +514,7 @@ export default function AddCustomerPage() {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  placeholder="Mumbai"
+                  placeholder="Bangalore"
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
@@ -389,7 +529,7 @@ export default function AddCustomerPage() {
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
-                  placeholder="Maharashtra"
+                  placeholder="Karnataka"
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
@@ -404,7 +544,7 @@ export default function AddCustomerPage() {
                   name="zipCode"
                   value={formData.zipCode}
                   onChange={handleChange}
-                  placeholder="400001"
+                  placeholder="560001"
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
@@ -414,13 +554,15 @@ export default function AddCustomerPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Country
                 </label>
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -444,6 +586,237 @@ export default function AddCustomerPage() {
                 className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
               />
             </div>
+          </div>
+
+          {/* Vehicles Section */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-1 bg-gray-700 rounded-full" />
+                <h2 className="text-lg font-semibold text-gray-900">Vehicle Information</h2>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={handleAddVehicle}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-600 transition-all text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Add Vehicle
+              </motion.button>
+            </div>
+
+            {isLoadingMakes ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-700" />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {vehicles.map((vehicle, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                    className="relative bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-5"
+                  >
+                    {vehicles.length > 1 && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        type="button"
+                        onClick={() => handleRemoveVehicle(index)}
+                        className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </motion.button>
+                    )}
+
+                    <div className="flex items-center gap-2 mb-4">
+                      <MotorcycleIcon className="h-5 w-5 text-gray-700" />
+                      <h3 className="font-semibold text-gray-900">Vehicle {index + 1}</h3>
+                    </div>
+
+                    {/* Make, Model, Year */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      {/* Make */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Make <span className="text-status-error">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={vehicle.make}
+                            onChange={(e) => handleVehicleChange(index, 'make', e.target.value)}
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer pr-10"
+                          >
+                            <option value="">Select Make</option>
+                            {makesData.map((make) => (
+                              <option key={make.id} value={make.name}>
+                                {make.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Model */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Model <span className="text-status-error">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={vehicle.model}
+                            onChange={(e) => handleVehicleChange(index, 'model', e.target.value)}
+                            disabled={!vehicle.make}
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                          >
+                            <option value="">Select Model</option>
+                            {getAvailableModels(vehicle.make).map((model) => (
+                              <option key={model.id} value={model.name}>
+                                {model.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Year */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Year <span className="text-status-error">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={vehicle.year}
+                            onChange={(e) => handleVehicleChange(index, 'year', e.target.value)}
+                            disabled={!vehicle.model}
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                          >
+                            <option value="">Select Year</option>
+                            {getAvailableYears(vehicle.make, vehicle.model)
+                              .slice()
+                              .reverse()
+                              .map((year) => (
+                                <option key={year} value={year.toString()}>
+                                  {year}
+                                </option>
+                              ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Category, License Plate, Color, VIN, Engine Number, Mileage */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Category */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Category
+                        </label>
+                        <input
+                          type="text"
+                          value={vehicle.category}
+                          readOnly
+                          placeholder="Auto-populated based on model selection"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 cursor-default"
+                        />
+                      </div>
+
+                      {/* License Plate */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          License Plate <span className="text-status-error">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={vehicle.licensePlate}
+                          onChange={(e) => handleVehicleChange(index, 'licensePlate', e.target.value)}
+                          placeholder="KA 01 AB 1234"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                        />
+                      </div>
+
+                      {/* Engine Number */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Engine Number
+                        </label>
+                        <input
+                          type="text"
+                          value={vehicle.engineNumber}
+                          onChange={(e) => handleVehicleChange(index, 'engineNumber', e.target.value)}
+                          placeholder="HC22E41001234"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all font-mono text-sm"
+                        />
+                      </div>
+
+                      {/* VIN */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          VIN (Chassis Number)
+                        </label>
+                        <input
+                          type="text"
+                          value={vehicle.vin}
+                          onChange={(e) => handleVehicleChange(index, 'vin', e.target.value)}
+                          placeholder="MAL22H1A2M100001"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all font-mono text-sm"
+                        />
+                      </div>
+
+                      {/* Color */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Color
+                        </label>
+                        <input
+                          type="text"
+                          value={vehicle.color}
+                          onChange={(e) => handleVehicleChange(index, 'color', e.target.value)}
+                          placeholder="Pearl White"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                        />
+                      </div>
+
+                      {/* Mileage */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Current Mileage (km)
+                        </label>
+                        <input
+                          type="number"
+                          value={vehicle.mileage}
+                          onChange={(e) => handleVehicleChange(index, 'mileage', e.target.value)}
+                          placeholder="12000"
+                          min="0"
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                        />
+                      </div>
+
+                      {/* Vehicle Notes */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Vehicle Notes
+                        </label>
+                        <textarea
+                          value={vehicle.notes}
+                          onChange={(e) => handleVehicleChange(index, 'notes', e.target.value)}
+                          placeholder="Any additional notes about this vehicle..."
+                          rows={2}
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}

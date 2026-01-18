@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   UserPlus,
-  ArrowLeft,
   Save,
   User,
   Mail,
@@ -280,15 +279,6 @@ export default function AddEmployeePage() {
           className="mb-6 md:mb-8"
         >
           <div className="flex items-center gap-4">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleBack}
-              className="flex items-center justify-center h-10 w-10 bg-graphite-800 text-white rounded-xl hover:bg-graphite-700 transition-all duration-200 shadow-md border border-graphite-700"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </motion.button>
-
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-graphite-900 tracking-tight">
                 Add New Employee

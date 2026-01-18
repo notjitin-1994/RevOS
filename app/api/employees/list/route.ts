@@ -34,13 +34,27 @@ export async function GET(request: Request) {
     console.log('Fetching employees for garage ID:', garageId)
 
     // Fetch employees from users table
-    // Filter by garage_id and exclude Owner role
+    // Try garage_id first, if no results, try garage_uid
+    // Filter out owner role (case-insensitive)
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('garage_id', garageId)
-      .neq('user_role', 'Owner')
+      .or(`garage_id.eq.${garageId},garage_uid.eq.${garageId}`)
+      .not('user_role', 'in', '("Owner","owner")')
       .order('created_at', { ascending: false })
+
+    // Debug log to see what we got
+    console.log('Query result:', {
+      count: data?.length || 0,
+      error: error?.message,
+      sample: data?.slice(0, 3).map((d: any) => ({
+        user_uid: d.user_uid,
+        first_name: d.first_name,
+        last_name: d.last_name,
+        user_role: d.user_role,
+        garage_id: d.garage_id,
+      }))
+    })
 
     if (error) {
       console.error('Error fetching employees:', error)

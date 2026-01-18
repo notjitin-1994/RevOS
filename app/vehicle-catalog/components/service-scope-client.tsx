@@ -6,22 +6,14 @@ import {
   Search,
   Plus,
   ChevronDown,
-  Eye,
-  Edit,
-  Trash2,
   Calendar,
+  Mail,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
 import { cn } from '@/lib/utils'
-
-/**
- * Service Scope Management Page - Master Data
- *
- * Manages the universe of supported vehicles.
- * Defines makes, models, and applicable years.
- * Based on RevOS-features.md specification.
- */
+import Image from 'next/image'
+import { RequestMakeModelModal } from './request-make-model-modal'
 
 interface ModelData {
   id: string
@@ -34,87 +26,60 @@ interface MakeData {
   id: string
   name: string
   country: string
+  logoUrl: string | null
   models: ModelData[]
   createdAt: string
 }
 
-// Mock data - Service scope master data
-const mockMakes: MakeData[] = [
-  {
-    id: '1',
-    name: 'Honda',
-    country: 'Japan',
-    models: [
-      { id: '1-1', name: 'CBR650R', category: 'Sport', years: [2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '1-2', name: 'CBR600RR', category: 'Sport', years: [2021, 2022, 2023, 2024] },
-      { id: '1-3', name: 'CBR1000RR-R Fireblade', category: 'Sport', years: [2022, 2023, 2024] },
-      { id: '1-4', name: 'Africa Twin', category: 'Adventure', years: [2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '1-5', name: 'NC750X', category: 'Dual-Sport', years: [2021, 2022, 2023, 2024] },
-    ],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '2',
-    name: 'Kawasaki',
-    country: 'Japan',
-    models: [
-      { id: '2-1', name: 'Ninja 400', category: 'Sport', years: [2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '2-2', name: 'Ninja 650', category: 'Sport', years: [2020, 2021, 2022, 2023, 2024] },
-      { id: '2-3', name: 'Ninja ZX-10R', category: 'Sport', years: [2021, 2022, 2023, 2024] },
-      { id: '2-4', name: 'Z900', category: 'Naked', years: [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '2-5', name: 'Versys 650', category: 'Adventure', years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022] },
-    ],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '3',
-    name: 'Yamaha',
-    country: 'Japan',
-    models: [
-      { id: '3-1', name: 'MT-07', category: 'Naked', years: [2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '3-2', name: 'MT-09', category: 'Naked', years: [2021, 2022, 2023, 2024] },
-      { id: '3-3', name: 'YZF-R1', category: 'Sport', years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '3-4', name: 'YZF-R6', category: 'Sport', years: [2019, 2020, 2021, 2022, 2023] },
-      { id: '3-5', name: 'Tracer 900', category: 'Sport Touring', years: [2020, 2021, 2022, 2023, 2024] },
-    ],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '4',
-    name: 'BMW',
-    country: 'Germany',
-    models: [
-      { id: '4-1', name: 'R 1250 GS', category: 'Adventure', years: [2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '4-2', name: 'R 1250 RT', category: 'Touring', years: [2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '4-3', name: 'S 1000 RR', category: 'Sport', years: [2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '4-4', name: 'M 1000 RR', category: 'Sport', years: [2023, 2024] },
-      { id: '4-5', name: 'G 310 GS', category: 'Adventure', years: [2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-    ],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '5',
-    name: 'Royal Enfield',
-    country: 'India',
-    models: [
-      { id: '5-1', name: 'Classic 350', category: 'Cruiser', years: [2021, 2022, 2023, 2024] },
-      { id: '5-2', name: 'Classic 500', category: 'Cruiser', years: [2018, 2019, 2020, 2021, 2022] },
-      { id: '5-3', name: 'Himalayan', category: 'Adventure', years: [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '5-4', name: 'Interceptor 650', category: 'Cruiser', years: [2018, 2019, 2020, 2021, 2022, 2023, 2024] },
-      { id: '5-5', name: 'Continental GT', category: 'Cruiser', years: [2018, 2019, 2020, 2021, 2022, 2023] },
-    ],
-    createdAt: '2023-01-15',
-  },
-]
+interface ServiceScopeClientProps {
+  initialMakes: MakeData[]
+}
 
-export default function ServiceScopePage() {
+function MakeLogo({ logoUrl, makeName }: { logoUrl: string | null; makeName: string }) {
+  const [imageError, setImageError] = React.useState(false)
+
+  if (logoUrl && !imageError) {
+    // Check if it's a local SVG file
+    if (logoUrl.startsWith('/logos/')) {
+      return (
+        <img
+          src={logoUrl}
+          alt={`${makeName} logo`}
+          className="h-8 w-8 object-contain"
+          onError={() => {
+            console.log(`Failed to load logo for ${makeName}: ${logoUrl}`)
+            setImageError(true)
+          }}
+        />
+      )
+    }
+
+    // External URL
+    return (
+      <img
+        src={logoUrl}
+        alt={`${makeName} logo`}
+        className="h-8 w-8 object-contain"
+        onError={() => {
+          console.log(`Failed to load logo for ${makeName}: ${logoUrl}`)
+          setImageError(true)
+        }}
+      />
+    )
+  }
+
+  return <MotorcycleIcon className="h-7 w-7 text-gray-700" />
+}
+
+export function ServiceScopeClient({ initialMakes }: ServiceScopeClientProps) {
   const router = useRouter()
-  const [makes, setMakes] = useState<MakeData[]>(mockMakes)
-  const [filteredMakes, setFilteredMakes] = useState<MakeData[]>(mockMakes)
+  const [makes, setMakes] = useState<MakeData[]>(initialMakes)
+  const [filteredMakes, setFilteredMakes] = useState<MakeData[]>(initialMakes)
   const [searchQuery, setSearchQuery] = useState('')
   const [countryFilter, setCountryFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'name' | 'models' | 'newest'>('name')
   const [currentPage, setCurrentPage] = useState(1)
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
   const itemsPerPage = 10
 
   // Extract unique countries
@@ -164,19 +129,7 @@ export default function ServiceScopePage() {
   const paginatedMakes = filteredMakes.slice(startIndex, endIndex)
 
   const handleViewMake = (id: string) => {
-    router.push(`/services/${id}`)
-  }
-
-  const handleEditMake = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    router.push(`/services/${id}/edit`)
-  }
-
-  const handleDeleteMake = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    if (confirm('Are you sure you want to delete this make and all its models?')) {
-      setMakes(makes.filter((m) => m.id !== id))
-    }
+    router.push(`/vehicle-catalog/${id}`)
   }
 
   const getYearRange = (years: number[]) => {
@@ -195,28 +148,16 @@ export default function ServiceScopePage() {
         transition={{ duration: 0.5 }}
         className="mb-6 md:mb-8"
       >
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-1 bg-gray-900 rounded-full" />
-            <div>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-gray-900 tracking-tight">
-                Service Scope Management
-              </h1>
-              <p className="text-sm md:text-base text-gray-600 mt-1">
-                Master data for supported makes, models, and years
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-1 bg-gray-900 rounded-full" />
+          <div>
+            <h1 className="font-display font-bold text-2xl md:text-3xl text-gray-900 tracking-tight">
+              Vehicle Catalog
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Master data for supported makes, models, and years
+            </p>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => router.push('/services/add')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg"
-          >
-            <Plus className="h-5 w-5" />
-            Add Make
-          </motion.button>
         </div>
       </motion.header>
 
@@ -227,22 +168,22 @@ export default function ServiceScopePage() {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
       >
-        <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-6 shadow-card">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">Total Makes</p>
-          <p className="text-2xl md:text-3xl font-bold text-gray-900">{makes.length}</p>
+        <div className="bg-graphite-700 border border-graphite-700 rounded-xl p-4 md:p-6 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-white/80 mb-2">Total Makes</p>
+          <p className="text-2xl md:text-3xl font-bold text-white">{makes.length}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-6 shadow-card">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">Total Models</p>
-          <p className="text-2xl md:text-3xl font-bold text-gray-900">{makes.reduce((acc, m) => acc + m.models.length, 0)}</p>
+        <div className="bg-graphite-700 border border-graphite-700 rounded-xl p-4 md:p-6 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-white/80 mb-2">Total Models</p>
+          <p className="text-2xl md:text-3xl font-bold text-white">{makes.reduce((acc, m) => acc + m.models.length, 0)}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-6 shadow-card">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">Countries</p>
-          <p className="text-2xl md:text-3xl font-bold text-gray-900">{countries.length - 1}</p>
+        <div className="bg-graphite-700 border border-graphite-700 rounded-xl p-4 md:p-6 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-white/80 mb-2">Countries</p>
+          <p className="text-2xl md:text-3xl font-bold text-white">{countries.length - 1}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-6 shadow-card">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-2">Avg Models/Make</p>
-          <p className="text-2xl md:text-3xl font-bold text-gray-900">
-            {Math.round(makes.reduce((acc, m) => acc + m.models.length, 0) / makes.length)}
+        <div className="bg-graphite-700 border border-graphite-700 rounded-xl p-4 md:p-6 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-wider text-white/80 mb-2">Avg Models/Make</p>
+          <p className="text-2xl md:text-3xl font-bold text-white">
+            {makes.length > 0 ? Math.round(makes.reduce((acc, m) => acc + m.models.length, 0) / makes.length) : 0}
           </p>
         </div>
       </motion.div>
@@ -268,13 +209,13 @@ export default function ServiceScopePage() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-stretch sm:items-center w-full sm:w-auto">
             {/* Country Filter */}
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-none">
               <select
                 value={countryFilter}
                 onChange={(e) => setCountryFilter(e.target.value)}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all cursor-pointer"
+                className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all cursor-pointer text-sm"
               >
                 {countries.map((country) => (
                   <option key={country} value={country}>
@@ -282,22 +223,34 @@ export default function ServiceScopePage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             </div>
 
             {/* Sort */}
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-none">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all cursor-pointer"
+                className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-gray-400 transition-all cursor-pointer text-sm"
               >
                 <option value="name">Sort by Name</option>
                 <option value="models">Sort by Model Count</option>
                 <option value="newest">Sort by Newest</option>
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             </div>
+
+            {/* Request to Add Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsRequestModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-graphite-700 hover:bg-graphite-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg"
+            >
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Make/New Models</span>
+              <span className="sm:hidden">Add Make/New Models</span>
+            </motion.button>
           </div>
         </div>
       </motion.div>
@@ -342,54 +295,17 @@ export default function ServiceScopePage() {
                     className="p-5 cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
-                      {/* Make Icon */}
+                      {/* Make Logo/Icon */}
                       <div className="h-14 w-14 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200 shrink-0">
-                        <MotorcycleIcon className="h-7 w-7 text-gray-700" />
+                        <MakeLogo logoUrl={make.logoUrl} makeName={make.name} />
                       </div>
 
                       {/* Make Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900">{make.name}</h3>
-                            <p className="text-sm text-gray-600">{make.country}</p>
-                          </div>
-
-                          {/* Stats */}
-                          <div className="flex items-center gap-3 text-sm">
-                            <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium">
-                              {make.models.length} {make.models.length === 1 ? 'model' : 'models'}
-                            </span>
-                          </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">{make.name}</h3>
+                          <p className="text-sm text-gray-600">{make.country}</p>
                         </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleViewMake(make.id)
-                          }}
-                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                          title="View Details"
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={(e) => handleEditMake(e, make.id)}
-                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                          title="Edit Make"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteMake(e, make.id)}
-                          className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all duration-200"
-                          title="Delete Make"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -442,13 +358,10 @@ export default function ServiceScopePage() {
                       <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Country</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Models</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-600"># Models</span>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Sample Models</span>
-                    </th>
-                    <th className="px-6 py-4 text-right">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Actions</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">Models</span>
                     </th>
                   </tr>
                 </thead>
@@ -466,7 +379,7 @@ export default function ServiceScopePage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
-                            <MotorcycleIcon className="h-6 w-6 text-gray-700" />
+                            <MakeLogo logoUrl={make.logoUrl} makeName={make.name} />
                           </div>
                           <p className="text-base font-semibold text-gray-900">{make.name}</p>
                         </div>
@@ -500,42 +413,6 @@ export default function ServiceScopePage() {
                               +{make.models.length - 3} more
                             </span>
                           )}
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleViewMake(make.id)
-                            }}
-                            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditMake(e, make.id)
-                            }}
-                            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                            title="Edit Make"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteMake(e, make.id)
-                            }}
-                            className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all duration-200"
-                            title="Delete Make"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -619,6 +496,12 @@ export default function ServiceScopePage() {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Request Make/Model Modal */}
+      <RequestMakeModelModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </div>
   )
 }

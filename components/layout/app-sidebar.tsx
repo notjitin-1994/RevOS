@@ -59,12 +59,12 @@ export function AppSidebar({ open, setOpen, hideMobile = false }: AppSidebarProp
       icon: <UserPlus className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
-      label: 'Service Scope Management',
-      href: '/services',
+      label: 'Vehicle Catalog',
+      href: '/vehicle-catalog',
       icon: <Wrench className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
-      label: 'Vehicle Management',
+      label: 'Vehicle Registry',
       href: '/vehicles',
       icon: <MotorcycleIcon className="h-5 w-5 shrink-0 text-graphite-900" />,
     },

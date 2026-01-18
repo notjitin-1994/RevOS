@@ -14,7 +14,6 @@ import {
   X,
   AlertCircle,
   Loader2,
-  Filter,
   Eye,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -69,241 +68,30 @@ export default function CustomerManagementPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
-  // Search and filter states
+  // Search state
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  // Dummy customer data for demonstration
-  const dummyCustomers: Customer[] = [
-    {
-      id: '1',
-      firstName: 'Rajesh',
-      lastName: 'Kumar',
-      email: 'rajesh.kumar@email.com',
-      phoneNumber: '+91 98765 43210',
-      alternatePhone: '+91 98765 43211',
-      address: '123, Palm Grove Society',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      zipCode: '400001',
-      country: 'India',
-      dateOfBirth: '1985-03-15',
-      customerSince: '2023-01-15',
-      status: 'active',
-      totalVehicles: 2,
-      totalJobs: 5,
-      notes: 'Regular customer, prefers Saturday appointments',
-    },
-    {
-      id: '2',
-      firstName: 'Priya',
-      lastName: 'Sharma',
-      email: 'priya.sharma@email.com',
-      phoneNumber: '+91 98765 43212',
-      address: '456, Lake View Apartments',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      zipCode: '560001',
-      country: 'India',
-      dateOfBirth: '1990-07-22',
-      customerSince: '2023-03-20',
-      status: 'active',
-      totalVehicles: 1,
-      totalJobs: 3,
-      notes: 'Owns Honda Activa 6G',
-    },
-    {
-      id: '3',
-      firstName: 'Amit',
-      lastName: 'Patel',
-      email: 'amit.patel@email.com',
-      phoneNumber: '+91 98765 43213',
-      alternatePhone: '+91 98765 43214',
-      address: '789, Green Park',
-      city: 'Ahmedabad',
-      state: 'Gujarat',
-      zipCode: '380001',
-      country: 'India',
-      dateOfBirth: '1988-11-08',
-      customerSince: '2022-11-10',
-      status: 'active',
-      totalVehicles: 3,
-      totalJobs: 12,
-      notes: 'Heavy user, owns multiple bikes',
-    },
-    {
-      id: '4',
-      firstName: 'Sneha',
-      lastName: 'Reddy',
-      email: 'sneha.reddy@email.com',
-      phoneNumber: '+91 98765 43215',
-      address: '321, Hillside Colony',
-      city: 'Hyderabad',
-      state: 'Telangana',
-      zipCode: '500001',
-      country: 'India',
-      dateOfBirth: '1992-05-30',
-      customerSince: '2023-06-05',
-      status: 'active',
-      totalVehicles: 1,
-      totalJobs: 2,
-      notes: 'New customer, referred by Amit Patel',
-    },
-    {
-      id: '5',
-      firstName: 'Vikram',
-      lastName: 'Singh',
-      email: 'vikram.singh@email.com',
-      phoneNumber: '+91 98765 43216',
-      alternatePhone: '+91 98765 43217',
-      address: '654, Metro City',
-      city: 'Delhi',
-      state: 'Delhi',
-      zipCode: '110001',
-      country: 'India',
-      dateOfBirth: '1986-09-12',
-      customerSince: '2022-08-18',
-      status: 'inactive',
-      totalVehicles: 2,
-      totalJobs: 8,
-      notes: 'Inactive for 6 months, follow-up needed',
-    },
-    {
-      id: '6',
-      firstName: 'Ananya',
-      lastName: 'Das',
-      email: 'ananya.das@email.com',
-      phoneNumber: '+91 98765 43218',
-      address: '987, Sea View Road',
-      city: 'Chennai',
-      state: 'Tamil Nadu',
-      zipCode: '600001',
-      country: 'India',
-      dateOfBirth: '1995-02-14',
-      customerSince: '2023-09-01',
-      status: 'active',
-      totalVehicles: 1,
-      totalJobs: 1,
-      notes: 'First-time service scheduled',
-    },
-    {
-      id: '7',
-      firstName: 'Rahul',
-      lastName: 'Verma',
-      email: 'rahul.verma@email.com',
-      phoneNumber: '+91 98765 43219',
-      address: '147, City Center',
-      city: 'Pune',
-      state: 'Maharashtra',
-      zipCode: '411001',
-      country: 'India',
-      dateOfBirth: '1989-06-25',
-      customerSince: '2022-04-12',
-      status: 'active',
-      totalVehicles: 2,
-      totalJobs: 7,
-      notes: 'Prefers genuine parts only',
-    },
-    {
-      id: '8',
-      firstName: 'Kavita',
-      lastName: 'Nair',
-      email: 'kavita.nair@email.com',
-      phoneNumber: '+91 98765 43220',
-      alternatePhone: '+91 98765 43221',
-      address: '258, Tech Park Area',
-      city: 'Kochi',
-      state: 'Kerala',
-      zipCode: '682001',
-      country: 'India',
-      dateOfBirth: '1991-10-08',
-      customerSince: '2023-07-22',
-      status: 'active',
-      totalVehicles: 1,
-      totalJobs: 4,
-      notes: 'Regular maintenance customer',
-    },
-    {
-      id: '9',
-      firstName: 'Arjun',
-      lastName: 'Mehta',
-      email: 'arjun.mehta@email.com',
-      phoneNumber: '+91 98765 43222',
-      address: '369, Industrial Area',
-      city: 'Jaipur',
-      state: 'Rajasthan',
-      zipCode: '302001',
-      country: 'India',
-      dateOfBirth: '1987-04-03',
-      customerSince: '2022-12-05',
-      status: 'inactive',
-      totalVehicles: 1,
-      totalJobs: 3,
-      notes: 'Moved to another city',
-    },
-    {
-      id: '10',
-      firstName: 'Pooja',
-      lastName: 'Iyer',
-      email: 'pooja.iyer@email.com',
-      phoneNumber: '+91 98765 43223',
-      address: '741, Beach Road',
-      city: 'Goa',
-      state: 'Goa',
-      zipCode: '403001',
-      country: 'India',
-      dateOfBirth: '1993-12-20',
-      customerSince: '2023-10-15',
-      status: 'active',
-      totalVehicles: 2,
-      totalJobs: 2,
-      notes: 'Touring enthusiast',
-    },
-    {
-      id: '11',
-      firstName: 'Deepak',
-      lastName: 'Joshi',
-      email: 'deepak.joshi@email.com',
-      phoneNumber: '+91 98765 43224',
-      address: '852, Hill Station',
-      city: 'Lonavala',
-      state: 'Maharashtra',
-      zipCode: '410401',
-      country: 'India',
-      dateOfBirth: '1984-08-17',
-      customerSince: '2022-02-28',
-      status: 'active',
-      totalVehicles: 4,
-      totalJobs: 15,
-      notes: 'Vintage bike collector',
-    },
-    {
-      id: '12',
-      firstName: 'Meera',
-      lastName: 'Saxena',
-      email: 'meera.saxena@email.com',
-      phoneNumber: '+91 98765 43225',
-      address: '963, Garden Estate',
-      city: 'Lucknow',
-      state: 'Uttar Pradesh',
-      zipCode: '226001',
-      country: 'India',
-      dateOfBirth: '1990-01-25',
-      customerSince: '2023-05-10',
-      status: 'active',
-      totalVehicles: 1,
-      totalJobs: 6,
-      notes: 'Monthly maintenance package',
-    },
-  ]
-
   useEffect(() => {
     loadCustomers()
   }, [])
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A'
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch {
+      return 'N/A'
+    }
+  }
 
   const loadCustomers = async () => {
     try {
@@ -325,20 +113,17 @@ export default function CustomerManagementPage() {
 
       console.log('Fetching customers for garage ID:', garageId)
 
-      // TODO: Replace with actual API call when ready
-      // const response = await fetch(`/api/customers/list?garageId=${garageId}`)
-      // if (!response.ok) {
-      //   const errorData = await response.json()
-      //   throw new Error(errorData.error || 'Failed to fetch customers')
-      // }
-      // const result = await response.json()
-      // if (!result.success) {
-      //   throw new Error(result.error || 'Failed to fetch customers')
-      // }
-      // setCustomers(result.customers)
-
-      // Using dummy data for now - replace with actual API call later
-      setCustomers(dummyCustomers)
+      // Fetch customers from API
+      const response = await fetch(`/api/customers/list?garageId=${garageId}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch customers')
+      }
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch customers')
+      }
+      setCustomers(result.customers)
       setIsLoading(false)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred'
@@ -353,8 +138,7 @@ export default function CustomerManagementPage() {
   }
 
   const handleViewCustomer = (customer: Customer) => {
-    // TODO: Navigate to customer profile page when implemented
-    console.log('View customer:', customer)
+    router.push(`/customer-management/${customer.id}`)
   }
 
   const handleDeleteCustomer = (customer: Customer) => {
@@ -365,14 +149,23 @@ export default function CustomerManagementPage() {
   const confirmDelete = async () => {
     if (selectedCustomer) {
       try {
-        // TODO: Call API to soft delete customer
-        // const response = await fetch('/api/customers/delete', {
-        //   method: 'DELETE',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({ customerId: selectedCustomer.id }),
-        // })
+        const response = await fetch('/api/customers/delete', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ customerId: selectedCustomer.id }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to delete customer')
+        }
+
+        const result = await response.json()
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete customer')
+        }
 
         // Remove customer from local state
         setCustomers(customers.filter((cust) => cust.id !== selectedCustomer.id))
@@ -396,9 +189,7 @@ export default function CustomerManagementPage() {
       (customer.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (customer.phoneNumber?.toLowerCase() || '').includes(searchQuery.toLowerCase())
 
-    const matchesStatus = statusFilter === 'all' || customer.status === statusFilter
-
-    return matchesSearch && matchesStatus
+    return matchesSearch
   })
 
   // Pagination
@@ -407,21 +198,10 @@ export default function CustomerManagementPage() {
   const endIndex = startIndex + itemsPerPage
   const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex)
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, statusFilter])
-
-  const getStatusColor = (status: Customer['status']) => {
-    switch (status) {
-      case 'active':
-        return 'text-status-success bg-status-success/10 border-status-success/30'
-      case 'inactive':
-        return 'text-status-error bg-status-error/10 border-status-error/30'
-      default:
-        return 'text-gray-400'
-    }
-  }
+  }, [searchQuery])
 
   if (isLoading) {
     return (
@@ -510,20 +290,6 @@ export default function CustomerManagementPage() {
                 className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
               />
             </div>
-
-            {/* Status Filter */}
-            <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent appearance-none cursor-pointer"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
           </div>
         </motion.div>
 
@@ -555,9 +321,10 @@ export default function CustomerManagementPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
+                onClick={() => handleViewCustomer(customer)}
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all"
               >
-                {/* Card Header - Name, Status & Actions */}
+                {/* Card Header - Name & Status */}
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
@@ -575,38 +342,10 @@ export default function CustomerManagementPage() {
 
                     {/* Name & Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">
-                          {customer.firstName} {customer.lastName}
-                        </h3>
-                        <span
-                          className={cn(
-                            'px-2 py-0.5 rounded-md text-xs font-semibold border flex-shrink-0',
-                            getStatusColor(customer.status)
-                          )}
-                        >
-                          {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500">Customer since {customer.customerSince || 'N/A'}</p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-1">
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleViewCustomer(customer)}
-                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDeleteCustomer(customer)}
-                        className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </motion.button>
+                      <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
+                        {customer.firstName} {customer.lastName}
+                      </h3>
+                      <p className="text-sm text-gray-500">Customer since {formatDate(customer.customerSince)}</p>
                     </div>
                   </div>
                 </div>
@@ -662,12 +401,6 @@ export default function CustomerManagementPage() {
                   <th className="px-6 py-4 text-left">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Vehicles</span>
                   </th>
-                  <th className="px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</span>
-                  </th>
-                  <th className="px-6 py-4 text-right">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</span>
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -677,7 +410,8 @@ export default function CustomerManagementPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.03 }}
-                    className="hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => handleViewCustomer(customer)}
+                    className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                   >
                     {/* Customer Name & Avatar */}
                     <td className="px-6 py-4">
@@ -695,7 +429,7 @@ export default function CustomerManagementPage() {
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">{customer.firstName} {customer.lastName}</div>
-                          <div className="text-xs text-gray-500">Since {customer.customerSince || 'N/A'}</div>
+                          <div className="text-xs text-gray-500">Since {formatDate(customer.customerSince)}</div>
                         </div>
                       </div>
                     </td>
@@ -729,42 +463,6 @@ export default function CustomerManagementPage() {
                         <span>{customer.totalVehicles !== undefined ? customer.totalVehicles : 0}</span>
                       </div>
                     </td>
-
-                    {/* Status */}
-                    <td className="px-6 py-4">
-                      <span
-                        className={cn(
-                          'px-2.5 py-1 rounded-lg text-xs font-semibold border inline-block',
-                          getStatusColor(customer.status)
-                        )}
-                      >
-                        {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleViewCustomer(customer)}
-                          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDeleteCustomer(customer)}
-                          className="p-2 text-gray-400 hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </motion.button>
-                      </div>
-                    </td>
                   </motion.tr>
                 ))}
               </tbody>
@@ -777,11 +475,11 @@ export default function CustomerManagementPage() {
               <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No customers found</h3>
               <p className="text-gray-600 mb-6">
-                {searchQuery || statusFilter !== 'all'
-                  ? 'Try adjusting your search or filters'
+                {searchQuery
+                  ? 'Try adjusting your search'
                   : 'Get started by adding your first customer'}
               </p>
-              {!searchQuery && statusFilter === 'all' && (
+              {!searchQuery && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
