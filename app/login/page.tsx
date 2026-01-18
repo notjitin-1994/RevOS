@@ -34,11 +34,6 @@ export default function LoginPage() {
         {/* Left Column: Login Form */}
         <div className="flex flex-col items-center justify-center p-4 py-12 lg:py-0 pb-safe">
           <LoginForm />
-
-          {/* Mobile System Diagnostic Panel */}
-          <div className="lg:hidden w-full max-w-lg mt-12">
-            <SystemDiagnosticPanel />
-          </div>
         </div>
 
         {/* Right Column: System Diagnostic Panel (Desktop) */}

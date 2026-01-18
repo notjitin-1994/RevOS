@@ -520,6 +520,7 @@ export function LoginForm() {
           >
             {isLoading ? (
               <>
+                <span>Initializing...</span>
                 <svg
                   className="animate-spin h-5 w-5"
                   xmlns="http://www.w3.org/2000/svg"
@@ -541,10 +542,10 @@ export function LoginForm() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <span>Initializing...</span>
               </>
             ) : (
               <>
+                <span>Initialize System</span>
                 <svg
                   className="w-5 h-5"
                   viewBox="0 0 24 24"
@@ -559,10 +560,19 @@ export function LoginForm() {
                   <polyline points="10 17 15 12 10 7" />
                   <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
-                <span>Initialize System</span>
               </>
             )}
           </button>
+
+          {/* Mobile CTA Link */}
+          <div className="lg:hidden mt-6">
+            <a
+              href="http://localhost:3000/sign-up"
+              className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors duration-200"
+            >
+              Do not have a login ID? Start using RevOS to manage your Garage now →
+            </a>
+          </div>
         </form>
         </div>
 
