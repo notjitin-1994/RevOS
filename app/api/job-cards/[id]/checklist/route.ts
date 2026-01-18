@@ -70,8 +70,7 @@ export async function POST(
 
     console.log('Creating checklist item for job card:', jobCardId)
 
-    const result = await createChecklistItem({
-      jobCardId,
+    const result = await createChecklistItem(jobCardId, {
       mechanicId: body.mechanicId || null,
       itemName: body.itemName,
       description: body.description || null,

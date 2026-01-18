@@ -604,10 +604,11 @@ export default function CreateJobCardPage() {
       }
 
       // Prepare job card data
+      // Validation above ensures selectedCustomer and selectedVehicle are not null
       const jobCardData = {
         garageId,
-        customerId: selectedCustomer.id,
-        vehicleId: selectedVehicle.id,
+        customerId: selectedCustomer!.id,
+        vehicleId: selectedVehicle!.id,
         jobType,
         priority,
         customerComplaint,
@@ -627,9 +628,16 @@ export default function CreateJobCardPage() {
           status: 'pending' as const,
           priority: item.priority,
           estimatedMinutes: item.estimatedMinutes,
+          actualMinutes: 0,
+          isTimerRunning: false,
+          timerStartedAt: null,
+          totalTimeSpent: 0,
           laborRate: item.laborRate,
+          laborCost: 0,
           displayOrder: item.displayOrder,
+          mechanicNotes: null,
           notes: null,
+          completedAt: null,
         })) : undefined,
       }
 

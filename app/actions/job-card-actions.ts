@@ -13,6 +13,7 @@ import {
   type JobCardData,
   type JobCardWithRelations,
   type ChecklistItemData,
+  type JobCardFilters,
 } from '@/lib/supabase/job-card-queries'
 
 // Re-export types for convenience
@@ -43,14 +44,7 @@ export async function createJobCardAction(input: CreateJobCardInput): Promise<{
  */
 export async function getJobCardsByGarageIdAction(
   garageId: string,
-  filters?: {
-    status?: string
-    mechanicId?: string
-    customerId?: string
-    dateFrom?: string
-    dateTo?: string
-    search?: string
-  }
+  filters?: JobCardFilters
 ): Promise<JobCardData[]> {
   return await getJobCardsByGarageId(garageId, filters)
 }
@@ -101,13 +95,25 @@ export async function getChecklistItemsAction(jobCardId: string): Promise<Checkl
  * Server action to create a new checklist item
  */
 export async function createChecklistItemAction(
-  input: Omit<ChecklistItemData, 'id' | 'jobCardId' | 'createdAt' | 'updatedAt' | 'deletedAt'>
+  jobCardId: string,
+  input: {
+    mechanicId?: string | null
+    itemName: string
+    description?: string | null
+    category?: string | null
+    status?: 'pending' | 'in_progress' | 'completed' | 'skipped'
+    priority?: 'low' | 'medium' | 'high' | 'urgent'
+    estimatedMinutes?: number
+    laborRate?: number
+    displayOrder?: number
+    notes?: string | null
+  }
 ): Promise<{
   success: boolean
   error?: string
   checklistItem?: ChecklistItemData
 }> {
-  return await createChecklistItem(input)
+  return await createChecklistItem(jobCardId, input)
 }
 
 /**

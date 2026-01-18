@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getJobCardsByGarageId } from '@/lib/supabase/job-card-queries'
+import { getJobCardsByGarageId, type JobCardFilters } from '@/lib/supabase/job-card-queries'
 
 /**
  * GET /api/job-cards/list
@@ -21,17 +21,10 @@ export async function GET(request: Request) {
     console.log('Fetching job cards for garage ID:', garageId)
 
     // Extract filters from query params
-    const filters: {
-      status?: string
-      mechanicId?: string
-      customerId?: string
-      dateFrom?: string
-      dateTo?: string
-      search?: string
-    } = {}
+    const filters: JobCardFilters = {}
 
     if (url.searchParams.get('status')) {
-      filters.status = url.searchParams.get('status')!
+      filters.status = url.searchParams.get('status') as any
     }
 
     if (url.searchParams.get('mechanicId')) {

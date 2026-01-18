@@ -360,8 +360,10 @@ function jobCardToDbInput(input: CreateJobCardInput): Omit<DbJobCard, 'id' | 'jo
     reported_issue: input.reportedIssue || null,
     promised_date: input.promisedDate || null,
     promised_time: input.promisedTime || null,
+    actual_completion_date: null,
     lead_mechanic_id: input.leadMechanicId || null,
     internal_notes: input.internalNotes || null,
+    mechanic_notes: null,
   }
 }
 
@@ -823,22 +825,41 @@ export async function getChecklistItems(jobCardId: string): Promise<ChecklistIte
  * Create a new checklist item
  */
 export async function createChecklistItem(
-  input: Omit<ChecklistItemData, 'id' | 'jobCardId' | 'createdAt' | 'updatedAt' | 'deletedAt'>
+  jobCardId: string,
+  input: {
+    mechanicId?: string | null
+    itemName: string
+    description?: string | null
+    category?: string | null
+    status?: ChecklistItemStatus
+    priority?: Priority
+    estimatedMinutes?: number
+    laborRate?: number
+    displayOrder?: number
+    notes?: string | null
+  }
 ): Promise<{ success: boolean; error?: string; checklistItem?: ChecklistItemData }> {
   const supabase = createAdminClient()
 
   const dbInput = {
-    job_card_id: input.jobCardId,
-    mechanic_id: input.mechanicId,
+    job_card_id: jobCardId,
+    mechanic_id: input.mechanicId || null,
     item_name: input.itemName,
     description: input.description || null,
     category: input.category || null,
     status: input.status || 'pending',
-    priority: input.priority,
+    priority: input.priority || 'medium',
     estimated_minutes: input.estimatedMinutes || 0,
+    actual_minutes: 0,
+    is_timer_running: false,
+    timer_started_at: null,
+    total_time_spent: 0,
     labor_rate: input.laborRate || 0,
+    labor_cost: 0,
     display_order: input.displayOrder || 0,
+    mechanic_notes: null,
     notes: input.notes || null,
+    completed_at: null,
   }
 
   const { data, error } = await supabase
@@ -1086,12 +1107,13 @@ export async function getJobCardParts(jobCardId: string): Promise<JobCardPartDat
  * Add parts to a job card
  */
 export async function addJobCardPart(
+  jobCardId: string,
   input: Omit<JobCardPartData, 'id' | 'jobCardId' | 'createdAt' | 'updatedAt' | 'deletedAt'>
 ): Promise<{ success: boolean; error?: string; part?: JobCardPartData }> {
   const supabase = createAdminClient()
 
   const dbInput = {
-    job_card_id: input.jobCardId,
+    job_card_id: jobCardId,
     part_id: input.partId,
     part_name: input.partName,
     part_number: input.partNumber || null,

@@ -467,7 +467,7 @@ export default function JobCardsPage() {
             year: 2024,
             licensePlate: 'KA-51-GH-2345'
           },
-          leadMechanic: null
+          leadMechanic: undefined
         },
         {
           id: '7',
@@ -574,7 +574,7 @@ export default function JobCardsPage() {
             year: 2023,
             licensePlate: 'KA-03-EM-2345'
           },
-          leadMechanic: null
+          leadMechanic: undefined
         },
         {
           id: '10',

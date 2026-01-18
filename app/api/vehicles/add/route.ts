@@ -43,12 +43,12 @@ export async function POST(request: Request) {
       model,
       year,
       licensePlate: licensePlate || chassisNumber,
-      color: null,
+      color: undefined,
       vin: chassisNumber,
       engineNumber,
       chassisNumber,
       category,
-      currentMileage: null,
+      currentMileage: undefined,
       notes,
     })
 

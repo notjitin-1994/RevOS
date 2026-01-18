@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Copy,
   AlertTriangle,
+  CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'

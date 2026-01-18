@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation'
 import {
   Loader2,
   User,
-  MotorcycleIcon as Motorcycle,
   Hash,
   Phone,
   Mail,

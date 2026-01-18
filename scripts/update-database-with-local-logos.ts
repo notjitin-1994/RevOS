@@ -111,25 +111,14 @@ async function updateDatabase() {
     .rpc('update_motorcycle_logos_from_makes')
 
   if (syncError) {
-    // If function doesn't exist, do it manually
+    // If function doesn't exist, update each make individually
     console.log('  ℹ️  Function not found, updating manually...')
 
-    const { error: updateError } = await supabase
-      .from('motorcycles')
-      .update({
-        logo_url: supabase.raw(`(SELECT logo_url FROM makes WHERE makes.name = motorcycles.make)`),
-        updated_at: new Date().toISOString(),
-      })
-      .not('logo_url', 'is', null)
-
-    if (updateError) {
-      // Last resort: update each make individually
-      for (const [makeName, logoPath] of Object.entries(logoMap)) {
-        await supabase
-          .from('motorcycles')
-          .update({ logo_url: logoPath, updated_at: new Date().toISOString() })
-          .eq('make', makeName)
-      }
+    for (const [makeName, logoPath] of Object.entries(logoMap)) {
+      await supabase
+        .from('motorcycles')
+        .update({ logo_url: logoPath, updated_at: new Date().toISOString() })
+        .eq('make', makeName)
     }
   }
 

@@ -125,7 +125,7 @@ async function testUrl(url: string): Promise<boolean> {
   try {
     const response = await fetch(url, { method: 'HEAD' })
     const contentType = response.headers.get('content-type')
-    return response.ok && contentType?.includes('image')
+    return response.ok && (contentType?.includes('image') ?? false)
   } catch {
     return false
   }
@@ -157,7 +157,7 @@ async function main() {
     console.log(`\n🏢 Processing: ${make}`)
 
     // Method 1: Use verified logo URLs
-    let logoUrl = verifiedLogos[make]
+    let logoUrl: string | null = verifiedLogos[make] || null
 
     if (logoUrl) {
       console.log(`  ✓ Using verified URL`)
