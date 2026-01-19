@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMotorcyclesGroupedByMake } from '@/lib/supabase/motorcycle-queries'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/motorcycles/list
  *

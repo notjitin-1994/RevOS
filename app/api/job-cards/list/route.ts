@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getJobCardsByGarageId, type JobCardFilters } from '@/lib/supabase/job-card-queries'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/job-cards/list
  *

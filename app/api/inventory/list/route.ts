@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getParts } from '@/lib/supabase/inventory-queries'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/inventory/list
  *

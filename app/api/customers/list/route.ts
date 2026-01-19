@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getCustomersByGarageId } from '@/lib/supabase/customer-queries'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/customers/list
  *

@@ -29,9 +29,9 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
 
   // Transform job cards to calendar events
   const events = useMemo(() => {
-    // If no job cards, show placeholder events for demonstration
+    // If no job cards, return empty array
     if (jobCards.length === 0) {
-      return getPlaceholderEvents()
+      return []
     }
 
     return jobCards.map((jobCard) => {
