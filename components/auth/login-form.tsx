@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircle, User, ArrowRight, Shield, X, Mail, Building2, Phone, Users, Wrench } from 'lucide-react'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { loginSchema, type LoginFormValues } from '@/lib/schemas/login'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { LoginLogo } from './login-logo'
@@ -226,16 +227,24 @@ export function LoginForm() {
                 {/* Background User Image with Blur */}
                 <div className="absolute inset-0 opacity-60 overflow-hidden rounded-t-2xl">
                   {user.profileImageUrl ? (
-                    <img
+                    <Image
                       src={user.profileImageUrl}
                       alt={`${user.firstName} ${user.lastName}`}
-                      className="w-full h-full object-cover blur-sm scale-110"
+                      fill
+                      className="object-cover blur-sm scale-110"
+                      sizes="(max-width: 768px) 100vw, 420px"
+                      priority
+                      quality={75}
                     />
                   ) : (
-                    <img
+                    <Image
                       src="https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/6504b85a-95ba-4b37-936f-23e91249e7a0/fbb6c4fec01a1b12177b36cf7ae051f3.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1768808995&Signature=jlQehSRAT2yQD4F7hH9e16rwBgk="
                       alt="Password background"
-                      className="w-full h-full object-cover blur-sm scale-110"
+                      fill
+                      className="object-cover blur-sm scale-110"
+                      sizes="(max-width: 768px) 100vw, 420px"
+                      priority
+                      quality={75}
                     />
                   )}
                   {/* Brand Accent Overlay - Graphite */}
@@ -254,12 +263,15 @@ export function LoginForm() {
                     transition={{ delay: 0.12, type: "spring", stiffness: 200, damping: 20 }}
                   >
                     {user.profileImageUrl ? (
-                      <div className="relative">
+                      <div className="relative w-20 h-20">
                         <div className="absolute inset-0 bg-brand/25 rounded-2xl blur-xl scale-110" />
-                        <img
+                        <Image
                           src={user.profileImageUrl}
                           alt={`${user.firstName} ${user.lastName}`}
-                          className="relative w-20 h-20 rounded-2xl object-cover border-2 border-brand shadow-xl shadow-brand/20"
+                          fill
+                          className="rounded-2xl object-cover border-2 border-brand shadow-xl shadow-brand/20"
+                          sizes="80px"
+                          quality={90}
                         />
                       </div>
                     ) : (
@@ -525,10 +537,14 @@ export function LoginForm() {
               >
                 {/* Background Image with Blur */}
                 <div className="absolute inset-0 opacity-60 overflow-hidden rounded-t-2xl">
-                  <img
+                  <Image
                     src="https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/6504b85a-95ba-4b37-936f-23e91249e7a0/fbb6c4fec01a1b12177b36cf7ae051f3.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1768808995&Signature=jlQehSRAT2yQD4F7hH9e16rwBgk="
                     alt="Login background"
-                    className="w-full h-full object-cover blur-sm scale-110"
+                    fill
+                    className="object-cover blur-sm scale-110"
+                    sizes="(max-width: 768px) 100vw, 420px"
+                    priority
+                    quality={75}
                   />
                   {/* Brand Accent Overlay - Graphite */}
                   <div className="absolute inset-0 bg-graphite-700/30" />
