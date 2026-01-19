@@ -45,7 +45,7 @@ export function AppSidebar({ open, setOpen, hideMobile = false }: AppSidebarProp
     {
       label: 'Service Center',
       href: '/job-cards',
-      icon: <Settings className="h-5 w-5 shrink-0 text-graphite-900" />,
+      icon: <ClipboardList className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
       label: 'Crew Station',
