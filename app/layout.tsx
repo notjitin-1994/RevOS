@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 const manrope = Manrope({
   subsets: ['latin'],
-  weight: ['400', '600'],
+  weight: ['400', '600', '800'],
   variable: '--font-manrope',
   display: 'swap',
 })

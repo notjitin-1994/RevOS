@@ -102,10 +102,10 @@ export function SystemDiagnosticPanel() {
   const [activeModule, setActiveModule] = useState<string | null>(null)
 
   return (
-    <div className="h-full overflow-y-auto px-4 sm:px-5 md:px-6 py-6 md:py-8 mb-6 lg:mb-0 backdrop-blur-[3px] bg-graphite-900/30 border border-graphite-700/50 lg:border-0 rounded-xl relative">
+    <div className="h-full overflow-y-auto px-4 sm:px-5 md:px-6 py-6 md:py-8 mb-6 lg:mb-0 backdrop-blur-[3px] bg-graphite-900/30 border border-graphite-700/50 lg:border-0 rounded-xl">
       {/* Subtle shine effect for entire panel */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-      <div className="relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none rounded-xl" />
+      <div className="relative z-10">
       {/* RevOS Brand Header */}
       <div className="mb-8 md:mb-8">
         <h1 className="text-4xl sm:text-3xl md:text-3xl font-display font-bold text-white tracking-tight mb-3">
@@ -359,7 +359,7 @@ export function SystemDiagnosticPanel() {
 
       {/* Footer Stats */}
       <div className="mt-10 pt-8 border-t border-graphite-700">
-        <div className="grid grid-cols-3 gap-6 sm:gap-4 md:gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-6 sm:gap-4 md:gap-4">
           <div className="text-center">
             <p className="font-mono text-3xl sm:text-2xl md:text-2xl font-bold text-brand mb-2">7</p>
             <p className="text-sm sm:text-xs md:text-xs font-medium uppercase tracking-wider text-graphite-400">
@@ -378,17 +378,6 @@ export function SystemDiagnosticPanel() {
               Uptime
             </p>
           </div>
-        </div>
-
-        {/* Brand Footer */}
-        <div className="text-center space-y-2">
-          <p className="text-sm sm:text-xs md:text-xs font-display font-semibold tracking-wide">
-            POWERED BY{' '}
-            <span className="font-manrope">
-              <span className="font-semibold text-[#FF4F00]">GLITCH</span>
-              <span className="font-normal text-white">ZERO</span>
-            </span>
-          </p>
         </div>
       </div>
       </div>

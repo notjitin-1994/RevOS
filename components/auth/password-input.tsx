@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import type { UseFormRegisterReturn } from 'react-hook-form'
 
 interface PasswordInputProps {
@@ -45,8 +45,9 @@ export function PasswordInput({
     <div className="space-y-2">
       <label
         htmlFor={id}
-        className="block text-xs font-medium uppercase tracking-wider text-graphite-400"
+        className="block text-xs font-bold uppercase tracking-widest text-brand/90 flex items-center gap-2"
       >
+        <Lock className="w-3.5 h-3.5" />
         {label}
       </label>
 
@@ -61,14 +62,14 @@ export function PasswordInput({
           aria-describedby={error ? `${id}-error` : undefined}
           className={`
             w-full h-12 px-4 pr-14
-            text-base bg-graphite-900 text-white
+            text-base bg-white text-graphite-900
             border rounded-lg
-            placeholder:text-graphite-400
+            placeholder:text-graphite-500
             transition-all duration-200 ease-out
             disabled:opacity-50 disabled:cursor-not-allowed
             shadow-sm
             focus:outline-none
-            focus:ring-2 focus:ring-brand/20 focus:ring-offset-2 focus:ring-offset-graphite-900
+            focus:ring-2 focus:ring-brand/20 focus:ring-offset-2 focus:ring-offset-white
             ${
               error
                 ? 'border-status-error'
@@ -89,7 +90,7 @@ export function PasswordInput({
             absolute right-2 top-1/2 -translate-y-1/2
             flex items-center justify-center
             min-h-[44px] min-w-[44px]
-            text-graphite-400 hover:text-graphite-200
+            text-graphite-600 hover:text-graphite-900
             transition-colors duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
             active:scale-[0.98]
