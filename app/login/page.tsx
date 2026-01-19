@@ -7,14 +7,14 @@ import { GlowingDots } from '@/components/ui/glowing-dots'
  *
  * Features:
  * - Split layout: Login card (left) + System diagnostic panel (right)
- * - Dark mode native (bg-graphite-900)
+ * - Light gray background (#CFD0D4)
  * - Mobile responsive (stacks on mobile, side-by-side on desktop)
  * - Safe area support for iPhone Home bar
  * - Subtle glowing dots background animation
  *
  * Design System: Digital Volt
- * - Background: Graphite-900 (#0F172A)
- * - Animation: Brand Lime (#CCFF00) glowing dots
+ * - Background: Light Gray (#CFD0D4)
+ * - Animation: 0F172A glowing dots
  * - Philosophy: Industrial precision with digital elegance
  *
  * Layout Strategy:
@@ -23,7 +23,7 @@ import { GlowingDots } from '@/components/ui/glowing-dots'
  */
 export default function LoginPage() {
   return (
-    <main className="relative min-h-screen bg-graphite-900 overflow-hidden">
+    <main className="relative min-h-screen overflow-hidden" style={{ backgroundColor: '#CFD0D4' }}>
       {/* Background animation layer */}
       <div className="absolute inset-0 z-0">
         <GlowingDots />

@@ -38,12 +38,12 @@ class Particle {
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
 
-    // Brand Lime color at full opacity
-    ctx.fillStyle = `rgba(204, 255, 0, ${this.opacity})`
+    // Core particle color
+    ctx.fillStyle = `rgba(15, 23, 42, ${this.opacity})`
 
-    // Enhanced glow effect with brand lime
-    ctx.shadowBlur = glowBlur
-    ctx.shadowColor = `rgba(204, 255, 0, 0.6)`
+    // Substantial dark outward glow effect
+    ctx.shadowBlur = 100
+    ctx.shadowColor = `rgba(15, 23, 42, 0.8)`
 
     ctx.fill()
     ctx.shadowBlur = 0 // Reset for performance
@@ -62,9 +62,9 @@ class Particle {
  * - Proper React cleanup to prevent memory leaks
  *
  * Design System: Digital Volt
- * - Dot color: Brand Lime (#CCFF00) with low opacity
+ * - Dot color: 0F172A with low opacity
  * - Glow effect: Canvas shadowBlur
- * - Background: Transparent (shows bg-graphite-900 through)
+ * - Background: Transparent (shows #CFD0D4 through)
  * - Philosophy: Industrial precision meets digital elegance
  */
 export function GlowingDots() {
@@ -88,13 +88,13 @@ export function GlowingDots() {
 
     // Particle configuration
     const PARTICLE_COUNT = 100 // Increased for more visual interest
-    const MIN_SIZE = 1
-    const MAX_SIZE = 3
+    const MIN_SIZE = 3
+    const MAX_SIZE = 6
     const MIN_SPEED = 0.1
     const MAX_SPEED = 0.3
     const MIN_OPACITY = 1.0 // Full opacity
     const MAX_OPACITY = 1.0 // Full opacity
-    const GLOW_BLUR = 15 // Soft glow effect
+    const GLOW_BLUR = 20 // Soft glow effect
 
     // Initialize particles
     const initParticles = () => {

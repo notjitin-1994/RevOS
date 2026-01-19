@@ -202,13 +202,13 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-[462px] mx-auto px-4 h-[100dvh] flex flex-col justify-start overflow-y-auto overflow-x-hidden sm:h-auto sm:min-h-0 sm:justify-start sm:overflow-visible sm:pt-1">
       {/* Single Parent Card */}
-      <div className="relative h-[560px] sm:mt-[2px] bg-gradient-to-b from-graphite-800/95 to-graphite-800/90 backdrop-blur-xl border border-[0.5px] border-brand/30 rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.15),0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
+      <div className="relative h-[560px] sm:mt-[2px] bg-gradient-to-b from-graphite-800/95 to-graphite-800/90 backdrop-blur-xl border border-[0.5px] border-graphite-600/30 rounded-2xl shadow-[0_0_40px_rgba(100,116,139,0.25),0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
         {/* Ambient background glow effects */}
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -right-32 w-64 h-64 bg-graphite-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-graphite-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-graphite-500/40 to-transparent" />
 
         {/* Card Content Container - Full height with flex centering */}
         <div className="relative z-10 h-full flex flex-col">
@@ -264,18 +264,18 @@ export function LoginForm() {
                   >
                     {user.profileImageUrl ? (
                       <div className="relative w-20 h-20">
-                        <div className="absolute inset-0 bg-brand/25 rounded-2xl blur-xl scale-110" />
+                        <div className="absolute inset-0 bg-[#CCFF00]/25 rounded-2xl blur-xl scale-110" />
                         <Image
                           src={user.profileImageUrl}
                           alt={`${user.firstName} ${user.lastName}`}
                           fill
-                          className="rounded-2xl object-cover border-2 border-brand shadow-xl shadow-brand/20"
+                          className="rounded-2xl object-cover border-2 border-[#CCFF00] shadow-xl shadow-[#CCFF00]/20"
                           sizes="80px"
                           quality={90}
                         />
                       </div>
                     ) : (
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand to-brand/70 flex items-center justify-center shadow-xl shadow-brand/20 border-2 border-brand/50">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#CCFF00] to-[#CCFF00]/70 flex items-center justify-center shadow-xl shadow-[#CCFF00]/20 border-2 border-[#CCFF00]/50">
                         <User className="w-10 h-10 text-graphite-900" strokeWidth={2} />
                       </div>
                     )}
@@ -288,12 +288,12 @@ export function LoginForm() {
                     transition={{ delay: 0.2 }}
                   >
                     <h1 className="text-[28px] leading-tight font-display font-bold text-white tracking-tight mb-2">
-                      Welcome <span className="text-brand">{user.firstName}</span>!
+                      Welcome <span className="text-[#CCFF00]">{user.firstName}</span>!
                     </h1>
                   </motion.div>
 
                   <motion.p
-                    className="text-base font-display font-semibold text-brand tracking-wide"
+                    className="text-base font-display font-semibold text-[#CCFF00] tracking-wide"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.28 }}
@@ -346,7 +346,7 @@ export function LoginForm() {
                         <button
                           type="button"
                           onClick={() => console.log('Forgot password clicked')}
-                          className="text-xs font-medium text-brand/80 hover:text-brand transition-colors duration-200"
+                          className="text-xs font-medium text-[#CCFF00]/80 hover:text-[#CCFF00] transition-colors duration-200"
                         >
                           Forgot Password?
                         </button>
@@ -398,15 +398,15 @@ export function LoginForm() {
                       <button
                         type="button"
                         onClick={handleGoBack}
-                        className="text-xs font-semibold text-brand/80 hover:text-brand transition-colors duration-200"
+                        className="text-xs font-semibold text-[#CCFF00]/80 hover:text-[#CCFF00] transition-colors duration-200"
                       >
                         Not {user.firstName}?
                       </button>
-                      <span className="text-white">|</span>
+                      <span className="text-graphite-600">|</span>
                       <button
                         type="button"
                         onClick={() => setShowContactModal(true)}
-                        className="text-xs font-semibold text-brand/80 hover:text-brand transition-colors duration-200"
+                        className="text-xs font-semibold text-[#CCFF00]/80 hover:text-[#CCFF00] transition-colors duration-200"
                       >
                         Contact Support
                       </button>
@@ -509,14 +509,14 @@ export function LoginForm() {
                     >
                       <a
                         href="#"
-                        className="text-brand/70 hover:text-brand transition-colors duration-200 font-medium"
+                        className="text-[#CCFF00]/70 hover:text-[#CCFF00] transition-colors duration-200 font-medium"
                       >
                         Password tips
                       </a>
-                      <span className="text-brand/30">•</span>
+                      <span className="text-[#CCFF00]/30">•</span>
                       <a
                         href="#"
-                        className="text-brand/70 hover:text-brand transition-colors duration-200 font-medium"
+                        className="text-[#CCFF00]/70 hover:text-[#CCFF00] transition-colors duration-200 font-medium"
                       >
                         Need help?
                       </a>
@@ -535,21 +535,6 @@ export function LoginForm() {
                 transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                 className="flex-1 flex flex-col justify-center px-6 pb-6 relative"
               >
-                {/* Background Image with Blur */}
-                <div className="absolute inset-0 opacity-60 overflow-hidden rounded-t-2xl">
-                  <Image
-                    src="https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/6504b85a-95ba-4b37-936f-23e91249e7a0/fbb6c4fec01a1b12177b36cf7ae051f3.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1768808995&Signature=jlQehSRAT2yQD4F7hH9e16rwBgk="
-                    alt="Login background"
-                    fill
-                    className="object-cover blur-sm scale-110"
-                    sizes="(max-width: 768px) 100vw, 420px"
-                    priority
-                    quality={75}
-                  />
-                  {/* Brand Accent Overlay - Graphite */}
-                  <div className="absolute inset-0 bg-graphite-700/30" />
-                </div>
-
                 {/* Content Overlay - Above background */}
                 <div className="relative z-10">
                 {/* Logo Header */}
@@ -591,7 +576,7 @@ export function LoginForm() {
                   <div className="space-y-3">
                     <label
                       htmlFor="loginId"
-                      className="block text-xs font-bold uppercase tracking-widest text-brand/90 flex items-center gap-2"
+                      className="block text-xs font-bold uppercase tracking-widest text-[#CCFF00]/90 flex items-center gap-2"
                     >
                       <Shield className="w-3.5 h-3.5" />
                       Login ID
@@ -615,11 +600,11 @@ export function LoginForm() {
                         disabled:opacity-50 disabled:cursor-not-allowed
                         shadow-sm
                         focus:outline-none
-                        focus:ring-2 focus:ring-brand/20 focus:ring-offset-2 focus:ring-offset-white
+                        focus:ring-2 focus:ring-[#CCFF00]/20 focus:ring-offset-2 focus:ring-offset-white
                         ${
                           loginErrors.loginId
                             ? 'border-status-error'
-                            : 'border-graphite-600 focus:border-brand/50'
+                            : 'border-gray-300 focus:border-[#CCFF00]'
                         }
                       `}
                       {...registerLogin('loginId')}
@@ -655,7 +640,7 @@ export function LoginForm() {
                       <button
                         type="button"
                         onClick={() => setShowContactModal(true)}
-                        className="text-xs font-medium text-brand/80 hover:text-brand transition-colors duration-200"
+                        className="text-xs font-medium text-[#CCFF00]/80 hover:text-[#CCFF00] transition-colors duration-200"
                       >
                         Forgot your login ID?
                       </button>
@@ -707,10 +692,10 @@ export function LoginForm() {
                     <button
                       type="button"
                       onClick={() => setShowBusinessModal(true)}
-                      className="group inline-flex items-center gap-1.5 text-xs font-semibold text-brand/80 hover:text-brand transition-all duration-200 whitespace-nowrap"
+                      className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[#CCFF00]/80 hover:text-[#CCFF00] transition-all duration-200 whitespace-nowrap"
                     >
                       <span>Don't have a login ID?</span>
-                      <span className="underline decoration-brand/50 underline-offset-2 group-hover:decoration-brand transition-all">Contact us</span>
+                      <span className="underline decoration-[#CCFF00]/50 underline-offset-2 group-hover:decoration-[#CCFF00] transition-all">Contact us</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" strokeWidth={2.5} />
                     </button>
                   </motion.div>
@@ -725,15 +710,15 @@ export function LoginForm() {
 
       {/* Footer - Below the card */}
       <div className="mt-5 text-center">
-        <div className="flex items-center justify-center gap-2 text-[11px] text-graphite-500">
-          <span>© 2026 </span>
-          <span className="text-brand font-semibold">RevOS</span>
-          <span className="text-white">|</span>
-          <span className="font-display font-semibold tracking-wide">
+        <div className="flex items-center justify-center gap-2 text-xs text-graphite-500">
+          <span className="text-graphite-700">© 2026 </span>
+          <span className="text-graphite-800 font-semibold">RevOS</span>
+          <span className="text-graphite-600">|</span>
+          <span className="font-display font-semibold tracking-wide text-graphite-700">
             POWERED BY{' '}
             <span className="font-manrope">
               <span className="font-bold text-[#FF4F00]">GLITCH</span>
-              <span className="font-normal text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">ZERO</span>
+              <span className="font-normal text-graphite-800 drop-shadow-[0_0_8px_rgba(0,0,0,0.1)]">ZERO</span>
             </span>
           </span>
         </div>
