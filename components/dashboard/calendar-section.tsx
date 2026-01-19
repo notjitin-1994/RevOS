@@ -29,6 +29,11 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
 
   // Transform job cards to calendar events
   const events = useMemo(() => {
+    // If no job cards, show placeholder events for demonstration
+    if (jobCards.length === 0) {
+      return getPlaceholderEvents()
+    }
+
     return jobCards.map((jobCard) => {
       const eventDate = jobCard.promisedDate || jobCard.createdAt
       const backgroundColor = getEventBackgroundColor(jobCard.priority)
