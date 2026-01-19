@@ -19,13 +19,13 @@ import {
   Camera,
   Wrench,
 } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { getUserByUserUid, type UserData } from '@/lib/supabase/user-queries'
 import { getGarageByOwnerId, type GarageData } from '@/lib/supabase/garage-queries'
 import { EditUserModal } from '@/components/settings/edit-user-modal'
 import { ProfilePictureUploadModal } from '@/components/settings/profile-picture-upload'
+import { SettingsSkeleton } from '@/components/ui/skeleton/settings-skeleton'
 
 
 /**
@@ -246,28 +246,8 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#dfe5ef' }}>
-        <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="relative"
-          >
-            <div className="inline-block h-16 w-16 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-gray-300" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-gray-600 border-r-transparent border-b-transparent animate-spin" />
-            </div>
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-graphite-600 font-medium"
-          >
-            Loading settings...
-          </motion.p>
-        </div>
+      <div className="min-h-screen" style={{ backgroundColor: '#dfe5ef' }}>
+        <SettingsSkeleton />
       </div>
     )
   }
@@ -530,32 +510,76 @@ export default function SettingsPage() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="mb-4 md:mb-6"
           >
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="hidden md:flex items-center gap-1">
-                <TabsTrigger value="user-settings" className="flex items-center gap-2">
-                  <User className="h-4 w-4" strokeWidth={2.5} />
-                  <span>User Information</span>
-                </TabsTrigger>
-                <TabsTrigger value="garage-settings" className="flex items-center gap-2">
-                  <Building className="h-4 w-4" strokeWidth={2.5} />
-                  <span>Garage Information</span>
-                </TabsTrigger>
-              </TabsList>
+            {/* Desktop Tabs */}
+            <div className="hidden md:block overflow-x-auto">
+              <div className="border-b border-gray-200">
+                <nav className="flex gap-1 -mb-px">
+                  <button
+                    onClick={() => setActiveTab('user-settings')}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'user-settings'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    User Information
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('garage-settings')}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'garage-settings'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <Building className="h-4 w-4" />
+                    Garage Information
+                  </button>
+                </nav>
+              </div>
+            </div>
 
-              {/* Mobile Tabs List - Full Width */}
-              <TabsList className="md:hidden flex w-full">
-                <TabsTrigger value="user-settings" className="flex-1 flex items-center justify-center gap-2">
-                  <User className="h-4 w-4" strokeWidth={2.5} />
-                  <span>User</span>
-                </TabsTrigger>
-                <TabsTrigger value="garage-settings" className="flex-1 flex items-center justify-center gap-2">
-                  <Building className="h-4 w-4" strokeWidth={2.5} />
-                  <span>Garage</span>
-                </TabsTrigger>
-              </TabsList>
+            {/* Mobile Tabs - Full Width */}
+            <div className="md:hidden overflow-x-auto">
+              <div className="border-b border-gray-200">
+                <nav className="flex gap-1 -mb-px">
+                  <button
+                    onClick={() => setActiveTab('user-settings')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'user-settings'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    User
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('garage-settings')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'garage-settings'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <Building className="h-4 w-4" />
+                    Garage
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </motion.div>
 
-              {/* User Information Tab */}
-              <TabsContent value="user-settings" className="mt-4 md:mt-6">
+          {/* Tab Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {/* User Information Tab */}
+            {activeTab === 'user-settings' && (
+              <div className="mt-4 md:mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                   {/* Personal Information */}
                   <motion.div
@@ -702,10 +726,12 @@ export default function SettingsPage() {
                     </InfoCard>
                   </motion.div>
                 </div>
-              </TabsContent>
+              </div>
+            )}
 
-              {/* Garage Information Tab */}
-              <TabsContent value="garage-settings" className="mt-4 md:mt-6">
+            {/* Garage Information Tab */}
+            {activeTab === 'garage-settings' && (
+              <div className="mt-4 md:mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
 
                   {/* Basic Contact Information */}
@@ -938,8 +964,8 @@ export default function SettingsPage() {
                     </motion.div>
                   )}
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </motion.div>
 
         </div>

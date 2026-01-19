@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useFormAutoSave } from '@/lib/hooks/useFormAutoSave'
 
 /**
  * Add Part Page
@@ -57,6 +58,7 @@ interface FormData {
 
   // Vehicle Fitment
   compatibleVehicles: string[] // Array of vehicle IDs
+  isUniversalFitment: boolean // Fits all motorcycles
 
   // Physical Attributes
   weight: string
@@ -182,6 +184,7 @@ export default function AddPartPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('basic')
+  const [hasRestoredData, setHasRestoredData] = useState(false)
 
   // Smart-sorted dropdown options
   const [categoryOptions, setCategoryOptions] = useState<FieldOption[]>([])
@@ -221,6 +224,7 @@ export default function AddPartPage() {
 
     // Vehicle Fitment
     compatibleVehicles: [],
+    isUniversalFitment: false,
 
     // Physical Attributes
     weight: '',
@@ -254,6 +258,18 @@ export default function AddPartPage() {
     installationInstructionsUrl: '',
   })
 
+  // Auto-save hook for form persistence (must be after formData state)
+  const { clearSavedData, loadSavedData, hasSavedData } = useFormAutoSave({
+    formData: formData,
+    storageKey: 'add-part-draft',
+    isSubmitting: isLoading,
+    debounceMs: 2000, // Save 2 seconds after last change
+    shouldSave: (data) => {
+      // Only save if there's meaningful data (at least part number or name)
+      return !!(data.partNumber || data.partName || data.sku || data.oemPartNumber)
+    },
+  })
+
   // Calculate margin in real-time
   const margin = formData.purchasePrice > 0
     ? ((formData.sellingPrice - formData.purchasePrice) / formData.purchasePrice) * 100
@@ -266,11 +282,42 @@ export default function AddPartPage() {
     ? 'low-stock'
     : 'in-stock'
 
-  // Load motorcycles from catalog
+  // Load motorcycles and restore draft on mount
   useEffect(() => {
     loadMotorcycles()
     loadFieldOptions()
+    restoreDraft()
   }, [])
+
+  /**
+   * Restore saved draft from localStorage
+   */
+  const restoreDraft = () => {
+    const savedData = loadSavedData()
+    if (savedData && Object.keys(savedData).length > 0) {
+      try {
+        // Restore form data
+        setFormData(savedData as FormData)
+        setHasRestoredData(true)
+
+        // Silent restoration - no visual indicator
+        console.log('✓ Draft restored from', new Date().toLocaleTimeString())
+      } catch (error) {
+        console.warn('Failed to restore draft:', error)
+      }
+    }
+  }
+
+  /**
+   * Handle cancel with optional draft cleanup
+   */
+  const handleCancel = (shouldClearDraft = true) => {
+    if (shouldClearDraft) {
+      clearSavedData()
+      console.log('✓ Draft cleared on cancel')
+    }
+    router.push('/inventory')
+  }
 
   // Filter motorcycles based on search query
   useEffect(() => {
@@ -482,17 +529,26 @@ export default function AddPartPage() {
         return
       }
 
-      // TODO: Call API to add part
-      // const response = await fetch('/api/inventory/add', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ ...formData, garageId }),
-      // })
+      // Call API to add part
+      const response = await fetch('/api/inventory/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, garageId }),
+      })
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const result = await response.json()
 
-      console.log('Part added successfully:', formData)
+      if (!result.success) {
+        setError(result.error || 'Failed to add part')
+        setIsLoading(false)
+        return
+      }
+
+      console.log('Part added successfully:', result.part)
+
+      // Clear saved draft after successful submission
+      clearSavedData()
+      console.log('✓ Draft cleared after successful submission')
 
       // Record usage for dropdown fields (fire and forget, don't wait)
       ;(async () => {
@@ -1262,7 +1318,7 @@ export default function AddPartPage() {
                               placeholder="Supplier name"
                               value={supplier.name}
                               onChange={(e) => handleBackupSupplierChange(index, 'name', e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                           <div>
@@ -1272,7 +1328,7 @@ export default function AddPartPage() {
                               placeholder="Phone"
                               value={supplier.phone}
                               onChange={(e) => handleBackupSupplierChange(index, 'phone', e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                           <div>
@@ -1282,7 +1338,7 @@ export default function AddPartPage() {
                               placeholder="Email"
                               value={supplier.email}
                               onChange={(e) => handleBackupSupplierChange(index, 'email', e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                           <div>
@@ -1292,7 +1348,7 @@ export default function AddPartPage() {
                               placeholder="Website"
                               value={supplier.website}
                               onChange={(e) => handleBackupSupplierChange(index, 'website', e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                           <div>
@@ -1302,7 +1358,7 @@ export default function AddPartPage() {
                               placeholder="Vendor SKU"
                               value={supplier.vendorSku}
                               onChange={(e) => handleBackupSupplierChange(index, 'vendorSku', e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                           <div>
@@ -1313,7 +1369,7 @@ export default function AddPartPage() {
                               placeholder="Days"
                               value={supplier.leadTimeDays}
                               onChange={(e) => handleBackupSupplierChange(index, 'leadTimeDays', parseInt(e.target.value) || 0)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                           <div>
@@ -1324,7 +1380,7 @@ export default function AddPartPage() {
                               placeholder="Quantity"
                               value={supplier.minimumOrderQuantity}
                               onChange={(e) => handleBackupSupplierChange(index, 'minimumOrderQuantity', parseInt(e.target.value) || 0)}
-                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             />
                           </div>
                         </div>
@@ -1466,7 +1522,7 @@ export default function AddPartPage() {
           <div className="flex gap-3 pt-6 border-t border-gray-200">
             <button
               type="button"
-              onClick={() => router.push('/inventory')}
+              onClick={() => handleCancel(true)}
               disabled={isLoading}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >

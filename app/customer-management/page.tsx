@@ -19,9 +19,10 @@ import {
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
+import { CustomerListSkeleton } from '@/components/ui/skeleton/customer-list-skeleton'
 
 /**
- * Customer Management Page
+ * Client Hub Page
  *
  * A comprehensive interface for managing garage customers.
  * Features include:
@@ -205,16 +206,48 @@ export default function CustomerManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        {/* Header Skeleton */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="mb-6"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading customers...</p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-1 bg-gray-700 rounded-full" />
+              <div>
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2" />
+                <div className="h-5 bg-gray-200 rounded animate-pulse w-48" />
+              </div>
+            </div>
+            <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+          </div>
         </motion.div>
+
+        {/* Search Skeleton */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-6 bg-white rounded-xl p-4 border border-gray-200"
+        >
+          <div className="h-12 bg-gray-200 rounded-xl animate-pulse" />
+        </motion.div>
+
+        {/* Count Skeleton */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mb-6"
+        >
+          <div className="h-5 bg-gray-200 rounded animate-pulse w-48" />
+        </motion.div>
+
+        {/* Customer List Skeleton */}
+        <CustomerListSkeleton count={10} />
       </div>
     )
   }
@@ -251,7 +284,7 @@ export default function CustomerManagementPage() {
               <div className="h-10 w-1 bg-gray-700 rounded-full" />
               <div>
                 <h1 className="text-2xl md:text-3xl font-display font-bold text-gray-900 tracking-tight">
-                  Customer Management
+                  Client Hub
                 </h1>
                 <p className="text-sm md:text-base text-gray-600 mt-1">
                   Manage your garage customers

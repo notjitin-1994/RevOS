@@ -19,9 +19,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { EmployeeListSkeleton } from '@/components/ui/skeleton/employee-list-skeleton'
 
 /**
- * Employee Management Page
+ * Crew Station Page
  *
  * A comprehensive interface for managing garage employees.
  * Features include:
@@ -223,16 +224,38 @@ export default function EmployeeManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="mb-6"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-graphite-900 mx-auto mb-4" />
-          <p className="text-gray-700 font-medium">Loading employees...</p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-1 bg-gray-700 rounded-full" />
+              <div>
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2" />
+                <div className="h-5 bg-gray-200 rounded animate-pulse w-48" />
+              </div>
+            </div>
+            <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+          </div>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-6 bg-white rounded-xl p-4 border border-gray-200"
+        >
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse" />
+            <div className="w-full md:w-48 h-12 bg-gray-200 rounded-xl animate-pulse" />
+          </div>
+        </motion.div>
+
+        <EmployeeListSkeleton count={6} />
       </div>
     )
   }
@@ -269,7 +292,7 @@ export default function EmployeeManagementPage() {
                 <div className="h-10 w-1 bg-gray-700 rounded-full" />
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                    Employee Management
+                    Crew Station
                   </h1>
                   <p className="text-sm md:text-base text-gray-700 mt-1">
                     Manage your garage team members

@@ -207,7 +207,7 @@ export default function DashboardPage() {
           <div className="h-10 w-1 bg-graphite-900 rounded-full" />
           <div>
             <h1 className="font-display font-bold text-2xl md:text-3xl text-gray-900 tracking-tight">
-              Dashboard
+              Garage Management Hub
             </h1>
             <p className="text-sm md:text-base text-gray-600 mt-1">
               Welcome back! Here's your garage overview
@@ -323,21 +323,11 @@ export default function DashboardPage() {
         transition={{ duration: 0.5, delay: 0.3 }}
         className="mb-6 md:mb-8 bg-white rounded-xl border border-gray-200 p-4 md:p-6 shadow-card"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-graphite-900" />
-            <h2 className="font-display font-semibold text-base md:text-lg text-gray-900">
-              Today's Schedule
-            </h2>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push('/calendar')}
-            className="text-sm text-gray-700 hover:text-gray-900 font-medium transition-colors"
-          >
-            View All
-          </motion.button>
+        <div className="flex items-center gap-3 mb-4">
+          <Calendar className="h-5 w-5 text-graphite-900" />
+          <h2 className="font-display font-semibold text-base md:text-lg text-gray-900">
+            Today's Schedule
+          </h2>
         </div>
 
         <div className="space-y-2">

@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS inventory_field_usage (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  garage_id UUID NOT NULL REFERENCES garages(id) ON DELETE CASCADE,
+  garage_id TEXT NOT NULL,
   field_name VARCHAR(100) NOT NULL, -- e.g., 'category', 'usedFor', 'make', etc.
   field_value VARCHAR(255) NOT NULL, -- e.g., 'Engine', 'Brakes', 'Motul', etc.
   usage_count INTEGER NOT NULL DEFAULT 1,
@@ -22,7 +22,7 @@ COMMENT ON TABLE inventory_field_usage IS 'Tracks usage frequency of dropdown op
 
 -- Function to update usage count (upsert)
 CREATE OR REPLACE FUNCTION increment_field_usage(
-  p_garage_id UUID,
+  p_garage_id TEXT,
   p_field_name VARCHAR(100),
   p_field_value VARCHAR(255)
 )

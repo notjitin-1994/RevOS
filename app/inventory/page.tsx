@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Package,
@@ -18,9 +18,27 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { InventoryListSkeleton } from '@/components/ui/skeleton/inventory-list-skeleton'
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
 
 /**
- * Parts & Inventory Management Page
+ * Parts Repository Page
  *
  * A comprehensive interface for managing garage parts inventory.
  * Features include:
@@ -66,19 +84,25 @@ export default function InventoryManagementPage() {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [stockFilter, setStockFilter] = useState<'all' | 'in-stock' | 'low-stock' | 'out-of-stock'>('all')
+  const debouncedSearchQuery = useDebounce(searchQuery, 500)
+  const [categoryFilter, setCategoryFilter] = useState<string>('')
+  const [stockFilter, setStockFilter] = useState<string>('')
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const itemsPerPage = 10
 
   useEffect(() => {
     loadParts()
-  }, [])
+  }, [currentPage, categoryFilter, stockFilter, debouncedSearchQuery])
 
   const loadParts = async () => {
     try {
+      setIsLoading(true)
+      setError(null)
+
       // Check authentication
       const sessionUser = sessionStorage.getItem('user')
       if (!sessionUser) {
@@ -95,78 +119,45 @@ export default function InventoryManagementPage() {
         return
       }
 
-      // TODO: Fetch parts from API
-      // const response = await fetch(`/api/inventory/list?garageId=${garageId}`)
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: itemsPerPage.toString(),
+      })
 
-      // Mock data for now
-      const mockParts: Part[] = [
-        {
-          id: '1',
-          partNumber: 'OIL-001',
-          partName: 'Engine Oil 10W-40',
-          category: 'Engine',
-          make: 'Universal',
-          usedFor: 'Engine',
-          onHandStock: 25,
-          warehouseStock: 50,
-          lowStockThreshold: 10,
-          purchasePrice: 450,
-          sellingPrice: 650,
-          margin: 30.8,
-          location: 'A1-01',
-          supplier: 'AutoParts Ltd',
-          lastRestocked: '2024-01-10',
-          description: 'High-quality synthetic engine oil',
-          status: 'in-stock',
-        },
-        {
-          id: '2',
-          partNumber: 'BRK-002',
-          partName: 'Brake Pads Front',
-          category: 'Brakes',
-          make: 'Honda',
-          model: 'CBR650R',
-          usedFor: 'Brakes',
-          onHandStock: 8,
-          warehouseStock: 5,
-          lowStockThreshold: 10,
-          purchasePrice: 800,
-          sellingPrice: 1200,
-          margin: 33.3,
-          location: 'B2-03',
-          supplier: 'Brake Masters',
-          lastRestocked: '2024-01-05',
-          description: 'Ceramic brake pads for front wheel',
-          status: 'low-stock',
-        },
-        {
-          id: '3',
-          partNumber: 'AIR-003',
-          partName: 'Air Filter',
-          category: 'Engine',
-          make: 'Yamaha',
-          model: 'MT-07',
-          usedFor: 'Engine',
-          onHandStock: 0,
-          warehouseStock: 0,
-          lowStockThreshold: 5,
-          purchasePrice: 350,
-          sellingPrice: 500,
-          margin: 30,
-          location: 'A1-05',
-          supplier: 'Filter World',
-          lastRestocked: '2023-12-20',
-          description: 'High-flow air filter',
-          status: 'out-of-stock',
-        },
-      ]
+      if (debouncedSearchQuery) {
+        params.append('search', debouncedSearchQuery)
+      }
 
-      setParts(mockParts)
-      setIsLoading(false)
+      if (categoryFilter) {
+        params.append('category', categoryFilter)
+      }
+
+      if (stockFilter) {
+        params.append('stockStatus', stockFilter)
+      }
+
+      // Fetch parts from API
+      const response = await fetch(`/api/inventory/list?${params.toString()}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch parts')
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch parts')
+      }
+
+      setParts(data.parts)
+      setTotalCount(data.totalCount)
+      setTotalPages(data.totalPages)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred'
       console.error('Error loading parts:', err)
       setError(message)
+    } finally {
       setIsLoading(false)
     }
   }
@@ -208,30 +199,10 @@ export default function InventoryManagementPage() {
     }
   }
 
-  const filteredParts = parts.filter((part) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      part.partName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      part.partNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (part.make?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (part.model?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-
-    const matchesCategory = categoryFilter === 'all' || part.category === categoryFilter
-    const matchesStock = stockFilter === 'all' || part.status === stockFilter
-
-    return matchesSearch && matchesCategory && matchesStock
-  })
-
-  // Pagination
-  const totalPages = Math.ceil(filteredParts.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const paginatedParts = filteredParts.slice(startIndex, endIndex)
-
-  // Reset to page 1 when filters change
+  // Reset to page 1 when search query changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, categoryFilter, stockFilter])
+  }, [debouncedSearchQuery, categoryFilter, stockFilter])
 
   const getStatusColor = (status: Part['status']) => {
     switch (status) {
@@ -253,16 +224,38 @@ export default function InventoryManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="mb-6"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading inventory...</p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-1 bg-gray-700 rounded-full" />
+              <div>
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2" />
+                <div className="h-5 bg-gray-200 rounded animate-pulse w-48" />
+              </div>
+            </div>
+            <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+          </div>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-6 bg-white rounded-xl p-4 border border-gray-200"
+        >
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse" />
+            <div className="w-full md:w-48 h-12 bg-gray-200 rounded-xl animate-pulse" />
+          </div>
+        </motion.div>
+
+        <InventoryListSkeleton count={9} />
       </div>
     )
   }
@@ -298,7 +291,7 @@ export default function InventoryManagementPage() {
             <div className="h-10 w-1 bg-gray-700 rounded-full" />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                Parts & Inventory
+                Parts Repository
               </h1>
               <p className="text-sm md:text-base text-gray-600 mt-1">
                 Manage your garage parts and stock levels
@@ -471,8 +464,8 @@ export default function InventoryManagementPage() {
           className="mb-6 flex items-center justify-between"
         >
           <p className="text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-900">{startIndex + 1}-{Math.min(endIndex, filteredParts.length)}</span> of{' '}
-            <span className="font-semibold text-gray-900">{filteredParts.length}</span> parts
+            Showing <span className="font-semibold text-gray-900">{parts.length}</span> of{' '}
+            <span className="font-semibold text-gray-900">{totalCount}</span> parts
           </p>
         </motion.div>
 
@@ -485,7 +478,7 @@ export default function InventoryManagementPage() {
         >
           {/* Mobile Card Layout */}
           <div className="md:hidden space-y-3">
-            {paginatedParts.map((part, index) => (
+            {parts.map((part, index) => (
               <motion.div
                 key={part.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -600,7 +593,7 @@ export default function InventoryManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedParts.map((part, index) => (
+                {parts.map((part, index) => (
                   <motion.tr
                     key={part.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -662,16 +655,16 @@ export default function InventoryManagementPage() {
           </div>
 
           {/* Empty State */}
-          {paginatedParts.length === 0 && (
+          {parts.length === 0 && (
             <div className="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-card">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No parts found</h3>
               <p className="text-gray-600 mb-6">
-                {searchQuery || categoryFilter !== 'all' || stockFilter !== 'all'
+                {searchQuery || categoryFilter || stockFilter
                   ? 'Try adjusting your search or filters'
                   : 'Get started by adding your first part'}
               </p>
-              {!searchQuery && categoryFilter === 'all' && stockFilter === 'all' && (
+              {!searchQuery && !categoryFilter && !stockFilter && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -687,7 +680,7 @@ export default function InventoryManagementPage() {
         </motion.div>
 
         {/* Pagination */}
-        {filteredParts.length > 0 && (
+        {totalCount > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

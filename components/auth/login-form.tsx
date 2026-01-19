@@ -11,6 +11,8 @@ import { loginSchema, type LoginFormValues } from '@/lib/schemas/login'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { LoginLogo } from './login-logo'
 import { PasswordInput } from './password-input'
+import { ForgotPasswordModal } from './forgot-password-modal'
+import { ForgotLoginIdModal } from './forgot-login-id-modal'
 
 // Schema for password verification on welcome screen
 const passwordSchema = z.object({
@@ -69,6 +71,8 @@ export function LoginForm() {
   const [showWelcome, setShowWelcome] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
   const [showBusinessModal, setShowBusinessModal] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [showForgotLoginId, setShowForgotLoginId] = useState(false)
   const [supportEmail, setSupportEmail] = useState('')
   const [supportMessage, setSupportMessage] = useState('')
   const [emailSent, setEmailSent] = useState(false)
@@ -345,7 +349,7 @@ export function LoginForm() {
                       <div className="text-right pt-1">
                         <button
                           type="button"
-                          onClick={() => console.log('Forgot password clicked')}
+                          onClick={() => setShowForgotPassword(true)}
                           className="text-xs font-medium text-[#CCFF00]/80 hover:text-[#CCFF00] transition-colors duration-200"
                         >
                           Forgot Password?
@@ -639,7 +643,7 @@ export function LoginForm() {
                     <div className="text-right pt-1">
                       <button
                         type="button"
-                        onClick={() => setShowContactModal(true)}
+                        onClick={() => setShowForgotLoginId(true)}
                         className="text-xs font-medium text-[#CCFF00]/80 hover:text-[#CCFF00] transition-colors duration-200"
                       >
                         Forgot your login ID?
@@ -1139,6 +1143,19 @@ export function LoginForm() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        initialLoginId={user?.loginId}
+      />
+
+      {/* Forgot Login ID Modal */}
+      <ForgotLoginIdModal
+        isOpen={showForgotLoginId}
+        onClose={() => setShowForgotLoginId(false)}
+      />
     </div>
   )
 }

@@ -14,6 +14,7 @@ import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import { RequestMakeModelModal } from './request-make-model-modal'
+import { VehicleCatalogSkeleton } from '@/components/ui/skeleton/vehicle-catalog-skeleton'
 
 interface ModelData {
   id: string
@@ -75,6 +76,7 @@ export function ServiceScopeClient({ initialMakes }: ServiceScopeClientProps) {
   const router = useRouter()
   const [makes, setMakes] = useState<MakeData[]>(initialMakes)
   const [filteredMakes, setFilteredMakes] = useState<MakeData[]>(initialMakes)
+  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [countryFilter, setCountryFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'name' | 'models' | 'newest'>('name')
@@ -262,7 +264,9 @@ export function ServiceScopeClient({ initialMakes }: ServiceScopeClientProps) {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="space-y-4"
       >
-        {filteredMakes.length === 0 ? (
+        {isLoading ? (
+          <VehicleCatalogSkeleton count={10} />
+        ) : filteredMakes.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
             <MotorcycleIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No makes found</h3>

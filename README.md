@@ -1,266 +1,227 @@
-# RevOS - Automotive SaaS Platform
+# RevOS - Automotive Garage Management System
 
-RevOS is a modern **light mode** Automotive SaaS application built with Next.js 14, featuring the "Precision Volt" design system.
+RevOS is a comprehensive **workshop management solution** designed to streamline automotive service operations. Built with Next.js 14, featuring a modern light mode design with graphite accents and lime highlights.
+
+## ✨ Key Features
+
+- 📊 **Dashboard** - Central hub with analytics, quick actions, and AI insights
+- 🔧 **Job Cards** - Complete service job tracking from creation to delivery
+- 📦 **Inventory Management** - Parts catalog with auto-save and stock tracking
+- 🚗 **Vehicle Registry** - Customer vehicle database with service history
+- 👥 **Customer Management** - CRM with service history and job card tracking
+- 👷 **Employee Management** - Role-based access control (RBAC)
+- 📅 **Calendar & Scheduling** - Work slot and activity tracking (coming soon)
+- 📧 **Marketing Tools** - Promotional campaigns and customer engagement
+- 🔐 **Authentication** - Login ID-based auth with account recovery
 
 ## 🎨 Design System
 
-### Color Palette - "Precision Volt" (Light Mode)
+RevOS uses a **light mode** design system with professional gray tones and lime accents.
 
-#### Brand Colors
-- **Brand Primary**: `#CCFF00` (Lime) - Sidebar background, accent elements
-- **Brand Hover**: `#B2DE00` - Hover state for sidebar and interactive elements
+### Quick Design Reference
 
-#### Background Colors
-- **App Background**: `#ecf0f5` (Light gray-blue) - Main application background
-- **Settings Background**: `#dfe5ef` - Settings page background
-- **Card Surface**: `#FFFFFF` (White) - Data cards and panels
-- **Icon Container**: `#F3F4F6` (Gray-100) - Icon backgrounds
-
-#### Text Colors
-- **Heading**: `#111827` (Gray-900) - Main headings
-- **Primary Text**: `#374151` (Gray-700) - Body text, icons
-- **Secondary Text**: `#4B5563` (Gray-600) - Labels, descriptions
-- **Muted Text**: `#9CA3AF` (Gray-400) - Placeholder, disabled text
-- **Sidebar Text**: `#0F172A` (Graphite-900) - Sidebar icons and labels
-
-#### Border Colors
-- **Border Subtle**: `#E5E7EB` (Gray-200) - Card borders, dividers
-- **Border Default**: `#D1D5DB` (Gray-300) - Input fields
-- **Border Medium**: `#9CA3AF` (Gray-400) - Focus states
-- **Border Strong**: `#4B5563` (Gray-600) - Emphasized dividers
-
-#### Status Colors
-- **Status Success**: `#2DD4BF` (Teal) - Success states
-- **Status Error**: `#EF4444` (Red) - Error states
-- **Status Warning**: `#F59E0B` (Orange) - Warning states
-- **Status Info**: `#38BDF8` (Blue) - Informational states
+| Element | Color | Tailwind |
+|---------|-------|----------|
+| **Brand Primary** | `#CCFF00` (Lime) | `bg-brand` |
+| **App Background** | `#CFD0D4` (Light Gray) | `bg-[#CFD0D4]` |
+| **Card Surface** | `#FFFFFF` (White) | `bg-white` |
+| **Text Primary** | `#374151` | `text-gray-700` |
+| **Text Heading** | `#111827` | `text-gray-900` |
+| **Sidebar Text** | `#0F172A` | `text-graphite-900` |
+| **Success** | `#2DD4BF` (Teal) | `text-teal-500` |
+| **Error** | `#EF4444` (Red) | `text-red-500` |
 
 ### Typography
 
-- **Display Font**: Barlow (for headings H1-H3)
-- **UI Font**: Inter (for body text and UI elements)
-- **Mono Font**: JetBrains Mono (for VINs, part numbers, and data)
+- **Display Font**: Barlow (H1-H3 headings)
+- **UI Font**: Inter (Body text and UI elements)
+- **Mono Font**: JetBrains Mono (VINs, part numbers, data)
+
+📖 **For complete design system:** See [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
+- Supabase account (for database)
 
-### Installation
+### Quick Install
 
-1. Install dependencies:
 ```bash
+# Clone the repository
+git clone https://github.com/your-org/revos.git
+cd revos
+
+# Install dependencies
 npm install
-# or
-yarn install
-# or
-pnpm install
-```
 
-2. Run the development server:
-```bash
+# Set up environment variables
+cp .env.local.example .env.local
+# Edit .env.local with your Supabase credentials
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+📖 **For detailed setup instructions:** See [GETTING_STARTED.md](./GETTING_STARTED.md)
 
 ## 📁 Project Structure
 
 ```
 RevOS/
 ├── app/                      # Next.js App Router
+│   ├── (auth)/              # Auth routes (future)
 │   ├── login/               # Login page
-│   │   └── page.tsx         # Login page component
+│   ├── dashboard/           # Dashboard hub
+│   ├── inventory/           # Inventory management
+│   ├── job-cards/           # Job card tracking
+│   ├── vehicle-catalog/     # Vehicle registry
+│   ├── customer-management/ # Customer CRM
+│   ├── employee-management/ # Employee directory
+│   ├── calendar/            # Calendar (coming soon)
+│   ├── settings/            # Settings
 │   ├── layout.tsx           # Root layout with fonts
-│   ├── globals.css          # Global styles and Tailwind directives
-│   └── page.tsx             # Home page (redirects to login)
+│   ├── globals.css          # Global styles
+│   └── page.tsx             # Home (redirects to login)
+│
 ├── components/              # React components
-│   └── auth/               # Authentication components
-│       ├── login-form.tsx  # Main login form component
-│       ├── password-input.tsx # Reusable password input
-│       └── login-logo.tsx  # Brand/logo header
-├── lib/                     # Utility functions and hooks
+│   ├── auth/               # Authentication components
+│   ├── ui/                 # Reusable UI components
+│   ├── dashboard/          # Dashboard components
+│   ├── inventory/          # Inventory components
+│   └── ...
+│
+├── lib/                    # Business logic
+│   ├── hooks/              # Custom React hooks
+│   │   ├── use-auth.ts     # Authentication hook
+│   │   └── useFormAutoSave.ts # Auto-save hook
 │   ├── schemas/            # Zod validation schemas
-│   │   └── login.ts        # Login form schema
-│   └── hooks/              # Custom React hooks
-│       └── use-auth.ts     # Authentication hook
-├── public/                  # Static assets
-├── tailwind.config.ts      # Tailwind CSS configuration
+│   ├── supabase/           # Supabase queries
+│   └── utils.ts            # Utility functions
+│
+├── app/api/                # API routes
+│   ├── employees/          # Employee endpoints
+│   ├── inventory/          # Inventory endpoints
+│   ├── job-cards/          # Job card endpoints
+│   └── ...
+│
+├── prisma/                 # Database schema
+│   ├── schema.prisma       # Prisma schema
+│   └── migrations/         # SQL migrations
+│
+├── docs/                   # Feature documentation
+├── design-language/        # Design system docs
+├── tests/                  # Test files
+│
+├── tailwind.config.ts      # Tailwind configuration
 ├── tsconfig.json           # TypeScript configuration
-├── next.config.js          # Next.js configuration
-└── package.json            # Dependencies and scripts
+└── package.json            # Dependencies
 ```
-
-## 🎯 Features
-
-### Login Page
-
-- ✅ **Login ID Input** (not email) - Text input with alphanumeric validation
-- ✅ **Password Input** - With show/hide toggle
-- ✅ **Form Validation** - Using Zod schema and React Hook Form
-- ✅ **Accessibility** - WCAG 2.1 AA compliant (ARIA attributes, keyboard navigation)
-- ✅ **Mobile Responsive** - Optimized for all screen sizes
-- ✅ **Dark Mode** - Native dark mode with "Digital Volt" color scheme
-- ✅ **Security** - Proper autocomplete attributes and input types
-- ✅ **Loading States** - Visual feedback during authentication
-- ✅ **Error Handling** - Clear validation and API error messages
-
-### Design Principles
-
-- **"Grease-Proof Interface"** - High contrast, high legibility for garage environments
-- **"Industrial Smoothness"** - Hydraulic easing (ease-out), no bouncy springs
-- **Light Mode Native** - Clean white cards on light gray-blue background with brand accent lime sidebar
-- **Mobile-First** - Minimum touch targets of 44x44px
-- **Type Safety** - Full TypeScript coverage
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Form Management**: React Hook Form
-- **Validation**: Zod
-- **Icons**: Lucide React
-- **Fonts**: Barlow (Display), Inter (UI), JetBrains Mono (Data)
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Framework** | Next.js 14 | React framework with App Router |
+| **Language** | TypeScript 5+ | Type safety |
+| **Styling** | Tailwind CSS | Utility-first CSS |
+| **Database** | Supabase (PostgreSQL) | Database, auth, storage |
+| **Validation** | Zod | Schema validation |
+| **Forms** | React Hook Form | Form management |
+| **Animation** | Framer Motion | Smooth animations |
+| **Icons** | Lucide React | Icon library |
+| **Fonts** | Barlow, Inter, JetBrains Mono | Typography |
 
-## 📝 Component Documentation
+## 📚 Documentation
 
-### LoginForm
+### Core Documentation
 
-Main login form component with validation and error handling.
+| Document | Description |
+|----------|-------------|
+| **[GETTING_STARTED.md](./GETTING_STARTED.md)** | Setup and installation guide |
+| **[FEATURES.md](./FEATURES.md)** | Complete feature list |
+| **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)** | Design tokens and patterns |
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Technical architecture |
+| **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** | Complete documentation index |
 
-```tsx
-import { LoginForm } from '@/components/auth/login-form'
+### Feature Documentation
 
-<LoginForm />
-```
-
-### PasswordInput
-
-Reusable password input with show/hide toggle.
-
-```tsx
-import { PasswordInput } from '@/components/auth/password-input'
-
-<PasswordInput
-  id="password"
-  name="password"
-  label="Password"
-  placeholder="Enter your password"
-  register={register('password')}
-  error={errors.password?.message}
-/>
-```
-
-### LoginLogo
-
-Brand header component with logo and welcome message.
-
-```tsx
-import { LoginLogo } from '@/components/auth/login-logo'
-
-<LoginLogo />
-```
+| Topic | Document |
+|-------|----------|
+| Auto-Save Feature | [AUTO_SAVE_IMPLEMENTATION.md](./AUTO_SAVE_IMPLEMENTATION.md) |
+| Account Recovery | [RECOVERY_FEATURES_SUMMARY.md](./RECOVERY_FEATURES_SUMMARY.md) |
+| Job Cards | [docs/JOB_CARDS_IMPLEMENTATION.md](./docs/JOB_CARDS_IMPLEMENTATION.md) |
+| Testing | [TESTING_README.md](./TESTING_README.md) |
+| Security | [SECURITY_TEST_REPORT.md](./SECURITY_TEST_REPORT.md) |
 
 ## 🔐 Authentication
 
-The `useAuth` hook provides authentication functionality:
+RevOS uses **Login ID** based authentication (not email).
 
-```tsx
-import { useAuth } from '@/lib/hooks/use-auth'
+**Features:**
+- ✅ Login ID authentication
+- ✅ Password with show/hide toggle
+- ✅ "Initialize System" button
+- ✅ Forgot Password (3-step OTP flow)
+- ✅ Forgot Login ID (email-based recovery)
 
-const { login, isLoading, error } = useAuth()
+**See Also:**
+- [FORGOT_PASSWORD_IMPLEMENTATION.md](./FORGOT_PASSWORD_IMPLEMENTATION.md)
+- [FORGOT_LOGIN_ID_IMPLEMENTATION.md](./FORGOT_LOGIN_ID_IMPLEMENTATION.md)
 
-await login({ loginId: 'user123', password: 'password' })
-```
+## 🧪 Testing
 
-## 🎨 Customization
+The project includes comprehensive security testing:
 
-### Colors
+- **93 test cases** covering validation, security, and edge cases
+- **Vitest** as the test runner
+- Security analysis for employee creation API
 
-Edit `tailwind.config.ts` to customize the color palette:
+**See:** [TESTING_README.md](./TESTING_README.md)
 
-```typescript
-colors: {
-  brand: {
-    DEFAULT: '#CCFF00',    // Lime (sidebar background)
-    hover: '#B2DE00',      // Hover state
-  },
-  graphite: {
-    900: '#0F172A',        // Darkest text, sidebar icons
-    700: '#334155',        // Borders (rare)
-    600: '#475569',        // Muted text
-    400: '#94A3B8',        // Light muted
-  },
-  gray: {
-    900: '#111827',        // Headings, primary text
-    700: '#374151',        // Body text, icons
-    600: '#4B5563',        // Secondary text, labels
-    400: '#9CA3AF',        // Muted text, placeholders
-    200: '#E5E7EB',        // Card borders, dividers
-    100: '#F3F4F6',        // Icon containers, light backgrounds
-  },
-  status: {
-    success: '#2DD4BF',    // Positive states
-    error: '#EF4444',      // Error states
-    warning: '#F59E0B',    // Warning states
-    info: '#38BDF8',       // Informational states
-  },
-}
-```
+## 🎨 Design Principles
 
-### Light Mode Background
-
-Edit `app/globals.css` to change the main app background:
-
-```css
-body {
-  @apply bg-[#ecf0f5];  /* Light gray-blue */
-}
-```
-
-### Fonts
-
-Edit `app/layout.tsx` to customize font loading:
-
-```typescript
-const barlow = Barlow({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-barlow',
-})
-```
+- **"Grease-Proof Interface"** - High contrast for garage environments
+- **"Industrial Smoothness"** - Hydraulic easing (ease-out), no bouncy springs
+- **Light Mode Native** - Clean white cards on light gray background
+- **Mobile-First** - Minimum touch targets of 44x44px
+- **Type Safety** - Full TypeScript coverage
 
 ## 📱 Mobile Optimization
 
 - Input font size: `text-base` (16px) to prevent iOS auto-zoom
 - Touch targets: Minimum 44x44px
 - Safe area support for iPhone Home bar
+- Responsive design (mobile cards, desktop tables)
 - Tactile feedback with `active:scale-[0.98]`
 
 ## ♿ Accessibility
 
+- WCAG 2.1 AA compliant
 - Semantic HTML: `<form>`, `<label>`, `<button>`
-- ARIA attributes: `aria-invalid`, `aria-describedby`, `aria-pressed`, `aria-label`
-- Focus states: `focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-graphite-900`
-- Keyboard navigation: All elements reachable via Tab
-- Screen reader support: Proper role attributes and labels
-- WCAG 2.1 AA compliant contrast ratios
-- Minimum touch targets: 44x44px for mobile accessibility
+- ARIA attributes: `aria-invalid`, `aria-describedby`, `aria-pressed`
+- Focus states with visible rings
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast ratios (4.5:1 minimum)
 
-## 🔒 Security Considerations
+## 🔒 Security
 
-- `autocomplete="username"` on Login ID field
-- `autocomplete="current-password"` on password field
-- `type="password"` for password input
-- Passwords never logged or exposed
-- Input validation with Zod schemas
-- XSS protection via React's built-in escaping
+**Implemented:**
+- ✅ Input validation with Zod schemas
+- ✅ Row Level Security (RLS) in Supabase
+- ✅ Garage-level data isolation
+- ✅ Role-based access control (RBAC)
+- ✅ Password hashing (bcrypt)
+- ✅ OTP expiration (5 minutes)
+
+**Known Issues:**
+- ⚠️ Employee creation API has vulnerabilities (see [TESTING_README.md](./TESTING_README.md))
+- ⚠️ Rate limiting (planned)
+- ⚠️ CSRF protection (planned)
 
 ## 🚀 Deployment
 
@@ -273,17 +234,52 @@ npm start
 
 ### Environment Variables
 
-Create a `.env.local` file:
+Create `.env.local`:
 
 ```env
-# Add your environment variables here
-NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_REQUEST_EMAIL=your-email@example.com
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+```
+
+### Recommended Platforms
+
+- **Vercel** (recommended for Next.js)
+- **Netlify**
+- **AWS Amplify**
+- **Self-hosted** (Docker)
+
+## 🔧 Common Commands
+
+```bash
+# Development
+npm run dev              # Start dev server
+npm run build            # Build for production
+npm start                # Start production server
+
+# Testing
+npm test                 # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage
+
+# Database
+npx prisma generate      # Generate Prisma client
+npx prisma migrate dev    # Run migrations
+npx prisma studio        # Open Prisma Studio
 ```
 
 ## 📄 License
 
-Copyright © 2025 RevOS. All rights reserved.
+Copyright © 2026 RevOS. All rights reserved.
 
 ## 🤝 Contributing
 
 This is a private project. For questions or support, please contact the RevOS team.
+
+---
+
+**RevOS** - Automotive Garage Management System
+**Version:** 1.0.0
+**Last Updated:** January 2026
+
+For complete documentation, see [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)

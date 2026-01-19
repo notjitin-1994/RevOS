@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
+import { VehicleRegistrySkeleton } from '@/components/ui/skeleton/vehicle-registry-skeleton'
 
 /**
  * Bike Management Page - Vehicle Registry
@@ -249,10 +250,58 @@ export default function VehiclesPage() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-700 mb-4" />
-          <p className="text-gray-600">Loading vehicles...</p>
-        </div>
+        <>
+          {/* Header Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-1 bg-gray-700 rounded-full" />
+              <div>
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2" />
+                <div className="h-5 bg-gray-200 rounded animate-pulse w-48" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Stats Cards Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+          >
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl p-4 border border-gray-200">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mb-2" />
+                <div className="h-7 bg-gray-200 rounded animate-pulse w-12" />
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Search and Filters Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="bg-white rounded-xl border border-gray-200 p-4 mb-6"
+          >
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse" />
+              <div className="flex gap-3">
+                <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+                <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+                <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Vehicle List Skeleton */}
+          <VehicleRegistrySkeleton count={10} />
+        </>
       )}
 
       {/* Error State */}

@@ -27,7 +27,7 @@ import {
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { EditEmployeeModal } from '@/components/settings/edit-employee-modal'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DetailViewSkeleton } from '@/components/ui/skeleton/detail-view-skeleton'
 
 /**
  * Employee Profile Page
@@ -152,28 +152,8 @@ export default function EmployeeProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#dfe5ef' }}>
-        <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="relative"
-          >
-            <div className="inline-block h-16 w-16 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-graphite-900/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-graphite-900 border-r-transparent border-b-transparent animate-spin" />
-            </div>
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-graphite-600 font-medium"
-          >
-            Loading employee profile...
-          </motion.p>
-        </div>
+      <div className="min-h-screen" style={{ backgroundColor: '#dfe5ef' }}>
+        <DetailViewSkeleton tabCount={5} hasSidebar={true} />
       </div>
     )
   }
@@ -210,7 +190,7 @@ export default function EmployeeProfilePage() {
   }
 
   return (
-    <React.Fragment>
+    <>
       <main className="flex-1 overflow-y-auto pb-safe md:pb-0" style={{ backgroundColor: '#dfe5ef' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Header */}
@@ -346,58 +326,98 @@ export default function EmployeeProfilePage() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="mb-4 md:mb-6"
           >
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="hidden md:flex items-center gap-1">
-                <TabsTrigger
-                  value="employee-information"
-                  className="flex items-center gap-2"
-                >
-                  <User className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span>Employee Information</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="work-allocation"
-                  className="flex items-center gap-2"
-                >
-                  <Briefcase className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span>Work Allocation</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="productivity"
-                  className="flex items-center gap-2"
-                >
-                  <TrendingUp className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span>Productivity</span>
-                </TabsTrigger>
-              </TabsList>
+            {/* Desktop Tabs */}
+            <div className="hidden md:block overflow-x-auto">
+              <div className="border-b border-gray-200">
+                <nav className="flex gap-1 -mb-px">
+                  <button
+                    onClick={() => setActiveTab('employee-information')}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'employee-information'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    Employee Information
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('work-allocation')}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'work-allocation'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    Work Allocation
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('productivity')}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'productivity'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    Productivity
+                  </button>
+                </nav>
+              </div>
+            </div>
 
-              {/* Mobile Tabs - Full Width */}
-              <TabsList className="md:hidden flex w-full">
-                <TabsTrigger
-                  value="employee-information"
-                  className="flex-1 flex items-center justify-center gap-1.5"
-                >
-                  <User className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-xs font-medium">Employee</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="work-allocation"
-                  className="flex-1 flex items-center justify-center gap-1.5"
-                >
-                  <Briefcase className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-xs font-medium">Work</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="productivity"
-                  className="flex-1 flex items-center justify-center gap-1.5"
-                >
-                  <TrendingUp className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-xs font-medium">Productivity</span>
-                </TabsTrigger>
-              </TabsList>
+            {/* Mobile Tabs - Full Width */}
+            <div className="md:hidden overflow-x-auto">
+              <div className="border-b border-gray-200">
+                <nav className="flex gap-1 -mb-px">
+                  <button
+                    onClick={() => setActiveTab('employee-information')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'employee-information'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    Employee
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('work-allocation')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'work-allocation'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    Work
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('productivity')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === 'productivity'
+                        ? 'border-graphite-700 text-graphite-700'
+                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    Productivity
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </motion.div>
 
-              {/* Employee Information Tab */}
-              <TabsContent value="employee-information" className="mt-4 md:mt-6">
+          {/* Tab Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {/* Employee Information Tab */}
+            {activeTab === 'employee-information' && (
+              <div className="mt-4 md:mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
                   {/* Personal Information */}
                   <motion.div
@@ -554,10 +574,12 @@ export default function EmployeeProfilePage() {
                     </InfoCard>
                   </motion.div>
                 </div>
-              </TabsContent>
+              </div>
+            )}
 
-              {/* Work Allocation Tab */}
-              <TabsContent value="work-allocation" className="mt-4 md:mt-6">
+            {/* Work Allocation Tab */}
+            {activeTab === 'work-allocation' && (
+              <div className="mt-4 md:mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
                   {/* Active Jobs */}
                   <motion.div
@@ -700,10 +722,12 @@ export default function EmployeeProfilePage() {
                     </InfoCard>
                   </motion.div>
                 </div>
-              </TabsContent>
+              </div>
+            )}
 
-              {/* Productivity Tab */}
-              <TabsContent value="productivity" className="mt-4 md:mt-6">
+            {/* Productivity Tab */}
+            {activeTab === 'productivity' && (
+              <div className="mt-4 md:mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                   {/* Performance Overview */}
                   <motion.div
@@ -901,8 +925,8 @@ export default function EmployeeProfilePage() {
                     </InfoCard>
                   </motion.div>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </motion.div>
         </div>
       </main>
@@ -917,7 +941,7 @@ export default function EmployeeProfilePage() {
         fieldType={editingFieldType}
         onSuccess={handleUpdateSuccess}
       />
-    </React.Fragment>
+    </>
   )
 }
 

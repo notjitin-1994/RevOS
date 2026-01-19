@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import React, { createContext, useContext, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, Users, UserPlus, Wrench, Package, Calendar, Settings, LogOut } from "lucide-react";
+import { Building, Settings, Users, UserPlus, Wrench, Package, LogOut } from "lucide-react";
 import { MotorcycleIcon } from "@/components/ui/motorcycle-icon";
 
 interface NavLink {
@@ -54,14 +54,13 @@ export const MobileBottomNav = ({ onLogout }: MobileBottomNavProps) => {
   const activeItemRef = useRef<HTMLAnchorElement>(null);
 
   const navLinks: NavLink[] = [
-    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Job Cards', href: '/job-cards', icon: ClipboardList },
-    { label: 'Employees', href: '/employee-management', icon: Users },
-    { label: 'Customers', href: '/customer-management', icon: UserPlus },
+    { label: 'Hub', href: '/dashboard', icon: Building },
+    { label: 'Service', href: '/job-cards', icon: Settings },
+    { label: 'Crew', href: '/employee-management', icon: Users },
+    { label: 'Clients', href: '/customer-management', icon: UserPlus },
     { label: 'Catalog', href: '/vehicle-catalog', icon: Wrench },
     { label: 'Vehicles', href: '/vehicles', icon: MotorcycleIcon },
-    { label: 'Inventory', href: '/inventory', icon: Package },
-    { label: 'Calendar', href: '/calendar', icon: Calendar },
+    { label: 'Parts', href: '/inventory', icon: Package },
     { label: 'Settings', href: '/settings', icon: Settings },
     { label: 'Logout', href: '#', icon: LogOut, onClick: onLogout },
   ];

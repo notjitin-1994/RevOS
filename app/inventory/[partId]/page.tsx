@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { DetailViewSkeleton } from '@/components/ui/skeleton/detail-view-skeleton'
 
 /**
  * Part Detail Page
@@ -178,81 +179,21 @@ export default function PartDetailPage() {
         return
       }
 
-      // TODO: Fetch part from API
-      // const response = await fetch(`/api/inventory/part/${partId}`)
+      // Fetch part from API
+      const response = await fetch(`/api/inventory/part/${partId}`)
 
-      // Comprehensive mock data with relevant fields for motorcycle garage in India
-      const mockPart: Part = {
-        id: partId,
-        partNumber: 'OIL-001',
-        partName: 'Engine Oil 10W-40 Synthetic',
-        category: 'Engine',
-        make: 'Motul',
-        model: null,
-        usedFor: 'Engine Lubrication',
-        description: 'Premium synthetic engine oil formulated for high-performance motorcycles. Provides superior wear protection, thermal stability, and fuel efficiency. Compatible with both air-cooled and liquid-cooled engines.',
-        onHandStock: 25,
-        warehouseStock: 50,
-        lowStockThreshold: 10,
-        purchasePrice: 450,
-        sellingPrice: 650,
-        margin: 30.8,
-        wholesalePrice: 550,
-        coreCharge: null,
-        priceLastUpdated: '2024-01-15',
-        sku: 'SKU-OIL-10W40-SYN-1L',
-        oemPartNumber: 'OEM-999-888-777',
-        compatibleVehicles: ['mock-motorcycle-id-1', 'mock-motorcycle-id-2'], // Will be replaced with actual IDs
-        weight: 0.95,
-        dimensions: {
-          length: 25,
-          width: 10,
-          height: 10,
-        },
-        quantityPerPackage: 1,
-        isHazardous: false,
-        location: 'A1-01',
-        supplier: 'AutoParts Ltd',
-        supplierPhone: '+91 98765 43210',
-        supplierEmail: 'orders@autopartsltd.com',
-        supplierWebsite: 'https://autopartsltd.com',
-        vendorSku: 'APL-OIL-SYN-10W40',
-        leadTimeDays: 3,
-        minimumOrderQuantity: 12,
-        secondarySuppliers: [
-          {
-            name: 'Global Moto Spares',
-            phone: '+91 98765 11111',
-            email: 'sales@globalmoto.com',
-            website: 'https://globalmoto.com',
-            vendorSku: 'GMS-OIL-10W40',
-            leadTimeDays: 5,
-            minimumOrderQuantity: 24,
-          },
-          {
-            name: 'SpeedParts Inc',
-            phone: '+91 98765 22222',
-            email: 'orders@speedparts.in',
-            website: 'https://speedparts.in',
-            vendorSku: 'SPI-OIL-SYN-10W40',
-            leadTimeDays: 7,
-            minimumOrderQuantity: 50,
-          },
-        ],
-        lastRestocked: '2024-01-10',
-        dateAdded: '2023-06-15',
-        lastSoldDate: '2024-01-16',
-        lastPurchaseDate: '2024-01-08',
-        batchNumber: 'BATCH-2024-01-001',
-        expirationDate: '2026-01-10',
-        warrantyMonths: 24,
-        countryOfOrigin: 'India',
-        technicalDiagramUrl: 'https://example.com/docs/oil-specs.pdf',
-        installationInstructionsUrl: 'https://example.com/docs/oil-install.pdf',
-        status: 'in-stock',
+      if (!response.ok) {
+        throw new Error(`Failed to fetch part: ${response.statusText}`)
       }
 
-      setPart(mockPart)
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch part')
+      }
+
+      // API now returns data in the correct format, just use it directly
+      setPart(result.part as Part)
       setIsLoading(false)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred'
@@ -384,17 +325,7 @@ export default function PartDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <Loader2 className="h-12 w-12 animate-spin text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading part details...</p>
-        </motion.div>
-      </div>
+      <DetailViewSkeleton tabCount={5} hasSidebar={true} />
     )
   }
 
@@ -517,10 +448,50 @@ export default function PartDetailPage() {
                       </h3>
                     </div>
                     <div className="p-6">
-                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <CopyableField label="Part Number" value={part.partNumber} fieldId="partNumber" />
                         {part.sku && <CopyableField label="SKU" value={part.sku} fieldId="sku" />}
                         {part.oemPartNumber && <CopyableField label="OEM Part Number" value={part.oemPartNumber} fieldId="oemPartNumber" />}
+
+                        {part.make && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Brand / Manufacturer</dt>
+                            <dd className="text-base font-semibold text-gray-900">{part.make}</dd>
+                          </div>
+                        )}
+                        {part.model && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Model / Variant</dt>
+                            <dd className="text-base font-medium text-gray-900">{part.model}</dd>
+                          </div>
+                        )}
+                        {part.location && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1 flex items-center gap-2">
+                              <MapPin className="h-4 w-4" />
+                              Storage Location
+                            </dt>
+                            <dd className="text-base font-mono font-medium text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg inline-block">
+                              {part.location}
+                            </dd>
+                          </div>
+                        )}
+
+                        {part.vendorSku && <CopyableField label="Vendor SKU" value={part.vendorSku} fieldId="vendorSku" />}
+                        {part.batchNumber && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Batch / Lot Number</dt>
+                            <dd className="text-base font-mono text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg inline-block">
+                              {part.batchNumber}
+                            </dd>
+                          </div>
+                        )}
+                        {part.countryOfOrigin && (
+                          <div>
+                            <dt className="text-sm text-gray-600 mb-1">Country of Origin</dt>
+                            <dd className="text-base font-medium text-gray-900">{part.countryOfOrigin}</dd>
+                          </div>
+                        )}
                       </dl>
                     </div>
                   </div>

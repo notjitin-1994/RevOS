@@ -3,13 +3,12 @@
 import { useRouter } from 'next/navigation'
 import {
   LogOut,
-  LayoutDashboard,
+  Building,
   ClipboardList,
   Users,
   UserPlus,
   Wrench,
   Package,
-  Calendar as CalendarIcon,
   Settings,
 } from 'lucide-react'
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar'
@@ -39,22 +38,22 @@ export function AppSidebar({ open, setOpen, hideMobile = false }: AppSidebarProp
 
   const mainLinks: NavLink[] = [
     {
-      label: 'Dashboard',
+      label: 'Garage Management Hub',
       href: '/dashboard',
-      icon: <LayoutDashboard className="h-5 w-5 shrink-0 text-graphite-900" />,
+      icon: <Building className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
-      label: 'Job Card Management',
+      label: 'Service Center',
       href: '/job-cards',
-      icon: <ClipboardList className="h-5 w-5 shrink-0 text-graphite-900" />,
+      icon: <Settings className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
-      label: 'Employee Management',
+      label: 'Crew Station',
       href: '/employee-management',
       icon: <Users className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
-      label: 'Customer Management',
+      label: 'Client Hub',
       href: '/customer-management',
       icon: <UserPlus className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
@@ -69,14 +68,9 @@ export function AppSidebar({ open, setOpen, hideMobile = false }: AppSidebarProp
       icon: <MotorcycleIcon className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
     {
-      label: 'Parts & Inventory',
+      label: 'Parts Repository',
       href: '/inventory',
       icon: <Package className="h-5 w-5 shrink-0 text-graphite-900" />,
-    },
-    {
-      label: 'Calendar & Schedule',
-      href: '/calendar',
-      icon: <CalendarIcon className="h-5 w-5 shrink-0 text-graphite-900" />,
     },
   ]
 

@@ -460,7 +460,6 @@ export async function getJobCardsByGarageId(
     .from('job_cards')
     .select('*')
     .eq('garage_id', garageId)
-    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   // Apply filters

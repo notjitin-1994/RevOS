@@ -1,437 +1,557 @@
-# RevOS Login Page - Component Architecture
+# RevOS Architecture
 
-## Component Hierarchy
+Technical architecture and implementation details for RevOS.
 
-```
-app/login/page.tsx (Server Component)
-└── LoginForm (Client Component)
-    ├── LoginLogo (Presentational)
-    ├── Error Banner (Conditional)
-    └── Form Element
-        ├── Login ID Input
-        │   ├── Label
-        │   ├── Input Field (react-hook-form)
-        │   └── Error Message (Conditional)
-        └── PasswordInput (Reusable Component)
-            ├── Label
-            ├── Input Field (react-hook-form)
-            ├── Toggle Button
-            │   ├── Eye Icon (Show)
-            │   └── EyeOff Icon (Hide)
-            └── Error Message (Conditional)
-```
+> **Last Updated:** January 2026
+> **Framework:** Next.js 14 (App Router)
 
-## Data Flow
+---
 
-```
-User Input → LoginForm (react-hook-form)
-    ↓
-Zod Schema Validation
-    ↓
-If Valid → useAuth hook → API Call (stub)
-    ↓                    ↓
-Success ←────────────── Login
-    ↓
-Redirect/Update UI
-```
+## Table of Contents
 
-## State Management
+1. [Tech Stack](#tech-stack)
+2. [Project Structure](#project-structure)
+3. [Data Layer](#data-layer)
+4. [API Layer](#api-layer)
+5. [Authentication](#authentication)
+6. [State Management](#state-management)
+7. [Component Architecture](#component-architecture)
+8. [Routing & Navigation](#routing--navigation)
+9. [Performance Optimizations](#performance-optimizations)
 
-### LoginForm Component
-```tsx
-// Form State (react-hook-form)
-const { register, handleSubmit, formState } = useForm()
+---
 
-// Auth State (useAuth hook)
-const { login, isLoading, error } = useAuth()
+## Tech Stack
 
-// Local State
-const [showPassword, setShowPassword] = useState(false)
-```
+### Frontend
 
-### PasswordInput Component
-```tsx
-// Local State
-const [showPassword, setShowPassword] = useState(false)
-```
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Next.js** | 14+ | React framework with App Router |
+| **React** | 18+ | UI library |
+| **TypeScript** | 5+ | Type safety |
+| **Tailwind CSS** | 3+ | Styling |
+| **Framer Motion** | Latest | Animations |
+| **Lucide React** | Latest | Icons |
 
-## File Structure Map
+### Backend
+
+| Technology | Purpose |
+|------------|---------|
+| **Next.js API Routes** | Serverless API endpoints |
+| **Supabase** | Database, auth, storage |
+| **Prisma** | Database ORM (migrations) |
+
+### Validation & Forms
+
+| Technology | Purpose |
+|------------|---------|
+| **Zod** | Schema validation |
+| **React Hook Form** | Form management |
+| **Validator.js** | Email/phone validation |
+
+### Development
+
+| Technology | Purpose |
+|------------|---------|
+| **ESLint** | Linting |
+| **TypeScript** | Type checking |
+| **Vitest** | Testing |
+
+---
+
+## Project Structure
 
 ```
 RevOS/
-│
 ├── app/                          # Next.js App Router
-│   ├── login/
-│   │   └── page.tsx             # Login page entry point
-│   ├── layout.tsx               # Root layout (fonts)
+│   ├── (auth)/                   # Auth routes (future)
+│   ├── login/                    # Login page
+│   │   └── page.tsx             # Split layout login
+│   ├── dashboard/               # Dashboard hub
+│   │   └── page.tsx             # Main dashboard
+│   ├── inventory/               # Inventory management
+│   │   ├── page.tsx             # Parts list
+│   │   ├── add/                 # Add part form
+│   │   │   └── page.tsx         # 8-tab form with auto-save
+│   │   └── [partId]/            # Part details
+│   │       └── page.tsx
+│   ├── job-cards/               # Job card management
+│   │   ├── page.tsx             # Job cards list
+│   │   ├── create/              # Create job card
+│   │   └── [id]/                # Job card details
+│   │       └── page.tsx
+│   ├── vehicle-catalog/         # Vehicle registry
+│   │   ├── page.tsx             # Vehicle catalog
+│   │   ├── add/                 # Add vehicle
+│   │   └── [id]/                # Vehicle details
+│   ├── customer-management/     # Customer CRM
+│   │   ├── page.tsx             # Customer list
+│   │   ├── add/                 # Add customer
+│   │   └── [id]/                # Customer details
+│   ├── employee-management/     # Employee directory
+│   │   ├── page.tsx             # Employee list
+│   │   ├── add/                 # Add employee
+│   │   └── [loginId]/           # Employee profile
+│   ├── calendar/                # Calendar (future)
+│   ├── settings/                # Settings
+│   │   └── page.tsx
+│   ├── layout.tsx               # Root layout
 │   ├── globals.css              # Global styles
-│   └── page.tsx                 # Home (redirects)
+│   └── page.tsx                 # Home (redirects to login)
 │
-├── components/                   # React Components
-│   └── auth/
-│       ├── login-form.tsx       # Main form logic
-│       ├── password-input.tsx   # Reusable input
-│       └── login-logo.tsx       # Brand header
+├── components/                   # React components
+│   ├── auth/                    # Authentication components
+│   │   ├── login-form.tsx       # Main login form
+│   │   ├── password-input.tsx   # Reusable password input
+│   │   ├── login-logo.tsx       # Brand header
+│   │   ├── forgot-password-modal.tsx
+│   │   ├── forgot-login-id-modal.tsx
+│   │   └── system-diagnostic-panel.tsx
+│   ├── ui/                      # Reusable UI components
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── card.tsx
+│   │   └── ...
+│   ├── dashboard/               # Dashboard components
+│   ├── inventory/               # Inventory components
+│   ├── job-cards/               # Job card components
+│   └── ...
 │
-├── lib/                         # Business Logic
-│   ├── schemas/
-│   │   └── login.ts            # Zod validation
-│   └── hooks/
-│       └── use-auth.ts         # Authentication
+├── lib/                         # Business logic
+│   ├── hooks/                   # Custom React hooks
+│   │   ├── use-auth.ts          # Authentication hook
+│   │   └── useFormAutoSave.ts   # Auto-save hook
+│   ├── schemas/                 # Zod validation schemas
+│   │   ├── login.ts
+│   │   ├── forgot-password.ts
+│   │   ├── forgot-login-id.ts
+│   │   └── ...
+│   ├── supabase/                # Supabase queries
+│   │   ├── server.ts            # Supabase client
+│   │   ├── types.ts             # Database types
+│   │   └── job-card-queries.ts  # Job card queries
+│   └── utils.ts                 # Utility functions
 │
-├── Configuration Files
-│   ├── tailwind.config.ts       # Tailwind colors
-│   ├── tsconfig.json            # TypeScript
-│   ├── package.json             # Dependencies
-│   └── next.config.js           # Next.js
+├── app/api/                     # API routes
+│   ├── employees/               # Employee endpoints
+│   │   └── route.ts
+│   ├── inventory/               # Inventory endpoints
+│   │   ├── add/
+│   │   ├── list/
+│   │   └── part/
+│   ├── job-cards/               # Job card endpoints
+│   │   ├── list/
+│   │   ├── create/
+│   │   └── [id]/
+│   └── ...
 │
-└── Documentation
-    ├── README.md
-    ├── SETUP.md
-    ├── IMPLEMENTATION.md
-    ├── DESIGN-REFERENCE.md
-    ├── VERIFICATION.md
-    ├── PROJECT-SUMMARY.md
-    ├── QUICK-REFERENCE.md
-    └── ARCHITECTURE.md (this file)
+├── prisma/                      # Database schema
+│   ├── schema.prisma            # Prisma schema
+│   └── migrations/              # SQL migrations
+│       └── create_job_cards_system.sql
+│
+├── public/                      # Static assets
+│   └── images/
+│
+├── docs/                        # Feature documentation
+│   ├── JOB_CARDS_IMPLEMENTATION.md
+│   ├── PART_DATA_FIELDS_REFERENCE.md
+│   └── ...
+│
+├── design-language/             # Design system docs
+│   ├── color-design.txt
+│   ├── typography-design.txt
+│   └── ...
+│
+├── tests/                       # Test files
+│   ├── setup.ts
+│   ├── helpers.ts
+│   └── api/employees/
+│       ├── validation.test.ts
+│       ├── security.test.ts
+│       └── ...
+│
+├── tailwind.config.ts           # Tailwind configuration
+├── tsconfig.json                # TypeScript configuration
+├── next.config.js               # Next.js configuration
+├── vitest.config.ts             # Vitest configuration
+└── package.json                 # Dependencies
 ```
 
-## Component Responsibilities
+---
 
-### 1. page.tsx (Server Component)
-**Responsibility:** Layout wrapper
-```tsx
-- Centered full-page layout
-- Dark background (bg-graphite-900)
-- Safe area support (pb-safe)
-- Renders LoginForm
+## Data Layer
+
+### Database: Supabase (PostgreSQL)
+
+**Key Tables:**
+
+| Table | Purpose |
+|-------|---------|
+| `users` | User accounts and authentication |
+| `garages` | Garage/business accounts |
+| `employees` | Employee profiles |
+| `customers` | Customer information |
+| `customer_vehicles` | Vehicle registry |
+| `parts` | Parts catalog |
+| `job_cards` | Service job cards |
+| `job_card_checklist_items` | Job tasks |
+| `job_card_time_entries` | Time tracking |
+| `job_card_parts` | Parts usage |
+| `makes` | Vehicle makes (Honda, Yamaha, etc.) |
+| `models` | Vehicle models |
+
+**Row Level Security (RLS):**
+- ✅ Enabled on all tables
+- ✅ Garage-level data isolation
+- ✅ Role-based access policies
+
+**Database Functions:**
+- `generate_job_card_number(garage_id)` - Auto-generate job card numbers
+- `update_job_card_financials(job_card_id)` - Recalculate costs
+- `update_mechanic_metrics(mechanic_id, date)` - Calculate productivity
+
+---
+
+## API Layer
+
+### API Route Structure
+
+```
+/app/api/
+├── employees/
+│   ├── route.ts              # GET (list), POST (create)
+│   └── route.secure.ts       # Secure implementation
+├── inventory/
+│   ├── add/route.ts          # POST (add part)
+│   ├── list/route.ts         # GET (list parts)
+│   └── part/[id]/route.ts    # GET, PUT, DELETE
+├── job-cards/
+│   ├── list/route.ts         # GET (list with filters)
+│   ├── create/route.ts       # POST (create job card)
+│   └── [id]/
+│       ├── route.ts          # GET, PUT, DELETE
+│       ├── checklist/route.ts # GET, POST
+│       └── ...
+└── ...
 ```
 
-### 2. LoginForm (Client Component)
-**Responsibility:** Form orchestration
-```tsx
-- React Hook Form setup
-- Form validation (Zod)
-- State management
-- Error handling
-- Submit logic
-- UI rendering
+### API Response Format
+
+**Success Response:**
+```typescript
+{
+  success: true,
+  data: { ... },
+  message?: string
+}
 ```
 
-### 3. LoginLogo (Presentational)
-**Responsibility:** Brand display
-```tsx
-- Logo with lock icon
-- Welcome heading (font-display)
-- Subtitle text
-- Glow effect
+**Error Response:**
+```typescript
+{
+  success: false,
+  error: string,
+  details?: unknown
+}
 ```
 
-### 4. PasswordInput (Reusable)
-**Responsibility:** Password input with toggle
-```tsx
-- Password field
-- Show/hide toggle
-- ARIA attributes
-- Error display
-- Mobile optimization
+---
+
+## Authentication
+
+### Authentication Flow
+
+```
+1. User enters Login ID + Password
+   ↓
+2. Client validation (Zod)
+   ↓
+3. POST /api/auth/login
+   ↓
+4. Supabase auth.signInWithPassword()
+   ↓
+5. Session stored in cookies
+   ↓
+6. Redirect to dashboard
 ```
 
-### 5. loginSchema (Zod)
-**Responsibility:** Validation rules
-```tsx
-- loginId: required, alphanumeric, 1-100 chars
-- password: required, 8-128 chars
-- Type inference for TypeScript
+### Session Management
+
+- **Session Storage:** Supabase cookies (httpOnly)
+- **Session Duration:** Configurable (default: 7 days)
+- **Session Refresh:** Automatic token refresh
+
+### Recovery Flows
+
+**Forgot Password:**
+1. User enters login ID
+2. System sends OTP to email
+3. User verifies OTP
+4. User creates new password
+
+**Forgot Login ID:**
+1. User enters email
+2. System sends login ID to email
+
+---
+
+## State Management
+
+### Client State
+
+| Approach | Library | Usage |
+|----------|---------|-------|
+| **Local State** | React useState | Component-level state |
+| **Form State** | React Hook Form | Form data and validation |
+| **URL State** | Next.js useSearchParams | Filters, search params |
+| **Auto-Save** | localStorage | Draft persistence (useFormAutoSave) |
+
+### Server State
+
+| Approach | Library | Usage |
+|----------|---------|-------|
+| **Server Components** | Next.js | Data fetching on server |
+| **API Routes** | Next.js | Serverless endpoints |
+| **Supabase** | @supabase/supabase-js | Database queries |
+
+### No Global State Management
+
+RevOS does **NOT** use Redux, Zustand, or Jotai.
+- ✅ Server Components for data fetching
+- ✅ URL params for shared state
+- ✅ React Context for auth only (if needed)
+
+---
+
+## Component Architecture
+
+### Component Hierarchy Example
+
+```
+app/dashboard/page.tsx (Server Component)
+└── DashboardLayout
+    ├── Header
+    ├── StatsGrid
+    │   └── StatCard × 4
+    ├── QuickActions
+    │   └── QuickAction × 4
+    ├── ScheduleSection
+    ├── AnalyticsSection
+    └── AIInsightsSection
 ```
 
-### 6. useAuth (Hook)
-**Responsibility:** Authentication logic
-```tsx
-- Login function (stub)
-- Loading state
-- Error state
-- Clear error function
-```
+### Component Patterns
 
-## Props Flow
+**Server Components** (Default):
+- Used for pages and data-heavy components
+- No 'use client' directive
+- Can fetch data directly from Supabase
 
-### LoginForm → PasswordInput
+**Client Components** ('use client'):
+- Used for interactivity (forms, modals, animations)
+- Minimize usage for better performance
+- Use React Hook Form for forms
+
+**Reusable Components:**
+- Located in `components/ui/`
+- Fully typed with TypeScript
+- Follow design system strictly
+
+---
+
+## Routing & Navigation
+
+### App Router Structure
+
+**File-based Routing:**
+- `app/dashboard/page.tsx` → `/dashboard`
+- `app/inventory/add/page.tsx` → `/inventory/add`
+- `app/job-cards/[id]/page.tsx` → `/job-cards/{id}`
+
+**Dynamic Routes:**
+- `[partId]` - Part details
+- `[id]` - Job card details
+- `[loginId]` - Employee profiles
+
+**Navigation:**
+- `<Link>` from `next/link` for client navigation
+- `router.push()` for programmatic navigation
+- `<a>` for external links
+
+### Layouts
+
+**Root Layout** (`app/layout.tsx`):
+- Font loading (Barlow, Inter, JetBrains Mono)
+- Global styles
+- Metadata configuration
+
+**Nested Layouts:**
+- (Future) Auth layout for protected routes
+- (Future) Dashboard layout with sidebar
+
+---
+
+## Performance Optimizations
+
+### Image Optimization
+
 ```tsx
-<PasswordInput
-  id="password"
-  name="password"
-  label="Password"
-  placeholder="Enter your password"
-  error={errors.password?.message}
-  register={register('password')}
-  autoComplete="current-password"
-  disabled={isLoading}
+import Image from 'next/image'
+
+<Image
+  src="/logo.png"
+  alt="Logo"
+  width={200}
+  height={50}
+  priority // For above-fold images
 />
 ```
 
-## Styling Architecture
+### Code Splitting
 
-### Tailwind Configuration
-```tsx
-// Custom colors defined in tailwind.config.ts
-colors: {
-  brand: { DEFAULT: '#CCFF00', hover: '#B2DE00' },
-  graphite: { 900, 800, 700, 600, 400 },
-  status: { error, warning, success, info }
-}
+- **Automatic:** Next.js App Router splits by route
+- **Dynamic Imports:** `next/dynamic` for heavy components
+- **Client Components:** Only where necessary
 
-// Custom shadows
-boxShadow: {
-  glow: '0 0 15px rgba(204, 255, 0, 0.3)'
-}
-```
-
-### Global Styles (globals.css)
-```css
-/* Base layer */
-@tailwind base
-@tailwind components
-@tailwind utilities
-
-/* Custom base styles */
-body → bg-graphite-900, text-white, font-sans
-h1, h2, h3 → font-display, tracking-tight
-
-/* Custom focus styles */
-*:focus-visible → ring-2 ring-brand
-
-/* Utilities */
-.pb-safe → env(safe-area-inset-bottom)
-```
-
-## Type System
-
-```typescript
-// Form values type (from Zod schema)
-type LoginFormValues = {
-  loginId: string
-  password: string
-}
-
-// Component props types
-interface PasswordInputProps {
-  id: string
-  name: string
-  label: string
-  placeholder?: string
-  error?: string
-  register: UseFormRegisterReturn<string>
-  autoComplete?: string
-  disabled?: boolean
-}
-
-// Hook return type
-interface UseAuthReturn {
-  login: (credentials: LoginFormValues) => Promise<void>
-  isLoading: boolean
-  error: string | null
-  clearError: () => void
-}
-```
-
-## Validation Flow
-
-```
-User enters data
-    ↓
-onBlur → Validate field (onTouched mode)
-    ↓
-Invalid? → Show field error, prevent submit
-    ↓
-Valid? → Allow submit
-    ↓
-onSubmit → Validate entire form
-    ↓
-All valid? → Call login()
-    ↓
-API error? → Show banner error
-    ↓
-Success? → Navigate to dashboard
-```
-
-## Accessibility Tree
-
-```
-<form>
-  <h1>Welcome back</h1>
-  <div role="alert">Error banner (if API error)</div>
-
-  <div>
-    <label for="loginId">Login ID</label>
-    <input
-      id="loginId"
-      type="text"
-      aria-invalid="false/true"
-      aria-describedby="loginId-error (if error)"
-    />
-    <div id="loginId-error" role="alert">Field error (if any)</div>
-  </div>
-
-  <div>
-    <label for="password">Password</label>
-    <div class="relative">
-      <input
-        id="password"
-        type="password"
-        aria-invalid="false/true"
-        aria-describedby="password-error (if error)"
-      />
-      <button
-        aria-label="Show/Hide password"
-        aria-pressed="false/true"
-      >
-        <Eye/EyeOff icon />
-      </button>
-    </div>
-    <div id="password-error" role="alert">Field error (if any)</div>
-  </div>
-
-  <button>Initialize System</button>
-</form>
-```
-
-## Mobile Responsive Breakpoints
+### Font Optimization
 
 ```tsx
-// Base (mobile first)
-p-6           // 24px padding on mobile
-text-2xl       // 24px heading on mobile
-
-// md: breakpoint (768px+)
-md:p-8         // 32px padding on tablet+
-md:text-3xl    // 30px heading on tablet+
-
-// Mobile-specific
-text-base      // 16px (prevents iOS zoom)
-min-h-[44px]   // Minimum touch target
-pb-safe        // iPhone Home bar
-```
-
-## Performance Optimization
-
-```tsx
-// Font optimization
-- Next.js font optimization (Barlow, Inter, JetBrains Mono)
-- display: swap for faster FCP
-
-// Component optimization
-- 'use client' only where needed
-- No unnecessary re-renders
-- Efficient state management
-
-// Asset optimization
-- SVG icons (Lucide React)
-- No external images
-- Minimal CSS (Tailwind)
-
-// Code splitting
-- App Router automatic splitting
-- Dynamic imports available
-- Client components only where needed
-```
-
-## Security Layers
-
-```
-1. Client-side validation (Zod)
-   ↓
-2. Input sanitization
-   ↓
-3. Proper input types
-   ↓
-4. Autocomplete attributes
-   ↓
-5. Password masking
-   ↓
-6. Server-side validation (future)
-   ↓
-7. Authentication API (future)
-```
-
-## Extension Points
-
-### Future Enhancements
-```tsx
-// 1. Add "Remember me" checkbox
-<input type="checkbox" {...register('rememberMe')} />
-
-// 2. Add forgot password link
-<Link href="/forgot-password">Forgot password?</Link>
-
-// 3. Add multi-factor authentication
-<MFAInput onCodeVerified={handleMFA} />
-
-// 4. Add social login (if needed)
-<SocialLoginButton provider="google" />
-
-// 5. Add session management
-const { session } = useSession()
-```
-
-## Testing Strategy
-
-### Unit Tests (Future)
-```tsx
-// PasswordInput component
-describe('PasswordInput', () => {
-  it('toggles password visibility')
-  it('shows error message')
-  it('has proper ARIA attributes')
-})
-
-// LoginForm component
-describe('LoginForm', () => {
-  it('validates form inputs')
-  it('calls login on submit')
-  it('shows loading state')
-})
-
-// loginSchema
-describe('loginSchema', () => {
-  it('validates correct data')
-  it('rejects invalid loginId')
-  it('rejects short password')
+const barlow = Barlow({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-barlow',
+  display: 'swap', // Prevents FOUT
 })
 ```
 
-### Integration Tests (Future)
-```tsx
-describe('Login Flow', () => {
-  it('submits form with valid data')
-  it('shows error with invalid data')
-  it('navigates on success')
-})
-```
+### Caching Strategy
 
-### E2E Tests (Future)
+- **Static Data:** Next.js ISR (Incremental Static Regeneration)
+- **Dynamic Data:** Supabase queries with cache headers
+- **Client Data:** localStorage for drafts
+
+### Lazy Loading
+
 ```tsx
-// Playwright/Cypress
-test('user can login', async ({ page }) => {
-  await page.goto('/login')
-  await page.fill('[name="loginId"]', 'testuser')
-  await page.fill('[name="password"]', 'password123')
-  await page.click('button[type="submit"]')
-  await expect(page).toHaveURL('/dashboard')
+// Heavy component
+const HeavyChart = dynamic(() => import('./HeavyChart'), {
+  loading: () => <Skeleton />,
+  ssr: false,
 })
 ```
 
 ---
 
-## Summary
+## Security Architecture
 
-This architecture provides:
-- ✅ Clean separation of concerns
-- ✅ Reusable components
-- ✅ Type safety throughout
-- ✅ Accessibility built-in
-- ✅ Mobile-first design
-- ✅ Extensible structure
-- ✅ Production-ready code
+### Client-Side Security
 
-The login page is built with industry best practices and is ready for production use.
+- ✅ Input validation with Zod schemas
+- ✅ XSS protection via React escaping
+- ✅ CSRF tokens (future)
+- ✅ Content Security Policy (future)
+
+### Server-Side Security
+
+- ✅ Row Level Security (RLS) in Supabase
+- ✅ Garage-level data isolation
+- ✅ Role-based access control
+- ⚠️ Rate limiting (planned)
+- ⚠️ Request signing (planned)
+
+### Authentication Security
+
+- ✅ Password hashing (bcrypt)
+- ✅ OTP expiration (5 minutes)
+- ✅ Secure session cookies (httpOnly)
+- ✅ Autocomplete attributes for password managers
+
+### Known Vulnerabilities
+
+**Employee Creation API** (`/api/employees/route.ts`):
+- ⚠️ No authentication/authorization
+- ⚠️ SQL injection vulnerabilities
+- ⚠️ XSS vulnerabilities
+- ✅ Secure implementation: `/api/employees/route.secure.ts`
+
+**See:** [TESTING_README.md](./TESTING_README.md)
+
+---
+
+## Monitoring & Observability
+
+### Logging
+
+**Client-Side:**
+- Console logging in development
+- Error tracking (planned: Sentry)
+
+**Server-Side:**
+- API route logging (planned)
+- Database query logging (Supabase dashboard)
+
+### Analytics
+
+- User analytics (planned)
+- Performance monitoring (planned)
+- Error tracking (planned)
+
+---
+
+## Deployment
+
+### Environment Variables
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Email (for recovery features)
+NEXT_PUBLIC_REQUEST_EMAIL=your-email@example.com
+
+# App
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+```
+
+### Build Process
+
+```bash
+# Development
+npm run dev
+
+# Production build
+npm run build
+npm start
+
+# Testing
+npm test
+npm run test:coverage
+```
+
+### Hosting
+
+**Recommended Platforms:**
+- Vercel (recommended for Next.js)
+- Netlify
+- AWS (Amplify)
+- Self-hosted (Docker)
+
+---
+
+## Documentation Index
+
+For more details, see:
+
+- **Features:** [FEATURES.md](./FEATURES.md)
+- **Design System:** [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)
+- **Getting Started:** [GETTING_STARTED.md](./GETTING_STARTED.md)
+- **Documentation Index:** [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
+
+---
+
+**RevOS** - Automotive Garage Management System
+**Version:** 1.0.0
+**Last Updated:** January 2026
