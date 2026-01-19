@@ -200,9 +200,9 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-[420px] mx-auto px-4 min-h-screen flex flex-col justify-center py-8 sm:py-0 sm:min-h-0 sm:justify-start">
+    <div className="w-full max-w-[462px] mx-auto px-4 h-[100dvh] flex flex-col justify-start overflow-y-auto overflow-x-hidden sm:h-auto sm:min-h-0 sm:justify-start sm:overflow-visible sm:pt-1">
       {/* Single Parent Card */}
-      <div className="relative h-[560px] sm:mt-4 bg-gradient-to-b from-graphite-800/95 to-graphite-800/90 backdrop-blur-xl border border-[0.5px] border-brand/30 rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.15),0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
+      <div className="relative h-[560px] sm:mt-[2px] bg-gradient-to-b from-graphite-800/95 to-graphite-800/90 backdrop-blur-xl border border-[0.5px] border-brand/30 rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.15),0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
         {/* Ambient background glow effects */}
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
@@ -222,7 +222,7 @@ export function LoginForm() {
                 animate="animate"
                 exit="exit"
                 transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
-                className="flex-1 flex flex-col justify-center px-10 pb-6 relative"
+                className="flex-1 flex flex-col justify-center px-6 pb-6 relative"
               >
                 {/* Background User Image with Blur */}
                 <div className="absolute inset-0 opacity-60 overflow-hidden rounded-t-2xl">
@@ -402,7 +402,7 @@ export function LoginForm() {
                       >
                         Not {user.firstName}?
                       </button>
-                      <span className="text-brand/30">|</span>
+                      <span className="text-white">|</span>
                       <button
                         type="button"
                         onClick={() => setShowContactModal(true)}
@@ -533,7 +533,7 @@ export function LoginForm() {
                 animate="animate"
                 exit="exit"
                 transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-                className="flex-1 flex flex-col justify-center px-10 pb-6 relative"
+                className="flex-1 flex flex-col justify-center px-6 pb-6 relative"
               >
                 {/* Background Image with Blur */}
                 <div className="absolute inset-0 opacity-60 overflow-hidden rounded-t-2xl">
@@ -728,7 +728,7 @@ export function LoginForm() {
         <div className="flex items-center justify-center gap-2 text-[11px] text-graphite-500">
           <span>© 2026 </span>
           <span className="text-brand font-semibold">RevOS</span>
-          <span className="text-brand/30">|</span>
+          <span className="text-white">|</span>
           <span className="font-display font-semibold tracking-wide">
             POWERED BY{' '}
             <span className="font-manrope">
