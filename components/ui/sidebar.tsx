@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import React, { useState, createContext, useContext } from "react";
-import { motion } from "framer-motion";
+import React, { useState, createContext, useContext, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 
@@ -94,32 +94,34 @@ export const DesktopSidebar = ({
   ...props
 }: React.ComponentProps<typeof motion.div>) => {
   const { open, setOpen, animate } = useSidebar();
+
   return (
-    <>
-      <motion.div
-        className={cn(
-          "h-full py-4 hidden md:flex md:flex-col bg-brand w-[300px] shrink-0 border-r border-brand-hover sidebar-scroll-hide",
-          className
-        )}
-        animate={{
-          width: animate ? (open ? "300px" : "80px") : "300px",
-        }}
-        transition={{
-          duration: 0.4,
-          ease: [0.25, 0.1, 0.25, 1], // Custom cubic bezier for smooth feel
-        }}
-        onMouseEnter={() => setOpen?.(true)}
-        onMouseLeave={() => setOpen?.(false)}
-        {...props}
-      >
-        <div className={cn(
-          "flex flex-col h-full min-w-0 overflow-hidden",
-          open ? "px-4" : "items-center px-2"
-        )}>
-          {children as React.ReactNode}
-        </div>
-      </motion.div>
-    </>
+    <motion.div
+      className={cn(
+        "h-full py-4 hidden md:flex md:flex-col bg-brand w-[300px] shrink-0 border-r border-brand-hover sidebar-scroll-hide overflow-hidden",
+        className
+      )}
+      animate={{
+        width: animate ? (open ? 300 : 80) : 300,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 200,
+        damping: 30,
+        mass: 1,
+        velocity: 0,
+      }}
+      onMouseEnter={() => setOpen?.(true)}
+      onMouseLeave={() => setOpen?.(false)}
+      {...props}
+    >
+      <div className={cn(
+        "flex flex-col h-full min-w-0",
+        open ? "px-4" : "items-center px-2"
+      )}>
+        {children as React.ReactNode}
+      </div>
+    </motion.div>
   );
 };
 
@@ -202,54 +204,36 @@ export const SidebarLink = ({
     }
   };
 
+  const isActive = pathname === link.href || pathname?.startsWith(link.href + '/');
+
   return (
     <a
       href={link.href}
       onClick={handleClick}
       className={cn(
-        "flex items-center rounded-lg hover:bg-brand-hover/30 transition-all duration-300 cursor-pointer overflow-hidden min-w-0",
-        open ? "justify-start gap-3 px-3 py-3" : "justify-center py-3",
+        "flex items-center transition-colors cursor-pointer overflow-visible relative h-12",
+        open ? "rounded-lg justify-start px-3 w-full" : "rounded-xl justify-center px-2 w-12",
+        "hover:bg-brand-hover/30",
+        isActive && "bg-brand-hover/50",
         className
       )}
-      style={{
-        overflow: 'hidden',
-        minWidth: 0
-      } as any}
       {...props}
     >
-      <motion.div
-        animate={{
-          scale: open ? 1 : 1.1,
-        }}
-        transition={{
-          duration: 0.3,
-          ease: [0.25, 0.1, 0.25, 1],
-        }}
-        className="shrink-0"
-      >
+      <div className="shrink-0 flex items-center justify-center">
         {link.icon}
-      </motion.div>
+      </div>
 
-      <motion.span
-        initial={false}
-        animate={{
-          opacity: animate ? (open ? 1 : 0) : 1,
-          x: animate ? (open ? 0 : -10) : 0,
-        }}
-        transition={{
-          duration: 0.3,
-          ease: [0.25, 0.1, 0.25, 1],
-        }}
-        className="text-graphite-900 text-sm group-hover/sidebar:translate-x-1 transition-transform duration-200 whitespace-nowrap font-medium overflow-hidden"
+      <span
+        className={cn(
+          "text-graphite-900 text-sm whitespace-nowrap font-medium ml-3 transition-opacity duration-200",
+          !open && "opacity-0 pointer-events-none absolute"
+        )}
         style={{
-          display: animate && !open ? 'none' : 'block',
-          overflow: 'hidden',
-          minWidth: 0,
-          flexShrink: 1
-        } as any}
+          opacity: open ? 1 : 0,
+        }}
       >
         {link.label}
-      </motion.span>
+      </span>
     </a>
   );
 };
