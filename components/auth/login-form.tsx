@@ -204,18 +204,47 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-[462px] mx-auto px-4 h-[100dvh] flex flex-col justify-start overflow-y-auto overflow-x-hidden sm:h-auto sm:min-h-0 sm:justify-start sm:overflow-visible sm:pt-1">
+    <div className="w-full max-w-[462px] mx-auto px-2.5 sm:px-4 h-[100dvh] flex flex-col justify-start overflow-y-auto overflow-x-hidden sm:h-auto sm:min-h-0 sm:justify-start sm:overflow-visible sm:pt-1">
       {/* Single Parent Card */}
-      <div className="relative h-[560px] sm:mt-[2px] bg-gradient-to-b from-graphite-800/95 to-graphite-800/90 backdrop-blur-xl border border-[0.5px] border-graphite-600/30 rounded-2xl shadow-[0_0_40px_rgba(100,116,139,0.25),0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
+      <div className="relative h-[620px] sm:mt-[2px] bg-graphite-900/50 backdrop-blur-xl border border-[0.5px] rounded-2xl shadow-[0_0_20px_rgba(204,255,0,0.15),0_4px_16px_rgba(0,0,0,0.4)] sm:shadow-[0_0_60px_rgba(204,255,0,0.25),0_0_30px_rgba(204,255,0,0.15),0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden" style={{ borderColor: 'rgba(204, 255, 0, 0.15)' }}>
         {/* Ambient background glow effects */}
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-graphite-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-graphite-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#CCFF00]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-[#CCFF00]/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-graphite-500/40 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#CCFF00]/30 to-transparent" />
 
         {/* Card Content Container - Full height with flex centering */}
         <div className="relative z-10 h-full flex flex-col">
+          {/* Background User Image with Blur - for password screen */}
+          {showWelcome && user && (
+            <div className="absolute inset-0 opacity-60 overflow-hidden rounded-2xl -z-10">
+              {user.profileImageUrl ? (
+                <Image
+                  src={user.profileImageUrl}
+                  alt={`${user.firstName} ${user.lastName}`}
+                  fill
+                  className="object-cover blur-xl scale-110"
+                  sizes="(max-width: 768px) 100vw, 420px"
+                  priority
+                  quality={75}
+                />
+              ) : (
+                <Image
+                  src="https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/6504b85a-95ba-4b37-936f-23e91249e7a0/fbb6c4fec01a1b12177b36cf7ae051f3.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1768808995&Signature=jlQehSRAT2yQD4F7hH9e16rwBgk="
+                  alt="Password background"
+                  fill
+                  className="object-cover blur-xl scale-110"
+                  sizes="(max-width: 768px) 100vw, 420px"
+                  priority
+                  quality={75}
+                />
+              )}
+              {/* Brand Accent Overlay - Graphite to match marketing section */}
+              <div className="absolute inset-0 bg-graphite-900/50 backdrop-blur-md" />
+            </div>
+          )}
+
           {/* Main Content Area */}
           <AnimatePresence mode="wait">
             {showWelcome && user ? (
@@ -228,46 +257,19 @@ export function LoginForm() {
                 transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
                 className="flex-1 flex flex-col justify-center px-6 pb-6 relative"
               >
-                {/* Background User Image with Blur */}
-                <div className="absolute inset-0 opacity-60 overflow-hidden rounded-t-2xl">
-                  {user.profileImageUrl ? (
-                    <Image
-                      src={user.profileImageUrl}
-                      alt={`${user.firstName} ${user.lastName}`}
-                      fill
-                      className="object-cover blur-sm scale-110"
-                      sizes="(max-width: 768px) 100vw, 420px"
-                      priority
-                      quality={75}
-                    />
-                  ) : (
-                    <Image
-                      src="https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/6504b85a-95ba-4b37-936f-23e91249e7a0/fbb6c4fec01a1b12177b36cf7ae051f3.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1768808995&Signature=jlQehSRAT2yQD4F7hH9e16rwBgk="
-                      alt="Password background"
-                      fill
-                      className="object-cover blur-sm scale-110"
-                      sizes="(max-width: 768px) 100vw, 420px"
-                      priority
-                      quality={75}
-                    />
-                  )}
-                  {/* Brand Accent Overlay - Graphite */}
-                  <div className="absolute inset-0 bg-graphite-700/30" />
-                </div>
-
                 {/* Content Overlay - Above background */}
                 <div className="relative z-10">
                 {/* Profile Section */}
-                <div className="mb-6 text-center">
+                <div className="mb-5 text-center">
                   {/* Profile Picture */}
                   <motion.div
-                    className="inline-flex items-center justify-center mb-5"
+                    className="inline-flex items-center justify-center mb-4"
                     initial={{ scale: 0.85, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.12, type: "spring", stiffness: 200, damping: 20 }}
                   >
                     {user.profileImageUrl ? (
-                      <div className="relative w-20 h-20">
+                      <div className="relative w-16 h-16">
                         <div className="absolute inset-0 bg-[#CCFF00]/25 rounded-2xl blur-xl scale-110" />
                         <Image
                           src={user.profileImageUrl}
@@ -279,8 +281,8 @@ export function LoginForm() {
                         />
                       </div>
                     ) : (
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#CCFF00] to-[#CCFF00]/70 flex items-center justify-center shadow-xl shadow-[#CCFF00]/20 border-2 border-[#CCFF00]/50">
-                        <User className="w-10 h-10 text-graphite-900" strokeWidth={2} />
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#CCFF00] to-[#CCFF00]/70 flex items-center justify-center shadow-xl shadow-[#CCFF00]/20 border-2 border-[#CCFF00]/50">
+                        <User className="w-8 h-8 text-graphite-900" strokeWidth={2} />
                       </div>
                     )}
                   </motion.div>
@@ -291,13 +293,13 @@ export function LoginForm() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <h1 className="text-[28px] leading-tight font-display font-bold text-white tracking-tight mb-2">
+                    <h1 className="text-2xl leading-tight font-display font-bold text-white tracking-tight mb-1">
                       Welcome <span className="text-[#CCFF00]">{user.firstName}</span>!
                     </h1>
                   </motion.div>
 
                   <motion.p
-                    className="text-base font-display font-semibold text-[#CCFF00] tracking-wide"
+                    className="text-sm font-display font-semibold text-[#CCFF00] tracking-wide"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.28 }}
@@ -709,22 +711,21 @@ export function LoginForm() {
             )}
           </AnimatePresence>
 
-        </div>
-      </div>
-
-      {/* Footer - Below the card */}
-      <div className="mt-5 text-center">
-        <div className="flex items-center justify-center gap-2 text-xs text-graphite-500">
-          <span className="text-graphite-700">© 2026 </span>
-          <span className="text-graphite-800 font-semibold">RevOS</span>
-          <span className="text-graphite-600">|</span>
-          <span className="font-display font-semibold tracking-wide text-graphite-700">
-            POWERED BY{' '}
-            <span className="font-manrope">
-              <span className="font-bold text-[#FF4F00]">GLITCH</span>
-              <span className="font-normal text-graphite-800 drop-shadow-[0_0_8px_rgba(0,0,0,0.1)]">ZERO</span>
-            </span>
-          </span>
+          {/* Footer - Inside the card */}
+          <div className="mt-auto pt-4 pb-8 text-center">
+            <div className="flex items-center justify-center gap-2 text-xs text-white/60">
+              <span className="text-white/70">© 2026 </span>
+              <span className="text-lime-400 font-semibold">RevvOs</span>
+              <span className="text-white/50">|</span>
+              <span className="font-display font-semibold tracking-wide text-white/70">
+                POWERED BY{' '}
+                <span className="font-manrope">
+                  <span className="font-bold text-[#FF4F00]">GLITCH</span>
+                  <span className="font-normal text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.1)]">ZERO</span>
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -749,25 +750,26 @@ export function LoginForm() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-                className="relative w-full max-w-md bg-gradient-to-b from-graphite-800 to-graphite-800/95 border border-brand/30 rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.2),0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden"
+                className="relative w-full max-w-md bg-white border rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.06),0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+                style={{ borderColor: 'rgba(204, 255, 0, 0.2)' }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-brand/10">
+                <div className="flex items-center justify-between px-6 py-5 border-b rounded-t-2xl" style={{ borderColor: 'rgba(204, 255, 0, 0.15)' }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center">
-                      <Mail className="w-5 h-5 text-brand" strokeWidth={2} />
+                    <div className="w-10 h-10 rounded-xl bg-graphite-100 flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-graphite-700" strokeWidth={2} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-display font-bold text-white">Contact Support</h2>
-                      <p className="text-xs text-graphite-400">We'll help you resolve any issues</p>
+                      <h2 className="text-lg font-display font-bold text-gray-900">Contact Support</h2>
+                      <p className="text-xs text-gray-500">We'll help you resolve any issues</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowContactModal(false)}
-                    className="w-8 h-8 rounded-lg bg-graphite-900/50 hover:bg-graphite-900 flex items-center justify-center transition-colors duration-200"
+                    className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
                   >
-                    <X className="w-4 h-4 text-graphite-400" strokeWidth={2} />
+                    <X className="w-4 h-4 text-gray-600" strokeWidth={2} />
                   </button>
                 </div>
 
@@ -779,16 +781,16 @@ export function LoginForm() {
                       animate={{ opacity: 1, scale: 1 }}
                       className="text-center py-8"
                     >
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand/20 flex items-center justify-center">
-                        <Mail className="w-8 h-8 text-brand" strokeWidth={2} />
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-graphite-100 flex items-center justify-center">
+                        <Mail className="w-8 h-8 text-graphite-700" strokeWidth={2} />
                       </div>
-                      <h3 className="text-xl font-display font-bold text-white mb-2">Message Sent!</h3>
-                      <p className="text-sm text-graphite-400">We'll get back to you as soon as possible.</p>
+                      <h3 className="text-xl font-display font-bold text-gray-900 mb-2">Message Sent!</h3>
+                      <p className="text-sm text-gray-600">We'll get back to you as soon as possible.</p>
                     </motion.div>
                   ) : (
                     <>
                       <div className="space-y-2">
-                        <label htmlFor="support-email" className="block text-xs font-bold uppercase tracking-wider text-brand/90">
+                        <label htmlFor="support-email" className="block text-xs font-bold uppercase tracking-wider text-gray-700">
                           Your Email
                         </label>
                         <input
@@ -797,12 +799,13 @@ export function LoginForm() {
                           placeholder="your.email@example.com"
                           value={supportEmail}
                           onChange={(e) => setSupportEmail(e.target.value)}
-                          className="w-full h-11 px-4 text-sm bg-graphite-900/80 text-white border-2 border-graphite-700 rounded-xl placeholder:text-graphite-500 focus:outline-none focus:ring-4 focus:ring-brand/10 focus:border-brand/60 transition-all duration-300"
+                          className="w-full h-11 px-4 text-sm bg-white text-gray-900 border-2 rounded-xl placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-graphite-100 transition-all duration-300"
+                          style={{ borderColor: 'rgba(204, 255, 0, 0.2)' }}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label htmlFor="support-message" className="block text-xs font-bold uppercase tracking-wider text-brand/90">
+                        <label htmlFor="support-message" className="block text-xs font-bold uppercase tracking-wider text-gray-700">
                           Message
                         </label>
                         <textarea
@@ -811,7 +814,8 @@ export function LoginForm() {
                           placeholder="Describe the issue you're facing..."
                           value={supportMessage}
                           onChange={(e) => setSupportMessage(e.target.value)}
-                          className="w-full px-4 py-3 text-sm bg-graphite-900/80 text-white border-2 border-graphite-700 rounded-xl placeholder:text-graphite-500 focus:outline-none focus:ring-4 focus:ring-brand/10 focus:border-brand/60 transition-all duration-300 resize-none"
+                          className="w-full px-4 py-3 text-sm bg-white text-gray-900 border-2 rounded-xl placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-graphite-100 transition-all duration-300 resize-none"
+                          style={{ borderColor: 'rgba(204, 255, 0, 0.2)' }}
                         />
                       </div>
                     </>
@@ -820,17 +824,18 @@ export function LoginForm() {
 
                 {/* Modal Footer */}
                 {!emailSent && (
-                  <div className="px-6 py-4 border-t border-brand/10 flex gap-3">
+                  <div className="px-6 py-4 border-t flex gap-3 bg-white" style={{ borderColor: 'rgba(204, 255, 0, 0.15)' }}>
                     <button
                       onClick={() => setShowContactModal(false)}
-                      className="flex-1 px-4 py-3 rounded-xl border-2 border-graphite-700 text-graphite-300 font-semibold text-sm hover:bg-graphite-900/50 transition-all duration-200"
+                      className="flex-1 px-4 py-3 rounded-xl border-2 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all duration-200"
+                      style={{ borderColor: 'rgba(204, 255, 0, 0.2)' }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSendSupportEmail}
                       disabled={!supportEmail || !supportMessage}
-                      className="flex-1 px-4 py-3 rounded-xl bg-brand hover:bg-brand-hover text-graphite-900 font-bold text-sm shadow-lg shadow-brand/20 hover:shadow-xl hover:shadow-brand/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+                      className="flex-1 px-4 py-3 rounded-xl bg-graphite-800 hover:bg-graphite-900 text-white font-bold text-sm shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
                     >
                       Send Message
                     </button>
@@ -863,18 +868,19 @@ export function LoginForm() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-                className="relative w-full max-w-2xl my-8 bg-white border border-gray-200 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+                className="relative w-full max-w-2xl my-8 bg-white border rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.06),0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+                style={{ borderColor: 'rgba(204, 255, 0, 0.2)' }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+                <div className="flex items-center justify-between px-6 py-5 border-b rounded-t-2xl" style={{ borderColor: 'rgba(204, 255, 0, 0.15)' }}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-graphite-100 flex items-center justify-center">
                       <Building2 className="w-5 h-5 text-graphite-700" strokeWidth={2} />
                     </div>
                     <div>
                       <h2 className="text-lg font-display font-bold text-gray-900">Request a Quote</h2>
-                      <p className="text-xs text-gray-500">Get started with RevOS for your business</p>
+                      <p className="text-xs text-gray-500">Get started with RevvOs for your business</p>
                     </div>
                   </div>
                   <button

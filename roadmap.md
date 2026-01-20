@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This report analyzes the current job card tracking implementations in RevOS and provides research-backed recommendations for creating a more intuitive, modern, and project-management compliant system.
+This report analyzes the current job card tracking implementations in RevvOs and provides research-backed recommendations for creating a more intuitive, modern, and project-management compliant system.
 
 ---
 

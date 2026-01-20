@@ -22,7 +22,7 @@ import { VehicleRegistrySkeleton } from '@/components/ui/skeleton/vehicle-regist
  * Bike Management Page - Vehicle Registry
  *
  * Customer bike registry with ownership, VIN, and engine number tracking.
- * Based on RevOS-features.md specification.
+ * Based on RevvOs-features.md specification.
  */
 
 interface VehicleData {

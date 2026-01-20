@@ -2,7 +2,7 @@
 
 ## Overview
 
-The job card management system has been successfully implemented for RevOS. This comprehensive system allows garages to track service jobs from creation to delivery, including time tracking, parts management, and status history.
+The job card management system has been successfully implemented for RevvOs. This comprehensive system allows garages to track service jobs from creation to delivery, including time tracking, parts management, and status history.
 
 ## What Has Been Implemented
 
@@ -125,7 +125,7 @@ The job card management system has been successfully implemented for RevOS. This
 psql -h db.xxx.supabase.co -U postgres -d postgres
 
 # Run the migration
-\i /home/jitin-m-nair/Desktop/RevOS/prisma/migrations/create_job_cards_system.sql
+\i /home/jitin-m-nair/Desktop/RevvOs/prisma/migrations/create_job_cards_system.sql
 ```
 
 Or use the Supabase dashboard:
@@ -359,7 +359,7 @@ Before going live, verify:
 ## File Structure
 
 ```
-RevOS/
+RevvOs/
 ├── prisma/
 │   └── migrations/
 │       └── create_job_cards_system.sql       # Database schema
@@ -398,6 +398,6 @@ For issues or questions:
 
 ## Credits
 
-Built for RevOS Automotive Garage Management System
+Built for RevvOs Automotive Garage Management System
 Following existing codebase patterns and design system
 Production-ready implementation with full type safety

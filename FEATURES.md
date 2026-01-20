@@ -1,6 +1,6 @@
-# RevOS Features
+# RevvOs Features
 
-Complete feature list for the RevOS Automotive Garage Management System.
+Complete feature list for the RevvOs Automotive Garage Management System.
 
 > **Last Updated:** January 2026
 > **Version:** 1.0
@@ -324,6 +324,6 @@ For feature-specific documentation:
 
 ---
 
-**RevOS** - Automotive Garage Management System
+**RevvOs** - Automotive Garage Management System
 **Version:** 1.0.0
 **Last Updated:** January 2026

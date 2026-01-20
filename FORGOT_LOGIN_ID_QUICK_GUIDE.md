@@ -116,11 +116,11 @@ import { ForgotLoginIdModal } from '@/components/auth/forgot-login-id-modal'
 ## 📧 Email Template
 
 ```
-Subject: Your RevOS Login ID
+Subject: Your RevvOs Login ID
 
 Hello [User Name],
 
-You recently requested to retrieve your login ID for RevOS.
+You recently requested to retrieve your login ID for RevvOs.
 
 Your Login ID: [LOGIN_ID]
 
@@ -129,7 +129,7 @@ You can use this login ID to sign in to your account.
 If you didn't request this information, please ignore this email.
 
 Best regards,
-The RevOS Team
+The RevvOs Team
 ```
 
 ## 🧪 Testing Checklist

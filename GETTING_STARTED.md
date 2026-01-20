@@ -1,6 +1,6 @@
-# Getting Started with RevOS
+# Getting Started with RevvOs
 
-Quick start guide to set up and run RevOS locally.
+Quick start guide to set up and run RevvOs locally.
 
 > **Last Updated:** January 2026
 > **Version:** 1.0
@@ -396,7 +396,7 @@ For issues or questions:
 1. Check the troubleshooting section above
 2. Search existing GitHub issues
 3. Create a new issue with details
-4. Contact the RevOS team
+4. Contact the RevvOs team
 
 ---
 
@@ -425,7 +425,7 @@ For issues or questions:
 
 ---
 
-**RevOS** - Automotive Garage Management System
+**RevvOs** - Automotive Garage Management System
 **Version:** 1.0.0
 **Last Updated:** January 2026
 

@@ -1,7 +1,7 @@
 /**
- * Login logo/brand header component - RevOS Branding
+ * Login logo/brand header component - RevvOs Branding
  *
- * Displays the RevOS branding with simple "R" logo
+ * Displays the RevvOs branding with simple "R" logo
  */
 export function LoginLogo() {
   return (
@@ -15,7 +15,7 @@ export function LoginLogo() {
 
       {/* Product Name */}
       <h1 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight mb-2">
-        RevOS
+        RevvOs
       </h1>
 
       {/* Tagline */}

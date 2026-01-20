@@ -1,6 +1,6 @@
-# RevOS Documentation Index
+# RevvOs Documentation Index
 
-Complete index of all RevOS documentation.
+Complete index of all RevvOs documentation.
 
 > **Last Updated:** January 2026
 
@@ -90,7 +90,7 @@ Located in `/design-language/` directory:
 | Document | Description |
 |----------|-------------|
 | `docs/SMART_DROPDOWN_SORTING.md` | Smart sorting implementation |
-| `RevOS-features.md` | Original feature specifications document |
+| `RevvOs-features.md` | Original feature specifications document |
 
 ---
 
@@ -353,7 +353,7 @@ Found an error or outdated information?
 
 ---
 
-**RevOS** - Automotive Garage Management System
+**RevvOs** - Automotive Garage Management System
 **Version:** 1.0.0
 **Documentation Last Updated:** January 2026
 

@@ -6,8 +6,8 @@ import { useSidebar } from './sidebar'
 /**
  * Sidebar Logo Component
  *
- * Displays the RevOS logo with smooth animations:
- * - Icon-only when collapsed
+ * Displays the RevvOs logo with smooth animations:
+ * - Icon-only when collapsed (centered like nav icons)
  * - Icon + text when expanded
  * - Simple, clean fade transitions
  */
@@ -17,7 +17,10 @@ export function SidebarLogo() {
   return (
     <a
       href="/"
-      className="relative z-20 flex items-center text-sm font-normal text-graphite-900 group"
+      className={cn(
+        "relative z-20 flex items-center text-sm font-normal text-graphite-900 group transition-all duration-300",
+        open ? "justify-start" : "justify-center w-12"
+      )}
     >
       <div className="h-8 w-8 shrink-0 rounded-lg bg-graphite-900 flex items-center justify-center shadow-lg shadow-graphite-900/20 group-hover:shadow-graphite-900/40 transition-shadow duration-300">
         <span className="text-brand font-bold text-xl">R</span>
@@ -32,7 +35,7 @@ export function SidebarLogo() {
           opacity: open ? 1 : 0,
         }}
       >
-        RevOS
+        RevvOs
       </span>
     </a>
   )

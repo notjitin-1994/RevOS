@@ -29,7 +29,7 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'RevOS - Login',
+  title: 'RevvOs - Login',
   description: 'Automotive SaaS Platform - Login to your account',
   icons: {
     icon: '/icon.svg',

@@ -11,6 +11,7 @@ import {
   Loader2,
   AlertCircle,
   Plus,
+  Minus,
   X,
   Search,
   Calendar,
@@ -23,7 +24,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Car,
-  Tool,
   CalendarCheck,
   ClipboardCheck,
   Eye,
@@ -34,12 +34,54 @@ import {
   Scan,
   Settings2,
   ChevronDown,
+  GripVertical,
+  Filter,
+  MoreHorizontal,
+  Copy,
+  Link2,
+  Unlink,
+  Square,
+  CheckSquare,
+  Zap,
+  Timer,
+  TrendingUp,
+  Circle,
+  Ban,
+  PlayCircle,
+  PauseCircle,
+  RotateCcw,
+  Package,
+  Tag,
+  Layers,
+  Command,
+  Sparkles,
+  Flame,
+  ArrowUpDown,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { createJobCardAction } from '@/app/actions/job-card-actions'
 import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
-import { createCustomerAction, type CreateCustomerInput } from '@/app/actions/customer-actions'
+import { createCustomerAction, addVehicleToCustomerAction, type CreateCustomerInput, type CreateVehicleInput } from '@/app/actions/customer-actions'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
 
 // ============================================================================
@@ -63,6 +105,8 @@ interface VehicleData {
   licensePlate: string
   color?: string
   vin?: string
+  engineNumber?: string
+  chassisNumber?: string
   currentMileage?: number
 }
 
@@ -82,12 +126,543 @@ interface ChecklistItem {
   estimatedMinutes: number
   laborRate: number
   displayOrder: number
+  subtasks?: Subtask[]
+  linkedToCustomerIssues?: number[] // indices of customerReportIssues
+  linkedToServiceScope?: number[] // indices of workRequestedItems
+  linkedToTechnicalDiagnosis?: number[] // indices of technicalDiagnosisItems
+}
+
+// ============================================================================
+// ENHANCED TASK MANAGEMENT SYSTEM TYPES
+// ============================================================================
+
+interface Subtask {
+  id: string
+  name: string
+  description?: string
+  estimatedMinutes: number
+  completed: boolean
+  displayOrder: number
+}
+
+interface EnhancedTask {
+  id: string
+  name: string
+  description: string
+  category: 'Engine' | 'Electrical' | 'Body' | 'Maintenance' | 'Diagnostic' | 'Custom'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  estimatedMinutes: number
+  laborRate: number
+  status: 'pending' | 'in-progress' | 'completed' | 'blocked'
+  progress: number
+  displayOrder: number
+  linkedToIssues: number[] // indices of customerReportIssues
+  linkedToServiceItems: number[] // indices of workRequestedItems
+  tags: string[]
+  subtasks: Subtask[]
+  createdAt: number
+}
+
+type TaskCategory = 'Engine' | 'Electrical' | 'Body' | 'Maintenance' | 'Diagnostic' | 'Custom'
+type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'blocked'
+type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+interface TaskTemplate extends Omit<EnhancedTask, 'status' | 'progress' | 'displayOrder' | 'linkedToIssues' | 'linkedToServiceItems' | 'createdAt'> {
+  isTemplate: true
+}
+
+type FilterType = 'all' | 'linked' | 'unlinked' | 'high-priority' | 'overdue'
+type SortType = 'name' | 'category' | 'priority' | 'time' | 'status'
+
+// ============================================================================
+// TASK REPOSITORY - Pre-built task templates for automotive services
+// ============================================================================
+
+const TASK_REPOSITORY: TaskTemplate[] = [
+  // ENGINE TASKS
+  {
+    id: 'template-engine-oil-change',
+    isTemplate: true,
+    name: 'Oil Change & Filter Replacement',
+    description: 'Complete oil change with filter replacement and fluid level check',
+    category: 'Engine',
+    priority: 'medium',
+    estimatedMinutes: 30,
+    laborRate: 500,
+    tags: ['engine', 'maintenance', 'routine'],
+    subtasks: [
+      { id: 'st-1', name: 'Drain old oil', description: 'Drain engine oil completely', estimatedMinutes: 10, completed: false, displayOrder: 1 },
+      { id: 'st-2', name: 'Replace oil filter', description: 'Remove old filter and install new one', estimatedMinutes: 5, completed: false, displayOrder: 2 },
+      { id: 'st-3', name: 'Refill with fresh oil', description: 'Add recommended oil grade and quantity', estimatedMinutes: 10, completed: false, displayOrder: 3 },
+      { id: 'st-4', name: 'Check fluid levels', description: 'Verify oil level and check for leaks', estimatedMinutes: 5, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-engine-tune-up',
+    isTemplate: true,
+    name: 'Engine Tune-Up',
+    description: 'Comprehensive engine tune-up including spark plugs, air filter, and fuel system',
+    category: 'Engine',
+    priority: 'high',
+    estimatedMinutes: 120,
+    laborRate: 600,
+    tags: ['engine', 'maintenance', 'fuel-system'],
+    subtasks: [
+      { id: 'st-5', name: 'Replace spark plugs', description: 'Remove old plugs and install new ones', estimatedMinutes: 45, completed: false, displayOrder: 1 },
+      { id: 'st-6', name: 'Clean/replace air filter', description: 'Inspect and replace air filter if needed', estimatedMinutes: 15, completed: false, displayOrder: 2 },
+      { id: 'st-7', name: 'Check ignition timing', description: 'Verify and adjust ignition timing', estimatedMinutes: 30, completed: false, displayOrder: 3 },
+      { id: 'st-8', name: 'Clean fuel injectors', description: 'Perform fuel system cleaning', estimatedMinutes: 30, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-engine-timing-chain',
+    isTemplate: true,
+    name: 'Timing Chain/Belt Replacement',
+    description: 'Replace timing chain or belt and associated components',
+    category: 'Engine',
+    priority: 'urgent',
+    estimatedMinutes: 240,
+    laborRate: 700,
+    tags: ['engine', 'critical', 'timing'],
+    subtasks: [
+      { id: 'st-9', name: 'Remove covers and accessories', description: 'Remove necessary components to access timing chain', estimatedMinutes: 60, completed: false, displayOrder: 1 },
+      { id: 'st-10', name: 'Replace timing chain/belt', description: 'Install new timing chain or belt', estimatedMinutes: 90, completed: false, displayOrder: 2 },
+      { id: 'st-11', name: 'Replace tensioner and guides', description: 'Install new tensioner and guide components', estimatedMinutes: 45, completed: false, displayOrder: 3 },
+      { id: 'st-12', name: 'Set timing and verify', description: 'Properly time the engine and verify operation', estimatedMinutes: 45, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-engine-gasket-set',
+    isTemplate: true,
+    name: 'Cylinder Head Gasket Replacement',
+    description: 'Replace cylinder head gasket and resurface head if needed',
+    category: 'Engine',
+    priority: 'urgent',
+    estimatedMinutes: 300,
+    laborRate: 800,
+    tags: ['engine', 'critical', 'gasket'],
+    subtasks: [
+      { id: 'st-13', name: 'Drain fluids and disconnect', description: 'Prepare engine for disassembly', estimatedMinutes: 60, completed: false, displayOrder: 1 },
+      { id: 'st-14', name: 'Remove cylinder head', description: 'Carefully remove head and inspect', estimatedMinutes: 90, completed: false, displayOrder: 2 },
+      { id: 'st-15', name: 'Resurface head', description: 'Machine head surface if necessary', estimatedMinutes: 60, completed: false, displayOrder: 3 },
+      { id: 'st-16', name: 'Install new gasket and reassemble', description: 'Install new gasket and reassemble engine', estimatedMinutes: 90, completed: false, displayOrder: 4 },
+    ]
+  },
+
+  // ELECTRICAL TASKS
+  {
+    id: 'template-electrical-battery',
+    isTemplate: true,
+    name: 'Battery Replacement & Charging System Test',
+    description: 'Replace battery and test charging system performance',
+    category: 'Electrical',
+    priority: 'high',
+    estimatedMinutes: 30,
+    laborRate: 400,
+    tags: ['electrical', 'battery', 'charging'],
+    subtasks: [
+      { id: 'st-17', name: 'Test battery and charging system', description: 'Perform complete electrical system test', estimatedMinutes: 15, completed: false, displayOrder: 1 },
+      { id: 'st-18', name: 'Replace battery', description: 'Remove old battery and install new one', estimatedMinutes: 10, completed: false, displayOrder: 2 },
+      { id: 'st-19', name: 'Clean terminals and verify', description: 'Clean terminals and test operation', estimatedMinutes: 5, completed: false, displayOrder: 3 },
+    ]
+  },
+  {
+    id: 'template-electrical-starter',
+    isTemplate: true,
+    name: 'Starter Motor Replacement',
+    description: 'Replace starter motor and test starting system',
+    category: 'Electrical',
+    priority: 'high',
+    estimatedMinutes: 90,
+    laborRate: 550,
+    tags: ['electrical', 'starter', 'diagnostic'],
+    subtasks: [
+      { id: 'st-20', name: 'Diagnose starter issue', description: 'Confirm starter failure', estimatedMinutes: 20, completed: false, displayOrder: 1 },
+      { id: 'st-21', name: 'Remove starter motor', description: 'Disconnect and remove starter', estimatedMinutes: 30, completed: false, displayOrder: 2 },
+      { id: 'st-22', name: 'Install new starter', description: 'Install new or rebuilt starter', estimatedMinutes: 30, completed: false, displayOrder: 3 },
+      { id: 'st-23', name: 'Test starting system', description: 'Verify proper operation', estimatedMinutes: 10, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-electrical-alternator',
+    isTemplate: true,
+    name: 'Alternator Replacement',
+    description: 'Replace alternator and test charging system',
+    category: 'Electrical',
+    priority: 'high',
+    estimatedMinutes: 90,
+    laborRate: 550,
+    tags: ['electrical', 'alternator', 'charging'],
+    subtasks: [
+      { id: 'st-24', name: 'Test alternator output', description: 'Confirm alternator failure', estimatedMinutes: 15, completed: false, displayOrder: 1 },
+      { id: 'st-25', name: 'Remove alternator', description: 'Disconnect and remove alternator', estimatedMinutes: 35, completed: false, displayOrder: 2 },
+      { id: 'st-26', name: 'Install new alternator', description: 'Install new alternator and belt', estimatedMinutes: 30, completed: false, displayOrder: 3 },
+      { id: 'st-27', name: 'Test charging system', description: 'Verify output and battery charging', estimatedMinutes: 10, completed: false, displayOrder: 4 },
+    ]
+  },
+
+  // BODY TASKS
+  {
+    id: 'template-body-paint-scratch',
+    isTemplate: true,
+    name: 'Paint Scratch & Chip Repair',
+    description: 'Repair paint scratches and chips with color matching',
+    category: 'Body',
+    priority: 'low',
+    estimatedMinutes: 120,
+    laborRate: 450,
+    tags: ['body', 'cosmetic', 'paint'],
+    subtasks: [
+      { id: 'st-28', name: 'Clean and prep area', description: 'Clean and sand damaged area', estimatedMinutes: 30, completed: false, displayOrder: 1 },
+      { id: 'st-29', name: 'Apply primer and basecoat', description: 'Apply matching primer and paint', estimatedMinutes: 45, completed: false, displayOrder: 2 },
+      { id: 'st-30', name: 'Apply clearcoat', description: 'Apply clear coat for protection', estimatedMinutes: 30, completed: false, displayOrder: 3 },
+      { id: 'st-31', name: 'Buff and polish', description: 'Wet sand and polish finish', estimatedMinutes: 15, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-body-dent-repair',
+    isTemplate: true,
+    name: 'Dent Repair (Paintless)',
+    description: 'Remove minor dents without affecting original paint',
+    category: 'Body',
+    priority: 'medium',
+    estimatedMinutes: 90,
+    laborRate: 500,
+    tags: ['body', 'cosmetic', 'dent-repair'],
+    subtasks: [
+      { id: 'st-32', name: 'Assess dent damage', description: 'Evaluate if PDR is suitable', estimatedMinutes: 15, completed: false, displayOrder: 1 },
+      { id: 'st-33', name: 'Access dent area', description: 'Gain access to back of dent', estimatedMinutes: 20, completed: false, displayOrder: 2 },
+      { id: 'st-34', name: 'Massage dent out', description: 'Carefully work dent out from behind', estimatedMinutes: 45, completed: false, displayOrder: 3 },
+      { id: 'st-35', name: 'Final touch-up', description: 'Minor finishing and polish', estimatedMinutes: 10, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-body-fairing-replacement',
+    isTemplate: true,
+    name: 'Fairing/Body Panel Replacement',
+    description: 'Replace damaged body panels or fairings',
+    category: 'Body',
+    priority: 'medium',
+    estimatedMinutes: 150,
+    laborRate: 500,
+    tags: ['body', 'panel', 'replacement'],
+    subtasks: [
+      { id: 'st-36', name: 'Remove damaged panel', description: 'Carefully remove fasteners and panel', estimatedMinutes: 45, completed: false, displayOrder: 1 },
+      { id: 'st-37', name: 'Prepare mounting points', description: 'Clean and inspect mounting areas', estimatedMinutes: 30, completed: false, displayOrder: 2 },
+      { id: 'st-38', name: 'Install new panel', description: 'Fit and secure new panel', estimatedMinutes: 60, completed: false, displayOrder: 3 },
+      { id: 'st-39', name: 'Align and adjust', description: 'Ensure proper fit and alignment', estimatedMinutes: 15, completed: false, displayOrder: 4 },
+    ]
+  },
+
+  // MAINTENANCE TASKS
+  {
+    id: 'template-maintenance-brake-pads',
+    isTemplate: true,
+    name: 'Brake Pad Replacement',
+    description: 'Replace front and/or rear brake pads',
+    category: 'Maintenance',
+    priority: 'urgent',
+    estimatedMinutes: 60,
+    laborRate: 500,
+    tags: ['maintenance', 'brakes', 'safety'],
+    subtasks: [
+      { id: 'st-40', name: 'Inspect brake system', description: 'Check pads, rotors, and fluid', estimatedMinutes: 15, completed: false, displayOrder: 1 },
+      { id: 'st-41', name: 'Replace brake pads', description: 'Remove old pads and install new ones', estimatedMinutes: 30, completed: false, displayOrder: 2 },
+      { id: 'st-42', name: 'Bed in new pads', description: 'Properly bed in new brake pads', estimatedMinutes: 15, completed: false, displayOrder: 3 },
+    ]
+  },
+  {
+    id: 'template-maintenance-brake-fluid',
+    isTemplate: true,
+    name: 'Brake Fluid Flush',
+    description: 'Complete brake fluid system flush and refill',
+    category: 'Maintenance',
+    priority: 'high',
+    estimatedMinutes: 45,
+    laborRate: 450,
+    tags: ['maintenance', 'brakes', 'fluid'],
+    subtasks: [
+      { id: 'st-43', name: 'Drain old fluid', description: 'Flush old brake fluid from system', estimatedMinutes: 20, completed: false, displayOrder: 1 },
+      { id: 'st-44', name: 'Refill with fresh fluid', description: 'Add new brake fluid and bleed system', estimatedMinutes: 20, completed: false, displayOrder: 2 },
+      { id: 'st-45', name: 'Test brake operation', description: 'Verify brake feel and operation', estimatedMinutes: 5, completed: false, displayOrder: 3 },
+    ]
+  },
+  {
+    id: 'template-maintenance-chain-service',
+    isTemplate: true,
+    name: 'Chain & Sprocket Service',
+    description: 'Clean, adjust, lubricate chain and inspect sprockets',
+    category: 'Maintenance',
+    priority: 'medium',
+    estimatedMinutes: 30,
+    laborRate: 350,
+    tags: ['maintenance', 'drivetrain', 'routine'],
+    subtasks: [
+      { id: 'st-46', name: 'Clean chain', description: 'Thoroughly clean chain', estimatedMinutes: 10, completed: false, displayOrder: 1 },
+      { id: 'st-47', name: 'Inspect chain and sprockets', description: 'Check for wear and damage', estimatedMinutes: 10, completed: false, displayOrder: 2 },
+      { id: 'st-48', name: 'Adjust and lubricate', description: 'Properly tension and lubricate chain', estimatedMinutes: 10, completed: false, displayOrder: 3 },
+    ]
+  },
+  {
+    id: 'template-maintenance-tire-service',
+    isTemplate: true,
+    name: 'Tire Replacement & Balancing',
+    description: 'Replace tires and balance wheels',
+    category: 'Maintenance',
+    priority: 'high',
+    estimatedMinutes: 90,
+    laborRate: 400,
+    tags: ['maintenance', 'tires', 'safety'],
+    subtasks: [
+      { id: 'st-49', name: 'Remove wheels', description: 'Remove wheels from motorcycle', estimatedMinutes: 30, completed: false, displayOrder: 1 },
+      { id: 'st-50', name: 'Replace tires', description: 'Mount and balance new tires', estimatedMinutes: 45, completed: false, displayOrder: 2 },
+      { id: 'st-51', name: 'Install and torque', description: 'Install wheels and torque properly', estimatedMinutes: 15, completed: false, displayOrder: 3 },
+    ]
+  },
+  {
+    id: 'template-maintenance-air-filter',
+    isTemplate: true,
+    name: 'Air Filter Replacement',
+    description: 'Replace air filter element',
+    category: 'Maintenance',
+    priority: 'low',
+    estimatedMinutes: 20,
+    laborRate: 300,
+    tags: ['maintenance', 'engine', 'routine'],
+    subtasks: [
+      { id: 'st-52', name: 'Remove airbox cover', description: 'Access air filter housing', estimatedMinutes: 5, completed: false, displayOrder: 1 },
+      { id: 'st-53', name: 'Replace air filter', description: 'Install new air filter element', estimatedMinutes: 10, completed: false, displayOrder: 2 },
+      { id: 'st-54', name: 'Reassemble and verify', description: 'Close airbox and check sealing', estimatedMinutes: 5, completed: false, displayOrder: 3 },
+    ]
+  },
+  {
+    id: 'template-maintenance-coolant-flush',
+    isTemplate: true,
+    name: 'Coolant System Flush',
+    description: 'Flush cooling system and refill with fresh coolant',
+    category: 'Maintenance',
+    priority: 'high',
+    estimatedMinutes: 60,
+    laborRate: 450,
+    tags: ['maintenance', 'cooling', 'fluid'],
+    subtasks: [
+      { id: 'st-55', name: 'Drain coolant', description: 'Drain old coolant from system', estimatedMinutes: 20, completed: false, displayOrder: 1 },
+      { id: 'st-56', name: 'Flush system', description: 'Flush with water to remove debris', estimatedMinutes: 15, completed: false, displayOrder: 2 },
+      { id: 'st-57', name: 'Refill with coolant', description: 'Fill with recommended coolant mix', estimatedMinutes: 15, completed: false, displayOrder: 3 },
+      { id: 'st-58', name: 'Bleed system', description: 'Bleed air from cooling system', estimatedMinutes: 10, completed: false, displayOrder: 4 },
+    ]
+  },
+
+  // DIAGNOSTIC TASKS
+  {
+    id: 'template-diagnostic-engine-noise',
+    isTemplate: true,
+    name: 'Engine Noise Diagnosis',
+    description: 'Diagnose unusual engine noises and vibrations',
+    category: 'Diagnostic',
+    priority: 'high',
+    estimatedMinutes: 90,
+    laborRate: 600,
+    tags: ['diagnostic', 'engine', 'troubleshooting'],
+    subtasks: [
+      { id: 'st-59', name: 'Interview customer', description: 'Get details about noise and when it occurs', estimatedMinutes: 15, completed: false, displayOrder: 1 },
+      { id: 'st-60', name: 'Visual inspection', description: 'Check for obvious issues', estimatedMinutes: 20, completed: false, displayOrder: 2 },
+      { id: 'st-61', name: 'Test ride and listen', description: 'Reproduce noise and identify source', estimatedMinutes: 30, completed: false, displayOrder: 3 },
+      { id: 'st-62', name: 'Provide diagnosis and estimate', description: 'Report findings and repair options', estimatedMinutes: 25, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-diagnostic-electrical-issue',
+    isTemplate: true,
+    name: 'Electrical System Diagnosis',
+    description: 'Diagnose electrical issues including shorts, grounds, and component failures',
+    category: 'Diagnostic',
+    priority: 'high',
+    estimatedMinutes: 120,
+    laborRate: 650,
+    tags: ['diagnostic', 'electrical', 'troubleshooting'],
+    subtasks: [
+      { id: 'st-63', name: 'Battery and charging test', description: 'Test battery and charging system', estimatedMinutes: 20, completed: false, displayOrder: 1 },
+      { id: 'st-64', name: 'Visual wiring inspection', description: 'Check for damaged wires and connections', estimatedMinutes: 30, completed: false, displayOrder: 2 },
+      { id: 'st-65', name: 'Circuit testing', description: 'Test affected circuits with multimeter', estimatedMinutes: 40, completed: false, displayOrder: 3 },
+      { id: 'st-66', name: 'Component testing', description: 'Test suspected faulty components', estimatedMinutes: 30, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-diagnostic-vibration',
+    isTemplate: true,
+    name: 'Vibration & Handling Diagnosis',
+    description: 'Diagnose vibration, wobbling, or handling issues',
+    category: 'Diagnostic',
+    priority: 'high',
+    estimatedMinutes: 90,
+    laborRate: 600,
+    tags: ['diagnostic', 'suspension', 'troubleshooting'],
+    subtasks: [
+      { id: 'st-67', name: 'Test ride and assessment', description: 'Ride to reproduce the issue', estimatedMinutes: 30, completed: false, displayOrder: 1 },
+      { id: 'st-68', name: 'Wheel and tire inspection', description: 'Check wheels, tires, and balance', estimatedMinutes: 20, completed: false, displayOrder: 2 },
+      { id: 'st-69', name: 'Suspension inspection', description: 'Check forks, shocks, and bearings', estimatedMinutes: 25, completed: false, displayOrder: 3 },
+      { id: 'st-70', name: 'Frame and alignment check', description: 'Inspect for frame damage or misalignment', estimatedMinutes: 15, completed: false, displayOrder: 4 },
+    ]
+  },
+
+  // CUSTOM TASKS
+  {
+    id: 'template-custom-performance-upgrade',
+    isTemplate: true,
+    name: 'Performance Upgrade Installation',
+    description: 'Install aftermarket performance parts and accessories',
+    category: 'Custom',
+    priority: 'low',
+    estimatedMinutes: 180,
+    laborRate: 700,
+    tags: ['custom', 'upgrade', 'performance'],
+    subtasks: [
+      { id: 'st-71', name: 'Pre-install inspection', description: 'Verify parts compatibility', estimatedMinutes: 30, completed: false, displayOrder: 1 },
+      { id: 'st-72', name: 'Remove stock components', description: 'Remove OEM parts being replaced', estimatedMinutes: 60, completed: false, displayOrder: 2 },
+      { id: 'st-73', name: 'Install performance parts', description: 'Fit and secure new components', estimatedMinutes: 60, completed: false, displayOrder: 3 },
+      { id: 'st-74', name: 'Test and tune', description: 'Test operation and make adjustments', estimatedMinutes: 30, completed: false, displayOrder: 4 },
+    ]
+  },
+  {
+    id: 'template-custom-accessory-install',
+    isTemplate: true,
+    name: 'Accessory Installation',
+    description: 'Install motorcycle accessories (luggage, lights, guards, etc.)',
+    category: 'Custom',
+    priority: 'low',
+    estimatedMinutes: 90,
+    laborRate: 450,
+    tags: ['custom', 'accessory', 'upgrade'],
+    subtasks: [
+      { id: 'st-75', name: 'Review instructions', description: 'Review installation manual', estimatedMinutes: 15, completed: false, displayOrder: 1 },
+      { id: 'st-76', name: 'Prepare mounting points', description: 'Clean and prep installation areas', estimatedMinutes: 20, completed: false, displayOrder: 2 },
+      { id: 'st-77', name: 'Install accessory', description: 'Mount and secure accessory', estimatedMinutes: 45, completed: false, displayOrder: 3 },
+      { id: 'st-78', name: 'Test functionality', description: 'Verify proper operation', estimatedMinutes: 10, completed: false, displayOrder: 4 },
+    ]
+  },
+]
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Calculate task progress based on subtask completion
+ */
+function calculateTaskProgress(subtasks: Subtask[]): number {
+  if (subtasks.length === 0) return 0
+  const completed = subtasks.filter(st => st.completed).length
+  return Math.round((completed / subtasks.length) * 100)
+}
+
+/**
+ * Calculate total estimated time for a task including subtasks
+ */
+function calculateTaskTime(task: EnhancedTask | TaskTemplate): number {
+  const subtaskTime = task.subtasks.reduce((sum, st) => sum + st.estimatedMinutes, 0)
+  return subtaskTime > 0 ? subtaskTime : task.estimatedMinutes
+}
+
+/**
+ * Calculate total cost for a task
+ */
+function calculateTaskCost(task: EnhancedTask | TaskTemplate): number {
+  const time = calculateTaskTime(task)
+  return Math.round((time / 60) * task.laborRate)
+}
+
+/**
+ * Get category icon
+ */
+function getCategoryIcon(category: TaskCategory): React.ReactNode {
+  const icons = {
+    Engine: <Settings className="h-4 w-4" />,
+    Electrical: <Zap className="h-4 w-4" />,
+    Body: <SprayCan className="h-4 w-4" />,
+    Maintenance: <Wrench className="h-4 w-4" />,
+    Diagnostic: <Scan className="h-4 w-4" />,
+    Custom: <Sparkles className="h-4 w-4" />,
+  }
+  return icons[category] || <Package className="h-4 w-4" />
+}
+
+/**
+ * Get status badge styles
+ */
+function getStatusStyles(status: TaskStatus): { bg: string; text: string; icon: React.ReactNode } {
+  const styles = {
+    'pending': { bg: 'bg-gray-100', text: 'text-gray-700', icon: <Circle className="h-3 w-3" /> },
+    'in-progress': { bg: 'bg-blue-100', text: 'text-blue-700', icon: <PlayCircle className="h-3 w-3" /> },
+    'completed': { bg: 'bg-green-100', text: 'text-green-700', icon: <CheckCircle2 className="h-3 w-3" /> },
+    'blocked': { bg: 'bg-red-100', text: 'text-red-700', icon: <Ban className="h-3 w-3" /> },
+  }
+  return styles[status]
+}
+
+/**
+ * Fuzzy search for tasks
+ */
+function searchTasks(tasks: (EnhancedTask | TaskTemplate)[], query: string): (EnhancedTask | TaskTemplate)[] {
+  if (!query.trim()) return tasks
+
+  const lowerQuery = query.toLowerCase()
+  return tasks.filter(task => {
+    const nameMatch = task.name.toLowerCase().includes(lowerQuery)
+    const descMatch = task.description.toLowerCase().includes(lowerQuery)
+    const categoryMatch = task.category.toLowerCase().includes(lowerQuery)
+    return nameMatch || descMatch || categoryMatch
+  })
+}
+
+/**
+ * Filter tasks based on filter type
+ */
+function filterTasks(tasks: EnhancedTask[], filterType: FilterType): EnhancedTask[] {
+  switch (filterType) {
+    case 'all':
+      return tasks
+    case 'linked':
+      return tasks.filter(t => t.linkedToIssues.length > 0 || t.linkedToServiceItems.length > 0)
+    case 'unlinked':
+      return tasks.filter(t => t.linkedToIssues.length === 0 && t.linkedToServiceItems.length === 0)
+    case 'high-priority':
+      return tasks.filter(t => t.priority === 'high' || t.priority === 'urgent')
+    case 'overdue':
+      // For now, return high priority tasks as "overdue"
+      return tasks.filter(t => t.priority === 'urgent')
+    default:
+      return tasks
+  }
+}
+
+/**
+ * Sort tasks based on sort type
+ */
+function sortTasks(tasks: EnhancedTask[], sortType: SortType): EnhancedTask[] {
+  const sorted = [...tasks]
+  switch (sortType) {
+    case 'name':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name))
+    case 'category':
+      return sorted.sort((a, b) => a.category.localeCompare(b.category))
+    case 'priority':
+      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
+      return sorted.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+    case 'time':
+      return sorted.sort((a, b) => calculateTaskTime(b) - calculateTaskTime(a))
+    case 'status':
+      const statusOrder = { blocked: 0, 'in-progress': 1, pending: 2, completed: 3 }
+      return sorted.sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
+    default:
+      return sorted
+  }
 }
 
 type JobType = 'routine' | 'repair' | 'maintenance' | 'custom' | 'diagnostic'
 type Priority = 'low' | 'medium' | 'high' | 'urgent'
 type JobStatus = 'draft' | 'queued'
-type TabValue = 'customer' | 'job-details' | 'tasks' | 'scheduling' | 'review'
+type TabValue = 'customer' | 'job-details' | 'tasks' | 'labor-parts' | 'scheduling' | 'review'
 
 interface CustomerFormData {
   firstName: string
@@ -112,6 +687,7 @@ interface VehicleFormData {
   color: string
   vin: string
   engineNumber: string
+  chassisNumber: string
   mileage: string
   notes: string
 }
@@ -138,6 +714,7 @@ interface TabValidation {
   customer: boolean
   jobDetails: boolean
   tasks: boolean
+  laborParts: boolean
   scheduling: boolean
   review: boolean
 }
@@ -160,8 +737,9 @@ export default function CreateJobCardPage() {
   const [tabValidation, setTabValidation] = useState<TabValidation>({
     customer: false,
     jobDetails: false,
-    tasks: true,
-    scheduling: true,
+    tasks: false,
+    laborParts: false,
+    scheduling: false,
     review: false,
   })
 
@@ -178,6 +756,8 @@ export default function CreateJobCardPage() {
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false)
   const [customerModalError, setCustomerModalError] = useState<string | null>(null)
   const [customerModalSuccess, setCustomerModalSuccess] = useState(false)
+  const [modalMode, setModalMode] = useState<'create' | 'add-vehicle'>('create')
+  const [newlyAddedVehicleId, setNewlyAddedVehicleId] = useState<string | null>(null)
   const [makesData, setMakesData] = useState<MakeData[]>([])
   const [isLoadingMakes, setIsLoadingMakes] = useState(true)
 
@@ -204,6 +784,7 @@ export default function CreateJobCardPage() {
     color: '',
     vin: '',
     engineNumber: '',
+    chassisNumber: '',
     mileage: '',
     notes: '',
   }])
@@ -215,12 +796,14 @@ export default function CreateJobCardPage() {
   // Job details states
   const [jobType, setJobType] = useState<JobType>('repair')
   const [priority, setPriority] = useState<Priority>('medium')
-  const [initialStatus, setInitialStatus] = useState<JobStatus>('draft')
-  const [customerComplaint, setCustomerComplaint] = useState('')
-  const [workRequested, setWorkRequested] = useState('')
+  const [customerReportIssues, setCustomerReportIssues] = useState<string[]>([])
+  const [currentReportIssue, setCurrentReportIssue] = useState('')
+  const [workRequestedItems, setWorkRequestedItems] = useState<string[]>([])
+  const [currentWorkRequested, setCurrentWorkRequested] = useState('')
   const [customerNotes, setCustomerNotes] = useState('')
   const [currentMileage, setCurrentMileage] = useState('')
-  const [reportedIssue, setReportedIssue] = useState('')
+  const [technicalDiagnosisItems, setTechnicalDiagnosisItems] = useState<string[]>([])
+  const [currentTechnicalDiagnosis, setCurrentTechnicalDiagnosis] = useState('')
   const [internalNotes, setInternalNotes] = useState('')
 
   // Scheduling states
@@ -240,7 +823,22 @@ export default function CreateJobCardPage() {
     estimatedMinutes: 30,
     laborRate: 500,
     displayOrder: 1,
+    subtasks: [],
+    linkedToCustomerIssues: [],
+    linkedToServiceScope: [],
+    linkedToTechnicalDiagnosis: [],
   })
+
+  // Parts state
+  const [selectedParts, setSelectedParts] = useState<Array<{
+    id: string
+    partId: string | null
+    partName: string
+    partNumber: string | null
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+  }>>([])
 
   // ============================================================================
   // EFFECTS
@@ -266,16 +864,41 @@ export default function CreateJobCardPage() {
     }
   }, [selectedCustomer])
 
-  // Update validation state when form data changes
+  // Update tab validation state based on form data and navigation
+  // This ensures required tabs (Customer, Details) are validated based on actual data
+  // and optional tabs (Tasks, Scheduling) are marked complete when visited
   useEffect(() => {
-    setTabValidation({
-      customer: !!selectedCustomer && !!selectedVehicle,
-      jobDetails: !!jobType && !!priority && customerComplaint.trim() !== '' && workRequested.trim() !== '',
-      tasks: true,
-      scheduling: true,
-      review: false,
+    setTabValidation(prev => {
+      // Calculate validation state for required tabs based on form data
+      const customerValid = !!selectedCustomer && !!selectedVehicle
+      const jobDetailsValid = !!jobType && !!priority && customerReportIssues.length > 0 && workRequestedItems.length > 0
+
+      // Debug logging (can be removed in production)
+      console.log('[Tab Validation]', {
+        activeTab,
+        customerValid,
+        jobDetailsValid,
+        jobType,
+        priority,
+        customerReportIssuesCount: customerReportIssues.length,
+        workRequestedItemsCount: workRequestedItems.length,
+      })
+
+      return {
+        // Preserve form-based validation for required tabs
+        customer: customerValid,
+        jobDetails: jobDetailsValid,
+        // Mark tasks as complete when visited (optional tab)
+        tasks: activeTab === 'tasks' || activeTab === 'labor-parts' || activeTab === 'scheduling' || activeTab === 'review' ? true : prev.tasks,
+        // Mark labor-parts as complete when visited (optional tab)
+        laborParts: activeTab === 'labor-parts' || activeTab === 'scheduling' || activeTab === 'review' ? true : prev.laborParts,
+        // Mark scheduling as complete when visited (optional tab)
+        scheduling: activeTab === 'scheduling' || activeTab === 'review' ? true : prev.scheduling,
+        // Mark review as complete only when all required tabs are complete
+        review: activeTab === 'review' && customerValid && jobDetailsValid ? true : prev.review,
+      }
     })
-  }, [selectedCustomer, selectedVehicle, jobType, priority, customerComplaint, workRequested])
+  }, [activeTab, selectedCustomer, selectedVehicle, jobType, priority, customerReportIssues, workRequestedItems])
 
   // ============================================================================
   // DATA LOADING
@@ -354,22 +977,39 @@ export default function CreateJobCardPage() {
   }, [selectedCustomer, selectedVehicle])
 
   const validateJobDetailsTab = useCallback((): boolean => {
-    if (!customerComplaint.trim()) {
-      setTabErrors(prev => ({ ...prev, jobDetails: 'Customer complaint is required' }))
+    if (customerReportIssues.length === 0) {
+      setTabErrors(prev => ({ ...prev, jobDetails: 'At least one customer reported issue is required' }))
       return false
     }
-    if (!workRequested.trim()) {
-      setTabErrors(prev => ({ ...prev, jobDetails: 'Work requested is required' }))
+    if (workRequestedItems.length === 0) {
+      setTabErrors(prev => ({ ...prev, jobDetails: 'At least one service scope item is required' }))
       return false
     }
     setTabErrors(prev => ({ ...prev, jobDetails: '' }))
     return true
-  }, [customerComplaint, workRequested])
+  }, [customerReportIssues, workRequestedItems])
 
   const validateTasksTab = useCallback((): boolean => {
+    // Check if all tasks are linked to at least one item
+    const unlinkedTasks = checklistItems.filter(item => {
+      const hasLinks =
+        (item.linkedToCustomerIssues?.length || 0) +
+        (item.linkedToServiceScope?.length || 0) +
+        (item.linkedToTechnicalDiagnosis?.length || 0)
+      return hasLinks === 0
+    })
+
+    if (unlinkedTasks.length > 0) {
+      setTabErrors(prev => ({
+        ...prev,
+        tasks: `All tasks must be linked to at least one customer issue, service scope item, or diagnosis item. ${unlinkedTasks.length} task(s) not linked.`
+      }))
+      return false
+    }
+
     setTabErrors(prev => ({ ...prev, tasks: '' }))
     return true
-  }, [])
+  }, [checklistItems])
 
   const validateSchedulingTab = useCallback((): boolean => {
     setTabErrors(prev => ({ ...prev, scheduling: '' }))
@@ -402,8 +1042,68 @@ export default function CreateJobCardPage() {
     if (activeTab === 'job-details' && value !== 'job-details') {
       if (!validateJobDetailsTab()) return
     }
+    if (activeTab === 'tasks' && value !== 'tasks') {
+      if (!validateTasksTab()) return
+    }
 
     setActiveTab(value as TabValue)
+  }
+
+  // Check if a tab is accessible based on completed tabs
+  const isTabAccessible = (tabValue: string): boolean => {
+    const tabIndex = tabs.findIndex(t => t.value === tabValue)
+    const activeIndex = tabs.findIndex(t => t.value === activeTab)
+
+    // Can always go back to previous tabs
+    if (tabIndex < activeIndex) return true
+
+    // Can always stay on current tab
+    if (tabIndex === activeIndex) return true
+
+    // Can only move forward if current tab is validated
+    if (tabIndex === activeIndex + 1) {
+      // Map active tab value to validation state key (handle hyphen-to-camelCase conversion)
+      const validationKey = activeTab === 'job-details' ? 'jobDetails' :
+                          activeTab === 'labor-parts' ? 'laborParts' :
+                          activeTab as keyof TabValidation
+      return tabValidation[validationKey]
+    }
+
+    // Cannot skip tabs
+    return false
+  }
+
+  // Get tab status for styling
+  const getTabStatus = (tabValue: string) => {
+    if (activeTab === tabValue) return 'active'
+
+    // Map tab value to validation state key (handle hyphen-to-camelCase conversion)
+    const validationKey = tabValue === 'job-details' ? 'jobDetails' :
+                        tabValue === 'labor-parts' ? 'laborParts' :
+                        tabValue as keyof TabValidation
+
+    if (tabValidation[validationKey]) return 'complete'
+    if (isTabAccessible(tabValue)) return 'accessible'
+    return 'inaccessible'
+  }
+
+  // Get the message for inaccessible tabs
+  const getTabAccessibilityMessage = (tabValue: string): string | undefined => {
+    const status = getTabStatus(tabValue)
+    if (status !== 'inaccessible') return undefined
+
+    const tabIndex = tabs.findIndex(t => t.value === tabValue)
+    const activeIndex = tabs.findIndex(t => t.value === activeTab)
+
+    // Find the first incomplete tab before this one
+    for (let i = activeIndex; i < tabIndex; i++) {
+      const tab = tabs[i]
+      if (!tabValidation[tab.value as keyof TabValidation]) {
+        return `Complete ${tab.label} section first`
+      }
+    }
+
+    return undefined
   }
 
   const handleCustomerSelect = (customerId: string) => {
@@ -429,6 +1129,10 @@ export default function CreateJobCardPage() {
       estimatedMinutes: 30,
       laborRate: 500,
       displayOrder: checklistItems.length + 2,
+      subtasks: [],
+      linkedToCustomerIssues: [],
+      linkedToServiceScope: [],
+      linkedToTechnicalDiagnosis: [],
     })
     setError(null)
   }
@@ -437,8 +1141,49 @@ export default function CreateJobCardPage() {
     setChecklistItems(checklistItems.filter(item => item.id !== id))
   }
 
+  const handleAddReportIssue = () => {
+    if (!currentReportIssue.trim()) {
+      return
+    }
+
+    setCustomerReportIssues([...customerReportIssues, currentReportIssue.trim()])
+    setCurrentReportIssue('')
+  }
+
+  const handleRemoveReportIssue = (index: number) => {
+    setCustomerReportIssues(customerReportIssues.filter((_, i) => i !== index))
+  }
+
+  const handleAddWorkRequested = () => {
+    if (!currentWorkRequested.trim()) {
+      return
+    }
+
+    setWorkRequestedItems([...workRequestedItems, currentWorkRequested.trim()])
+    setCurrentWorkRequested('')
+  }
+
+  const handleRemoveWorkRequested = (index: number) => {
+    setWorkRequestedItems(workRequestedItems.filter((_, i) => i !== index))
+  }
+
+  const handleAddTechnicalDiagnosis = () => {
+    if (!currentTechnicalDiagnosis.trim()) {
+      return
+    }
+
+    setTechnicalDiagnosisItems([...technicalDiagnosisItems, currentTechnicalDiagnosis.trim()])
+    setCurrentTechnicalDiagnosis('')
+  }
+
+  const handleRemoveTechnicalDiagnosis = (index: number) => {
+    setTechnicalDiagnosisItems(technicalDiagnosisItems.filter((_, i) => i !== index))
+  }
+
   // Customer Modal Handlers (preserved from original)
   const handleOpenCustomerModal = () => {
+    // If a customer is already selected, open modal in "add vehicle" mode
+    setModalMode(selectedCustomer ? 'add-vehicle' : 'create')
     setShowCustomerModal(true)
     setCustomerModalError(null)
     setCustomerModalSuccess(false)
@@ -471,6 +1216,7 @@ export default function CreateJobCardPage() {
         color: '',
         vin: '',
         engineNumber: '',
+        chassisNumber: '',
         mileage: '',
         notes: '',
       }])
@@ -529,6 +1275,7 @@ export default function CreateJobCardPage() {
         color: '',
         vin: '',
         engineNumber: '',
+        chassisNumber: '',
         mileage: '',
         notes: '',
       },
@@ -542,6 +1289,20 @@ export default function CreateJobCardPage() {
   }
 
   const validateCustomerForm = (): string | null => {
+    // When adding a vehicle, only validate vehicle fields
+    if (modalMode === 'add-vehicle') {
+      const hasValidVehicle = customerVehicles.some(
+        v => v.make && v.model && v.year && v.licensePlate.trim()
+      )
+
+      if (!hasValidVehicle) {
+        return 'Please add at least one vehicle with make, model, year, and license plate'
+      }
+
+      return null
+    }
+
+    // When creating a new customer, validate all fields
     if (!customerFormData.firstName.trim()) return 'First name is required'
     if (!customerFormData.lastName.trim()) return 'Last name is required'
     if (!customerFormData.email.trim()) return 'Email is required'
@@ -583,13 +1344,83 @@ export default function CreateJobCardPage() {
     try {
       const sessionUser = sessionStorage.getItem('user')
       if (!sessionUser) {
-        throw new Error('User not authenticated')
+        setCustomerModalError('User not authenticated')
+        setIsCreatingCustomer(false)
+        return
       }
 
-      const currentUser = JSON.parse(sessionUser)
-      const garageId = currentUser.garageId
+      const parsedUser = JSON.parse(sessionUser)
+      const garageId = parsedUser.garageId || parsedUser.garage_id
 
       if (!garageId) {
+        setCustomerModalError('Garage ID not found')
+        setIsCreatingCustomer(false)
+        return
+      }
+
+      // If in add-vehicle mode, add vehicle to existing customer
+      if (modalMode === 'add-vehicle' && selectedCustomer) {
+        let newlyAddedVehicleId: string | undefined
+
+        for (const vehicle of customerVehicles) {
+          const vehicleData = {
+            make: vehicle.make,
+            model: vehicle.model,
+            year: parseInt(vehicle.year),
+            licensePlate: vehicle.licensePlate,
+            color: vehicle.color || undefined,
+            vin: vehicle.vin || undefined,
+            engineNumber: vehicle.engineNumber || undefined,
+            chassisNumber: vehicle.chassisNumber || undefined,
+            category: vehicle.category || undefined,
+            currentMileage: vehicle.mileage ? parseInt(vehicle.mileage) : undefined,
+            notes: vehicle.notes || undefined,
+          }
+
+          const result = await addVehicleToCustomerAction(selectedCustomer.id, garageId, vehicleData)
+
+          if (!result.success) {
+            setCustomerModalError(result.error || 'Failed to add vehicle')
+            setIsCreatingCustomer(false)
+            return
+          }
+
+          // Store the newly added vehicle ID
+          if (result.vehicleData?.id) {
+            newlyAddedVehicleId = result.vehicleData.id
+          }
+        }
+
+        // Reload customers to get updated vehicle list
+        await loadCustomers()
+
+        // Auto-select the newly added vehicle
+        if (newlyAddedVehicleId) {
+          const updatedCustomer = customers.find(c => c.id === selectedCustomer.id)
+          if (updatedCustomer) {
+            const newVehicle = updatedCustomer.vehicles.find(v => v.id === newlyAddedVehicleId)
+            if (newVehicle) {
+              setSelectedVehicle(newVehicle)
+              setNewlyAddedVehicleId(newlyAddedVehicleId) // Track newly added vehicle for highlight animation
+
+              // Clear the highlight after animation
+              setTimeout(() => setNewlyAddedVehicleId(null), 3000)
+            }
+          }
+        }
+
+        setCustomerModalSuccess(true)
+        setTimeout(() => {
+          handleCloseCustomerModal()
+        }, 1500)
+        return
+      }
+
+      // Original customer creation logic
+      const currentUser = JSON.parse(sessionUser)
+      const userGarageId = currentUser.garageId
+
+      if (!userGarageId) {
         throw new Error('Invalid user session')
       }
 
@@ -603,6 +1434,7 @@ export default function CreateJobCardPage() {
           color: v.color || undefined,
           vin: v.vin || undefined,
           engineNumber: v.engineNumber || undefined,
+          chassisNumber: v.chassisNumber || undefined,
           currentMileage: v.mileage ? parseInt(v.mileage) : undefined,
           notes: v.notes || undefined,
         }))
@@ -614,7 +1446,7 @@ export default function CreateJobCardPage() {
       }
 
       const customerData: CreateCustomerInput = {
-        garageId,
+        garageId: userGarageId,
         firstName: customerFormData.firstName,
         lastName: customerFormData.lastName,
         email: customerFormData.email,
@@ -657,19 +1489,29 @@ export default function CreateJobCardPage() {
   const calculateEstimatedCosts = useCallback(() => {
     let totalLaborMinutes = 0
     let totalLaborCost = 0
+    let totalPartsCost = 0
 
     checklistItems.forEach(item => {
       totalLaborMinutes += item.estimatedMinutes
       totalLaborCost += (item.estimatedMinutes / 60) * item.laborRate
     })
 
+    selectedParts.forEach(part => {
+      totalPartsCost += part.totalPrice
+    })
+
+    const totalCost = totalLaborCost + totalPartsCost
+
     return {
       totalLaborMinutes,
       totalLaborHours: (totalLaborMinutes / 60).toFixed(1),
       totalLaborCost: totalLaborCost.toFixed(2),
-      totalCost: totalLaborCost.toFixed(2),
+      totalPartsCost: totalPartsCost.toFixed(2),
+      totalCost: totalCost.toFixed(2),
+      taskCount: checklistItems.length,
+      partsCount: selectedParts.length,
     }
-  }, [checklistItems])
+  }, [checklistItems, selectedParts])
 
   const handleSubmit = async (e: React.FormEvent, saveAsDraft: boolean = false) => {
     e.preventDefault()
@@ -700,12 +1542,12 @@ export default function CreateJobCardPage() {
         vehicleId: selectedVehicle!.id,
         jobType,
         priority,
-        status: saveAsDraft ? 'draft' : initialStatus,
-        customerComplaint,
-        workRequested,
+        status: saveAsDraft ? 'draft' : 'queued',
+        customerComplaint: customerReportIssues.join(' | '),
+        workRequested: workRequestedItems.join(' | '),
         customerNotes: customerNotes || undefined,
         currentMileage: currentMileage ? parseInt(currentMileage) : undefined,
-        reportedIssue: reportedIssue || undefined,
+        reportedIssue: technicalDiagnosisItems.length > 0 ? technicalDiagnosisItems.join(' | ') : undefined,
         promisedDate: promisedDate || undefined,
         promisedTime: promisedTime || undefined,
         leadMechanicId: leadMechanicId || undefined,
@@ -728,6 +1570,14 @@ export default function CreateJobCardPage() {
           mechanicNotes: null,
           notes: null,
           completedAt: null,
+        })) : undefined,
+        parts: selectedParts.length > 0 ? selectedParts.map(part => ({
+          partId: part.partId,
+          partName: part.partName,
+          partNumber: part.partNumber,
+          quantity: part.quantity,
+          unitPrice: part.unitPrice,
+          totalPrice: part.totalPrice,
         })) : undefined,
       }
 
@@ -755,10 +1605,11 @@ export default function CreateJobCardPage() {
   // HELPERS
   // ============================================================================
 
-  const filteredCustomers = customers.filter(customer =>
-    `${customer.firstName} ${customer.lastName} ${customer.phoneNumber}`.toLowerCase()
+  const filteredCustomers = customers.filter(customer => {
+    const vehicleLicensePlates = customer.vehicles?.map(v => v.licensePlate).join(' ') || ''
+    return `${customer.firstName} ${customer.lastName} ${customer.phoneNumber} ${customer.email || ''} ${vehicleLicensePlates}`.toLowerCase()
       .includes(customerSearchQuery.toLowerCase())
-  )
+  })
 
   const getJobTypeIcon = (type: JobType) => {
     switch (type) {
@@ -820,6 +1671,7 @@ export default function CreateJobCardPage() {
     { value: 'customer', label: 'Customer', icon: User },
     { value: 'job-details', label: 'Details', icon: FileText },
     { value: 'tasks', label: 'Tasks', icon: ClipboardCheck },
+    { value: 'labor-parts', label: 'Labor & Parts', icon: Wrench },
     { value: 'scheduling', label: 'Schedule', icon: CalendarCheck },
     { value: 'review', label: 'Review', icon: Eye },
   ] as const
@@ -838,12 +1690,6 @@ export default function CreateJobCardPage() {
         className="mb-6 md:mb-8"
       >
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <ChevronLeft className="h-6 w-6 text-gray-700" />
-          </button>
           <div className="h-10 w-1 bg-graphite-700 rounded-full" />
           <div>
             <h1 className="text-2xl md:text-3xl font-display font-bold text-graphite-900 tracking-tight">
@@ -895,95 +1741,91 @@ export default function CreateJobCardPage() {
         )}
       </AnimatePresence>
 
-      {/* Progress Indicator */}
+      {/* Tabs Navigation */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-8"
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="mb-4 md:mb-6"
       >
-        <div className="flex items-center justify-between">
-          {tabs.map((tab, index) => (
-            <React.Fragment key={tab.value}>
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={() => {
-                    const tabIndex = tabs.findIndex(t => t.value === activeTab)
-                    const targetIndex = tabs.findIndex(t => t.value === tab.value)
+        {/* Desktop Tabs */}
+        <div className="hidden md:block overflow-x-auto">
+          <div className="border-b border-gray-200">
+            <nav className="flex gap-1 -mb-px">
+              {tabs.map((tab) => {
+                const status = getTabStatus(tab.value)
+                const accessibilityMessage = getTabAccessibilityMessage(tab.value)
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => handleTabChange(tab.value)}
+                    title={accessibilityMessage}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                      status === 'active' && "border-graphite-700 text-graphite-700",
+                      status === 'complete' && "border-status-success hover:border-status-success",
+                      status === 'accessible' && "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300",
+                      status === 'inaccessible' && "border-transparent text-gray-400 cursor-not-allowed"
+                    )}
+                    style={status === 'complete' ? { color: '#0D9488', borderColor: '#2DD4BF' } : undefined}
+                    disabled={status === 'inaccessible'}
+                  >
+                    {status === 'complete' ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <tab.icon className="h-4 w-4" />
+                    )}
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
+        </div>
 
-                    // Allow navigation back to previous tabs, or forward if current tab is validated
-                    if (targetIndex < tabIndex || (targetIndex === tabIndex + 1 && tabValidation[activeTab as keyof TabValidation])) {
-                      handleTabChange(tab.value)
-                    }
-                  }}
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-200",
-                    activeTab === tab.value
-                      ? "bg-brand text-graphite-900 scale-110 shadow-glow"
-                      : tabValidation[tab.value as keyof TabValidation]
-                      ? "bg-status-success text-white"
-                      : "bg-gray-200 text-gray-600"
-                  )}
-                >
-                  {tabValidation[tab.value as keyof TabValidation] && activeTab !== tab.value ? (
-                    <CheckCircle2 className="h-6 w-6" />
-                  ) : (
-                    <tab.icon className="h-5 w-5" />
-                  )}
-                </button>
-                <span
-                  className={cn(
-                    "text-xs font-medium mt-2 hidden sm:block",
-                    activeTab === tab.value ? "text-brand" : "text-gray-600"
-                  )}
-                >
-                  {tab.label}
-                </span>
-              </div>
-              {index < tabs.length - 1 && (
-                <div
-                  className={cn(
-                    "flex-1 h-1 mx-2 rounded-full transition-all duration-300",
-                    tabValidation[tab.value as keyof TabValidation]
-                      ? "bg-status-success"
-                      : "bg-gray-200"
-                  )}
-                />
-              )}
-            </React.Fragment>
-          ))}
+        {/* Mobile Tabs - Full Width */}
+        <div className="md:hidden overflow-x-auto">
+          <div className="border-b border-gray-200">
+            <nav className="flex gap-1 -mb-px">
+              {tabs.map((tab) => {
+                const status = getTabStatus(tab.value)
+                const accessibilityMessage = getTabAccessibilityMessage(tab.value)
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => handleTabChange(tab.value)}
+                    title={accessibilityMessage}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap",
+                      status === 'active' && "border-graphite-700 text-graphite-700",
+                      status === 'complete' && "border-status-success",
+                      status === 'accessible' && "border-transparent text-gray-600",
+                      status === 'inaccessible' && "border-transparent text-gray-400 cursor-not-allowed opacity-60"
+                    )}
+                    style={status === 'complete' ? { color: '#0D9488', borderColor: '#2DD4BF' } : undefined}
+                    disabled={status === 'inaccessible'}
+                  >
+                    {status === 'complete' ? (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <tab.icon className="h-3.5 w-3.5" />
+                    )}
+                    <span className="text-[10px]">{tab.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
         </div>
       </motion.div>
 
-      {/* Tabs Interface */}
+      {/* Tab Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
         className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
       >
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 px-6 pt-6">
-          <div className="flex overflow-x-auto scrollbar-hide gap-2 -mb-px">
-            {tabs.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => handleTabChange(tab.value)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
-                  activeTab === tab.value
-                    ? "border-brand text-brand"
-                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-                )}
-              >
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tab Content */}
         <div className="p-6 md:p-8">
           {activeTab === 'customer' && (
             <TabCustomer
@@ -1001,6 +1843,7 @@ export default function CreateJobCardPage() {
               onNextTab={() => handleTabChange('job-details')}
               tabError={tabErrors.customer}
               tabValidation={tabValidation.customer}
+              newlyAddedVehicleId={newlyAddedVehicleId}
             />
           )}
 
@@ -1010,15 +1853,23 @@ export default function CreateJobCardPage() {
               setJobType={setJobType}
               priority={priority}
               setPriority={setPriority}
-              initialStatus={initialStatus}
-              setInitialStatus={setInitialStatus}
-              customerComplaint={customerComplaint}
-              setCustomerComplaint={setCustomerComplaint}
-              workRequested={workRequested}
-              setWorkRequested={setWorkRequested}
+              customerReportIssues={customerReportIssues}
+              currentReportIssue={currentReportIssue}
+              setCurrentReportIssue={setCurrentReportIssue}
+              onAddReportIssue={handleAddReportIssue}
+              onRemoveReportIssue={handleRemoveReportIssue}
+              workRequestedItems={workRequestedItems}
+              currentWorkRequested={currentWorkRequested}
+              setCurrentWorkRequested={setCurrentWorkRequested}
+              onAddWorkRequested={handleAddWorkRequested}
+              onRemoveWorkRequested={handleRemoveWorkRequested}
               customerNotes={customerNotes}
               setCustomerNotes={setCustomerNotes}
-              reportedIssue={setReportedIssue}
+              technicalDiagnosisItems={technicalDiagnosisItems}
+              currentTechnicalDiagnosis={currentTechnicalDiagnosis}
+              setCurrentTechnicalDiagnosis={setCurrentTechnicalDiagnosis}
+              onAddTechnicalDiagnosis={handleAddTechnicalDiagnosis}
+              onRemoveTechnicalDiagnosis={handleRemoveTechnicalDiagnosis}
               onPreviousTab={() => handleTabChange('customer')}
               onNextTab={() => handleTabChange('tasks')}
               tabError={tabErrors.jobDetails}
@@ -1036,10 +1887,25 @@ export default function CreateJobCardPage() {
               setCurrentChecklistItem={setCurrentChecklistItem}
               onAddItem={handleAddChecklistItem}
               onRemoveItem={handleRemoveChecklistItem}
+              onAddTemplateItem={(item) => setChecklistItems([...checklistItems, item])}
               onPreviousTab={() => handleTabChange('job-details')}
-              onNextTab={() => handleTabChange('scheduling')}
+              onNextTab={() => handleTabChange('labor-parts')}
               getPriorityColor={getPriorityColor}
               calculateEstimatedCosts={calculateEstimatedCosts}
+              customerReportIssues={customerReportIssues}
+              workRequestedItems={workRequestedItems}
+              technicalDiagnosisItems={technicalDiagnosisItems}
+            />
+          )}
+
+          {activeTab === 'labor-parts' && (
+            <TabLaborParts
+              checklistItems={checklistItems}
+              selectedParts={selectedParts}
+              setSelectedParts={setSelectedParts}
+              calculateEstimatedCosts={calculateEstimatedCosts}
+              onPreviousTab={() => handleTabChange('tasks')}
+              onNextTab={() => handleTabChange('scheduling')}
             />
           )}
 
@@ -1057,7 +1923,7 @@ export default function CreateJobCardPage() {
               isLoadingEmployees={isLoadingEmployees}
               internalNotes={internalNotes}
               setInternalNotes={setInternalNotes}
-              onPreviousTab={() => handleTabChange('tasks')}
+              onPreviousTab={() => handleTabChange('labor-parts')}
               onNextTab={() => handleTabChange('review')}
             />
           )}
@@ -1068,9 +1934,8 @@ export default function CreateJobCardPage() {
               selectedVehicle={selectedVehicle}
               jobType={jobType}
               priority={priority}
-              initialStatus={initialStatus}
-              customerComplaint={customerComplaint}
-              workRequested={workRequested}
+              customerReportIssues={customerReportIssues}
+              workRequestedItems={workRequestedItems}
               checklistItems={checklistItems}
               promisedDate={promisedDate}
               promisedTime={promisedTime}
@@ -1119,8 +1984,14 @@ export default function CreateJobCardPage() {
                   {/* Header */}
                   <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Add New Customer</h2>
-                      <p className="text-sm text-gray-600 mt-1">Fill in the customer details below</p>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {modalMode === 'add-vehicle' ? 'Add Vehicle to Customer' : 'Add New Customer'}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {modalMode === 'add-vehicle'
+                          ? `Add a vehicle for ${selectedCustomer?.firstName} ${selectedCustomer?.lastName}`
+                          : 'Fill in the customer details below'}
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -1167,10 +2038,12 @@ export default function CreateJobCardPage() {
 
                   {/* Form */}
                   <form onSubmit={handleCreateCustomer} className="p-6 space-y-6">
-                    {/* Personal Information */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Personal Information - Only show for new customer creation */}
+                    {modalMode === 'create' && (
+                      <>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             First Name <span className="text-status-error">*</span>
@@ -1182,7 +2055,7 @@ export default function CreateJobCardPage() {
                             value={customerFormData.firstName}
                             onChange={handleCustomerFieldChange}
                             placeholder="John"
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                           />
                         </div>
                         <div>
@@ -1196,7 +2069,7 @@ export default function CreateJobCardPage() {
                             value={customerFormData.lastName}
                             onChange={handleCustomerFieldChange}
                             placeholder="Doe"
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -1212,7 +2085,7 @@ export default function CreateJobCardPage() {
                               value={customerFormData.email}
                               onChange={handleCustomerFieldChange}
                               placeholder="john.doe@example.com"
-                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                             />
                           </div>
                         </div>
@@ -1229,7 +2102,7 @@ export default function CreateJobCardPage() {
                               value={customerFormData.phoneNumber}
                               onChange={handleCustomerFieldChange}
                               placeholder="+91 98765 43210"
-                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                             />
                           </div>
                         </div>
@@ -1245,7 +2118,7 @@ export default function CreateJobCardPage() {
                               value={customerFormData.alternatePhone}
                               onChange={handleCustomerFieldChange}
                               placeholder="+91 98765 43211"
-                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                             />
                           </div>
                         </div>
@@ -1268,7 +2141,7 @@ export default function CreateJobCardPage() {
                               onChange={handleCustomerFieldChange}
                               placeholder="123 Main Street, Apt 4B"
                               rows={2}
-                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-none"
                             />
                           </div>
                         </div>
@@ -1282,7 +2155,7 @@ export default function CreateJobCardPage() {
                             value={customerFormData.city}
                             onChange={handleCustomerFieldChange}
                             placeholder="Bangalore"
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                           />
                         </div>
                         <div>
@@ -1295,7 +2168,7 @@ export default function CreateJobCardPage() {
                             value={customerFormData.state}
                             onChange={handleCustomerFieldChange}
                             placeholder="Karnataka"
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                           />
                         </div>
                         <div>
@@ -1308,7 +2181,7 @@ export default function CreateJobCardPage() {
                             value={customerFormData.zipCode}
                             onChange={handleCustomerFieldChange}
                             placeholder="560001"
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                           />
                         </div>
                         <div>
@@ -1320,11 +2193,13 @@ export default function CreateJobCardPage() {
                             name="country"
                             value={customerFormData.country}
                             onChange={handleCustomerFieldChange}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                           />
                         </div>
                       </div>
                     </div>
+                      </>
+                    )}
 
                     {/* Vehicles */}
                     <div>
@@ -1374,7 +2249,7 @@ export default function CreateJobCardPage() {
                                   <select
                                     value={vehicle.make}
                                     onChange={(e) => handleCustomerVehicleChange(index, 'make', e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all appearance-none cursor-pointer"
                                   >
                                     <option value="">Select Make</option>
                                     {makesData.map((make) => (
@@ -1392,7 +2267,7 @@ export default function CreateJobCardPage() {
                                     value={vehicle.model}
                                     onChange={(e) => handleCustomerVehicleChange(index, 'model', e.target.value)}
                                     disabled={!vehicle.make}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     <option value="">Select Model</option>
                                     {getAvailableModels(vehicle.make).map((model) => (
@@ -1410,7 +2285,7 @@ export default function CreateJobCardPage() {
                                     value={vehicle.year}
                                     onChange={(e) => handleCustomerVehicleChange(index, 'year', e.target.value)}
                                     disabled={!vehicle.model}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     <option value="">Select Year</option>
                                     {getAvailableYears(vehicle.make, vehicle.model)
@@ -1447,7 +2322,7 @@ export default function CreateJobCardPage() {
                                     value={vehicle.licensePlate}
                                     onChange={(e) => handleCustomerVehicleChange(index, 'licensePlate', e.target.value)}
                                     placeholder="KA 01 AB 1234"
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                                   />
                                 </div>
                                 <div>
@@ -1459,7 +2334,7 @@ export default function CreateJobCardPage() {
                                     value={vehicle.color}
                                     onChange={(e) => handleCustomerVehicleChange(index, 'color', e.target.value)}
                                     placeholder="Pearl White"
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                                   />
                                 </div>
                                 <div>
@@ -1472,7 +2347,43 @@ export default function CreateJobCardPage() {
                                     onChange={(e) => handleCustomerVehicleChange(index, 'mileage', e.target.value)}
                                     placeholder="12000"
                                     min="0"
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    VIN Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={vehicle.vin}
+                                    onChange={(e) => handleCustomerVehicleChange(index, 'vin', e.target.value)}
+                                    placeholder="17-character VIN"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Engine Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={vehicle.engineNumber}
+                                    onChange={(e) => handleCustomerVehicleChange(index, 'engineNumber', e.target.value)}
+                                    placeholder="Engine number"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Chassis Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={vehicle.chassisNumber}
+                                    onChange={(e) => handleCustomerVehicleChange(index, 'chassisNumber', e.target.value)}
+                                    placeholder="Chassis number"
+                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                                   />
                                 </div>
                               </div>
@@ -1485,15 +2396,15 @@ export default function CreateJobCardPage() {
                     {/* Notes */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Additional Notes
+                        {modalMode === 'add-vehicle' ? 'Vehicle Notes' : 'Additional Notes'}
                       </label>
                       <textarea
                         name="notes"
                         value={customerFormData.notes}
                         onChange={handleCustomerFieldChange}
-                        placeholder="Any additional notes about the customer..."
+                        placeholder={modalMode === 'add-vehicle' ? 'Any additional notes about the vehicle...' : 'Any additional notes about the customer...'}
                         rows={3}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-none"
                       />
                     </div>
 
@@ -1515,17 +2426,26 @@ export default function CreateJobCardPage() {
                         {isCreatingCustomer ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Adding Customer...
+                            {modalMode === 'add-vehicle' ? 'Adding Vehicle...' : 'Adding Customer...'}
                           </>
                         ) : customerModalSuccess ? (
                           <>
-                            <CheckCircle2 className="h-4 w-4" />
+                            <CheckCircle2 className="h-4 w-4" style={{ color: '#0D9488' }} />
                             Added Successfully!
                           </>
                         ) : (
                           <>
-                            <UserPlus className="h-4 w-4" />
-                            Add Customer
+                            {modalMode === 'add-vehicle' ? (
+                              <>
+                                <Car className="h-4 w-4" />
+                                Add Vehicle
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4" />
+                                Add Customer
+                              </>
+                            )}
                           </>
                         )}
                       </button>
@@ -1561,6 +2481,7 @@ function TabCustomer({
   onNextTab,
   tabError,
   tabValidation,
+  newlyAddedVehicleId,
 }: {
   customers: CustomerData[]
   selectedCustomer: CustomerData | null
@@ -1576,11 +2497,13 @@ function TabCustomer({
   onNextTab: () => void
   tabError?: string
   tabValidation: boolean
+  newlyAddedVehicleId?: string | null
 }) {
-  const filteredCustomers = customers.filter(customer =>
-    `${customer.firstName} ${customer.lastName} ${customer.phoneNumber}`.toLowerCase()
+  const filteredCustomers = customers.filter(customer => {
+    const vehicleLicensePlates = customer.vehicles?.map(v => v.licensePlate).join(' ') || ''
+    return `${customer.firstName} ${customer.lastName} ${customer.phoneNumber} ${customer.email || ''} ${vehicleLicensePlates}`.toLowerCase()
       .includes(customerSearchQuery.toLowerCase())
-  )
+  })
 
   return (
     <motion.div
@@ -1622,48 +2545,75 @@ function TabCustomer({
                   value={customerSearchQuery}
                   onChange={(e) => setCustomerSearchQuery(e.target.value)}
                   placeholder="Search by name, phone, or email..."
-                  className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
                 />
               </div>
             </div>
 
             {/* Customer Results */}
             {customerSearchQuery.trim() !== '' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto mb-4">
-                {isLoadingCustomers ? (
-                  <div className="col-span-2 flex items-center justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-graphite-700" />
-                  </div>
-                ) : filteredCustomers.length === 0 ? (
-                  <div className="col-span-2 text-center py-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                    <User className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                    <p className="text-graphite-600 mb-1">No matching customers found</p>
-                    <p className="text-sm text-gray-500 mb-3">Add a new customer to continue</p>
-                  </div>
-                ) : (
-                  filteredCustomers.map((customer) => (
-                    <motion.button
-                      key={customer.id}
-                      type="button"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => onCustomerSelect(customer.id)}
-                      className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 hover:border-brand text-left transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          <User className="h-5 w-5 text-graphite-700" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-graphite-900 truncate">
-                            {customer.firstName} {customer.lastName}
-                          </p>
-                          <p className="text-sm text-graphite-600">{customer.phoneNumber}</p>
-                          <p className="text-xs text-gray-500">{customer.email}</p>
-                        </div>
+              <div className="mb-4">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden max-h-80 overflow-y-auto">
+                  {isLoadingCustomers ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-graphite-700" />
+                    </div>
+                  ) : filteredCustomers.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3">
+                        <User className="h-6 w-6 text-gray-400" />
                       </div>
-                    </motion.button>
-                  ))
+                      <p className="text-sm font-medium text-gray-900 mb-1">No matching customers found</p>
+                      <p className="text-xs text-gray-500">Try a different search or add a new customer</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {filteredCustomers.map((customer, index) => (
+                        <motion.button
+                          key={customer.id}
+                          type="button"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                          whileHover={{ backgroundColor: '#f9fafb' }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => onCustomerSelect(customer.id)}
+                          className="w-full px-4 py-3 flex items-center gap-3 text-left transition-colors"
+                        >
+                          {/* Avatar with initials */}
+                          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-graphite-700 to-graphite-800 flex items-center justify-center shrink-0 shadow-sm">
+                            <span className="text-sm font-semibold text-white">
+                              {customer.firstName[0]}{customer.lastName[0]}
+                            </span>
+                          </div>
+
+                          {/* Customer Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {customer.firstName} {customer.lastName}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-gray-500 truncate">{customer.phoneNumber}</p>
+                              {customer.email && (
+                                <>
+                                  <span className="text-gray-300">•</span>
+                                  <p className="text-xs text-gray-500 truncate">{customer.email}</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Chevron indicator */}
+                          <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {filteredCustomers.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {filteredCustomers.length} {filteredCustomers.length === 1 ? 'customer' : 'customers'} found
+                  </p>
                 )}
               </div>
             )}
@@ -1679,24 +2629,24 @@ function TabCustomer({
             </button>
           </>
         ) : (
-          <div className="mb-6 bg-gradient-to-br from-brand/5 to-white rounded-xl border-2 border-brand/30 p-4">
+          <div className="mb-6 bg-gradient-to-br from-graphite-800/5 to-white rounded-xl border-2 border-graphite-700/30 p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-brand/20 flex items-center justify-center">
-                  <User className="h-6 w-6 text-brand" />
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="h-12 w-12 rounded-full bg-graphite-800/20 flex items-center justify-center shrink-0">
+                  <User className="h-6 w-6 text-graphite-700" />
                 </div>
-                <div>
-                  <p className="font-bold text-graphite-900">
+                <div className="min-w-0">
+                  <p className="font-bold text-graphite-900 break-words overflow-wrap-anywhere">
                     {selectedCustomer.firstName} {selectedCustomer.lastName}
                   </p>
-                  <p className="text-sm text-graphite-600">{selectedCustomer.phoneNumber}</p>
-                  <p className="text-xs text-gray-500">{selectedCustomer.email}</p>
+                  <p className="text-sm text-graphite-600 break-words overflow-wrap-anywhere">{selectedCustomer.phoneNumber}</p>
+                  <p className="text-xs text-gray-500 break-words overflow-wrap-anywhere">{selectedCustomer.email}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => onCustomerSelect('')}
-                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors shrink-0"
               >
                 <X className="h-4 w-4 text-graphite-600" />
               </button>
@@ -1708,55 +2658,152 @@ function TabCustomer({
       {/* Vehicle Section */}
       {selectedCustomer && (
         <div>
-          <h3 className="text-lg font-semibold text-graphite-900 mb-4">Vehicle Information</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-graphite-900">Vehicle Information</h3>
+            <button
+              type="button"
+              onClick={onOpenCustomerModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-graphite-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Vehicle
+            </button>
+          </div>
 
           {selectedCustomer.vehicles && selectedCustomer.vehicles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              {selectedCustomer.vehicles.map((vehicle) => (
-                <motion.button
-                  key={vehicle.id}
-                  type="button"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={() => onVehicleSelect(vehicle)}
-                  className={cn(
-                    "p-4 rounded-xl border-2 text-left transition-all",
-                    selectedVehicle?.id === vehicle.id
-                      ? "bg-brand/10 border-brand"
-                      : "bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-gray-300"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <Car className="h-5 w-5 text-graphite-700" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-graphite-900">
-                        {vehicle.year} {vehicle.make} {vehicle.model}
-                      </p>
-                      <p className="text-sm text-graphite-600">{vehicle.licensePlate}</p>
-                      {vehicle.color && (
-                        <p className="text-xs text-gray-500">{vehicle.color}</p>
-                      )}
-                    </div>
-                    {selectedVehicle?.id === vehicle.id && (
-                      <CheckCircle2 className="h-5 w-5 text-brand" />
-                    )}
-                  </div>
-                </motion.button>
-              ))}
+            <div className="mb-4">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="divide-y divide-gray-100">
+                  {selectedCustomer.vehicles.map((vehicle, index) => {
+                    const isSelected = selectedVehicle?.id === vehicle.id
+                    const isNewlyAdded = newlyAddedVehicleId === vehicle.id
+                    return (
+                      <motion.button
+                        key={vehicle.id}
+                        type="button"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                          ...(isNewlyAdded && !isSelected && {
+                            scale: [1, 1.02, 1],
+                            backgroundColor: ['#f9fafb', '#e0f2fe', '#f9fafb'],
+                          })
+                        }}
+                        transition={{
+                          duration: 0.2,
+                          delay: index * 0.05,
+                          ...(isNewlyAdded && !isSelected && {
+                            scale: { duration: 0.6, repeat: 2, repeatDelay: 0.2 },
+                            backgroundColor: { duration: 1.5, repeat: 1 },
+                          })
+                        }}
+                        whileHover={isSelected ? {} : { backgroundColor: '#f9fafb' }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => onVehicleSelect(vehicle)}
+                        style={isSelected ? { backgroundColor: '#374151' } : undefined}
+                        className={cn(
+                          "w-full px-4 py-3 flex items-center gap-3 text-left transition-all relative",
+                          !isSelected && isNewlyAdded && "ring-2 ring-status-success ring-opacity-50"
+                        )}
+                      >
+                        {/* New Badge */}
+                        {!isSelected && isNewlyAdded && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-bold text-white bg-status-success rounded-full"
+                          >
+                            NEW
+                          </motion.span>
+                        )}
+
+                        {/* Vehicle Icon */}
+                        <div className={cn(
+                          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
+                          isSelected
+                            ? "bg-white/20"
+                            : isNewlyAdded && !isSelected
+                            ? "bg-status-success"
+                            : "bg-gradient-to-br from-gray-100 to-gray-200"
+                        )}>
+                          <Car className={cn(
+                            "h-4.5 w-4.5",
+                            isSelected ? "text-white" : "text-gray-700"
+                          )} />
+                        </div>
+
+                        {/* Vehicle Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className={cn(
+                            "text-sm font-semibold truncate",
+                            isSelected ? "text-white" : "text-gray-900"
+                          )}>
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className={cn(
+                              "text-xs truncate",
+                              isSelected ? "text-white/80" : "text-gray-500"
+                            )}>{vehicle.licensePlate}</p>
+                            {vehicle.color && (
+                              <>
+                                <span className={cn(
+                                  isSelected ? "text-white/40" : "text-gray-300"
+                                )}>•</span>
+                                <p className={cn(
+                                  "text-xs truncate",
+                                  isSelected ? "text-white/80" : "text-gray-500"
+                                )}>{vehicle.color}</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Selection Indicator */}
+                        {isSelected ? (
+                          <div className="px-2.5 py-1 bg-lime-400 rounded-lg shrink-0">
+                            <span className="text-[10px] font-bold text-graphite-900 uppercase tracking-wide">
+                              Selected
+                            </span>
+                          </div>
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+                        )}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              </div>
+              {selectedCustomer.vehicles.length > 0 && (
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  {selectedCustomer.vehicles.length} {selectedCustomer.vehicles.length === 1 ? 'vehicle' : 'vehicles'}
+                </p>
+              )}
             </div>
           ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 mb-4">
-              <Car className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-graphite-600 mb-1">No vehicles found for this customer</p>
-              <p className="text-sm text-gray-500">Please add a vehicle first</p>
+            <div className="mb-4">
+              <div className="text-center py-10 px-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3">
+                  <Car className="h-6 w-6 text-gray-400" />
+                </div>
+                <p className="text-sm font-medium text-gray-900 mb-1">No vehicles found</p>
+                <p className="text-xs text-gray-500 mb-4">Add a vehicle to this customer to continue</p>
+                <button
+                  type="button"
+                  onClick={onOpenCustomerModal}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-graphite-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add First Vehicle
+                </button>
+              </div>
             </div>
           )}
 
           {/* Current Mileage */}
           {selectedVehicle && (
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-medium text-graphite-700 mb-2">
                 Current Mileage (km)
               </label>
@@ -1766,7 +2813,7 @@ function TabCustomer({
                 onChange={(e) => setCurrentMileage(e.target.value)}
                 placeholder={selectedVehicle.currentMileage?.toString() || "Enter current mileage"}
                 min="0"
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
               />
             </div>
           )}
@@ -1774,14 +2821,27 @@ function TabCustomer({
       )}
 
       {/* Navigation */}
-      <div className="flex justify-end pt-6 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={() => {
+            /* TODO: Implement save as draft functionality */
+            console.log('Save as draft')
+          }}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+        >
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">Save as Draft</span>
+          <span className="sm:hidden">Save Draft</span>
+        </button>
         <button
           type="button"
           onClick={onNextTab}
           disabled={!tabValidation}
-          className="flex items-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Next: Job Details
+          <span className="hidden sm:inline">Next: Job Details</span>
+          <span className="sm:hidden">Next</span>
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -1795,16 +2855,23 @@ function TabJobDetails({
   setJobType,
   priority,
   setPriority,
-  initialStatus,
-  setInitialStatus,
-  customerComplaint,
-  setCustomerComplaint,
-  workRequested,
-  setWorkRequested,
+  customerReportIssues,
+  currentReportIssue,
+  setCurrentReportIssue,
+  onAddReportIssue,
+  onRemoveReportIssue,
+  workRequestedItems,
+  currentWorkRequested,
+  setCurrentWorkRequested,
+  onAddWorkRequested,
+  onRemoveWorkRequested,
   customerNotes,
   setCustomerNotes,
-  reportedIssue,
-  setReportedIssue,
+  technicalDiagnosisItems,
+  currentTechnicalDiagnosis,
+  setCurrentTechnicalDiagnosis,
+  onAddTechnicalDiagnosis,
+  onRemoveTechnicalDiagnosis,
   onPreviousTab,
   onNextTab,
   tabError,
@@ -1817,16 +2884,23 @@ function TabJobDetails({
   setJobType: (type: JobType) => void
   priority: Priority
   setPriority: (priority: Priority) => void
-  initialStatus: JobStatus
-  setInitialStatus: (status: JobStatus) => void
-  customerComplaint: string
-  setCustomerComplaint: (value: string) => void
-  workRequested: string
-  setWorkRequested: (value: string) => void
+  customerReportIssues: string[]
+  currentReportIssue: string
+  setCurrentReportIssue: (value: string) => void
+  onAddReportIssue: () => void
+  onRemoveReportIssue: (index: number) => void
+  workRequestedItems: string[]
+  currentWorkRequested: string
+  setCurrentWorkRequested: (value: string) => void
+  onAddWorkRequested: () => void
+  onRemoveWorkRequested: (index: number) => void
   customerNotes: string
   setCustomerNotes: (value: string) => void
-  reportedIssue: string
-  setReportedIssue: (value: string) => void
+  technicalDiagnosisItems: string[]
+  currentTechnicalDiagnosis: string
+  setCurrentTechnicalDiagnosis: (value: string) => void
+  onAddTechnicalDiagnosis: () => void
+  onRemoveTechnicalDiagnosis: (index: number) => void
   onPreviousTab: () => void
   onNextTab: () => void
   tabError?: string
@@ -1837,7 +2911,6 @@ function TabJobDetails({
 }) {
   const jobTypes: JobType[] = ['repair', 'maintenance', 'routine', 'custom', 'diagnostic']
   const priorities: Priority[] = ['low', 'medium', 'high', 'urgent']
-  const statuses: JobStatus[] = ['draft', 'queued']
 
   return (
     <motion.div
@@ -1877,45 +2950,19 @@ function TabJobDetails({
               className={cn(
                 "p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all",
                 jobType === type
-                  ? "bg-brand/10 border-brand shadow-glow"
+                  ? "bg-graphite-800/10 border-graphite-700 shadow-glow"
                   : "bg-white border-gray-200 hover:border-gray-300"
               )}
             >
-              <div className={cn(jobType === type ? "text-brand" : "text-gray-600")}>
+              <div className={cn(jobType === type ? "text-graphite-700" : "text-gray-600")}>
                 {getJobTypeIcon(type)}
               </div>
               <span className={cn(
                 "text-sm font-medium text-center",
-                jobType === type ? "text-brand font-bold" : "text-gray-700"
+                jobType === type ? "text-graphite-700 font-bold" : "text-gray-700"
               )}>
                 {getJobTypeLabel(type)}
               </span>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* Initial Status */}
-      <div>
-        <label className="block text-sm font-medium text-graphite-700 mb-3">
-          Initial Status
-        </label>
-        <div className="flex gap-3">
-          {statuses.map((status) => (
-            <motion.button
-              key={status}
-              type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setInitialStatus(status)}
-              className={cn(
-                "px-6 py-3 rounded-xl border-2 font-medium text-sm transition-all capitalize flex-1",
-                initialStatus === status
-                  ? "bg-brand/10 border-brand text-graphite-900"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-              )}
-            >
-              {status.replace('_', ' ')}
             </motion.button>
           ))}
         </div>
@@ -1950,46 +2997,355 @@ function TabJobDetails({
         </div>
       </div>
 
-      {/* Customer Complaint */}
+      {/* Customer Reported Issues Checklist */}
       <div>
         <label className="block text-sm font-medium text-graphite-700 mb-2">
-          Customer Complaint <span className="text-status-error">*</span>
+          Customer Reported Issues Checklist <span className="text-status-error">*</span>
         </label>
-        <textarea
-          value={customerComplaint}
-          onChange={(e) => setCustomerComplaint(e.target.value)}
-          placeholder="Describe the customer's complaint... (e.g., 'Engine making strange noise when accelerating', 'Brake pads squeaking', 'Oil leakage noticed')"
-          rows={3}
-          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
-        />
+        <div className="space-y-3">
+          {/* Input Area */}
+          <div className="space-y-2">
+            <textarea
+              value={currentReportIssue}
+              onChange={(e) => setCurrentReportIssue(e.target.value)}
+              onKeyDown={(e) => {
+                // Desktop: Enter to add, Shift+Enter for newline
+                // Mobile: Enter for newline, use Add button
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  onAddReportIssue()
+                }
+              }}
+              placeholder="Enter an issue the customer reported..."
+              rows={4}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-y break-words overflow-wrap-anywhere text-sm"
+            />
+
+            {/* Desktop Helper Text and Action Button */}
+            <div className="hidden sm:flex items-center justify-between">
+              <p className="text-xs text-gray-500">
+                Press Enter to add the issue (Shift+Enter for new line)
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentReportIssue('')}
+                  disabled={!currentReportIssue.trim()}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onAddReportIssue}
+                  disabled={!currentReportIssue.trim()}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed",
+                    currentReportIssue.trim()
+                      ? "bg-graphite-700 text-white hover:bg-graphite-800"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  )}
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Issue
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Helper Text and Action Buttons */}
+            <div className="sm:hidden space-y-2">
+              <p className="text-xs text-gray-500">
+                Type multiple lines, then tap 'Add Issue' button
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentReportIssue('')}
+                  disabled={!currentReportIssue.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onAddReportIssue}
+                  disabled={!currentReportIssue.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-graphite-900 text-white hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Issue
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Issues List */}
+          {customerReportIssues.length > 0 && (
+            <div className="space-y-2">
+              {customerReportIssues.map((issue, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border-2 border-gray-200"
+                >
+                  <div className="h-2 w-2 rounded-full bg-graphite-700 shrink-0 mt-1.5" />
+                  <p className="flex-1 text-sm text-graphite-900 break-words overflow-wrap-anywhere">{issue}</p>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveReportIssue(index)}
+                    className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Helper Text */}
+          <p className="text-xs text-gray-500">
+            Press Enter or click Add to add each issue. All reported issues will be displayed on the job card.
+          </p>
+        </div>
       </div>
 
-      {/* Work Requested */}
+      {/* Service Scope Checklist */}
       <div>
         <label className="block text-sm font-medium text-graphite-700 mb-2">
-          Work Requested <span className="text-status-error">*</span>
+          Service Scope Checklist <span className="text-status-error">*</span>
         </label>
-        <textarea
-          value={workRequested}
-          onChange={(e) => setWorkRequested(e.target.value)}
-          placeholder="Describe the work that needs to be performed... (e.g., 'Full service including oil change', 'Replace brake pads and rotors', 'Diagnose engine noise')"
-          rows={3}
-          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
-        />
+        <div className="space-y-3">
+          {/* Input Area */}
+          <div className="space-y-2">
+            <textarea
+              value={currentWorkRequested}
+              onChange={(e) => setCurrentWorkRequested(e.target.value)}
+              onKeyDown={(e) => {
+                // Desktop: Enter to add, Shift+Enter for newline
+                // Mobile: Enter for newline, use Add button
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  onAddWorkRequested()
+                }
+              }}
+              placeholder="Enter a service item to be performed..."
+              rows={4}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-y break-words overflow-wrap-anywhere text-sm"
+            />
+
+            {/* Desktop Helper Text and Action Button */}
+            <div className="hidden sm:flex items-center justify-between">
+              <p className="text-xs text-gray-500">
+                Press Enter to add the service item (Shift+Enter for new line)
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentWorkRequested('')}
+                  disabled={!currentWorkRequested.trim()}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onAddWorkRequested}
+                  disabled={!currentWorkRequested.trim()}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed",
+                    currentWorkRequested.trim()
+                      ? "bg-graphite-700 text-white hover:bg-graphite-800"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  )}
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Item
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Helper Text and Action Buttons */}
+            <div className="sm:hidden space-y-2">
+              <p className="text-xs text-gray-500">
+                Type multiple lines, then tap 'Add Item' button
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentWorkRequested('')}
+                  disabled={!currentWorkRequested.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onAddWorkRequested}
+                  disabled={!currentWorkRequested.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-graphite-900 text-white hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Item
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Items List */}
+          {workRequestedItems.length > 0 && (
+            <div className="space-y-2">
+              {workRequestedItems.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border-2 border-gray-200"
+                >
+                  <div className="h-2 w-2 rounded-full bg-blue-600 shrink-0 mt-1.5" />
+                  <p className="flex-1 text-sm text-graphite-900 break-words overflow-wrap-anywhere">{item}</p>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveWorkRequested(index)}
+                    className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Helper Text */}
+          <p className="text-xs text-gray-500">
+            Add all service items to be performed. These will be tracked as part of the final delivery checklist.
+          </p>
+        </div>
       </div>
 
-      {/* Reported Issue */}
+      {/* Technical Diagnosis */}
       <div>
         <label className="block text-sm font-medium text-graphite-700 mb-2">
-          Reported Issue (Technical Diagnosis)
+          Technical Diagnosis
         </label>
-        <textarea
-          value={reportedIssue}
-          onChange={(e) => setReportedIssue(e.target.value)}
-          placeholder="Technical diagnosis or observed issue... (e.g., 'Worn brake pads at 3mm', 'Oil leak from valve cover gasket', 'Timing belt showing signs of wear')"
-          rows={2}
-          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
-        />
+        <div className="space-y-3">
+          {/* Input Area */}
+          <div className="space-y-2">
+            <textarea
+              value={currentTechnicalDiagnosis}
+              onChange={(e) => setCurrentTechnicalDiagnosis(e.target.value)}
+              onKeyDown={(e) => {
+                // Desktop: Enter to add, Shift+Enter for newline
+                // Mobile: Enter for newline, use Add button
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  onAddTechnicalDiagnosis()
+                }
+              }}
+              placeholder="Enter a technical diagnosis or observed issue..."
+              rows={4}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-y break-words overflow-wrap-anywhere text-sm"
+            />
+
+            {/* Desktop Helper Text and Action Button */}
+            <div className="hidden sm:flex items-center justify-between">
+              <p className="text-xs text-gray-500">
+                Press Enter to add the diagnosis (Shift+Enter for new line)
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentTechnicalDiagnosis('')}
+                  disabled={!currentTechnicalDiagnosis.trim()}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onAddTechnicalDiagnosis}
+                  disabled={!currentTechnicalDiagnosis.trim()}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed",
+                    currentTechnicalDiagnosis.trim()
+                      ? "bg-graphite-700 text-white hover:bg-graphite-800"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  )}
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Diagnosis
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Helper Text and Action Buttons */}
+            <div className="sm:hidden space-y-2">
+              <p className="text-xs text-gray-500">
+                Type multiple lines, then tap 'Add Diagnosis' button
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentTechnicalDiagnosis('')}
+                  disabled={!currentTechnicalDiagnosis.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onAddTechnicalDiagnosis}
+                  disabled={!currentTechnicalDiagnosis.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-graphite-900 text-white hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Diagnosis
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Diagnosis List */}
+          {technicalDiagnosisItems.length > 0 && (
+            <div className="space-y-2">
+              {technicalDiagnosisItems.map((diagnosis, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border-2 border-gray-200"
+                >
+                  <div className="h-2 w-2 rounded-full bg-graphite-700 shrink-0 mt-1.5" />
+                  <p className="flex-1 text-sm text-graphite-900 break-words overflow-wrap-anywhere">{diagnosis}</p>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveTechnicalDiagnosis(index)}
+                    className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Helper Text */}
+          <p className="text-xs text-gray-500">
+            Press Enter or click Add to add each diagnosis. All diagnoses will be displayed on the job card.
+          </p>
+        </div>
       </div>
 
       {/* Customer Notes */}
@@ -2002,26 +3358,31 @@ function TabJobDetails({
           onChange={(e) => setCustomerNotes(e.target.value)}
           placeholder="Any additional notes from the customer..."
           rows={2}
-          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-graphite-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-y break-words overflow-wrap-anywhere"
         />
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onPreviousTab}
-          className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-graphite-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={() => {
+            /* TODO: Implement save as draft functionality */
+            console.log('Save as draft')
+          }}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Back
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">Save as Draft</span>
+          <span className="sm:hidden">Save Draft</span>
         </button>
         <button
           type="button"
           onClick={onNextTab}
-          className="flex items-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
         >
-          Next: Tasks
+          <span className="hidden sm:inline">Next: Tasks</span>
+          <span className="sm:hidden">Next</span>
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -2029,31 +3390,95 @@ function TabJobDetails({
   )
 }
 
-// Tab 3: Tasks & Checklist
+// ============================================================================
+// ENHANCED TAB TASKS - World-Class Task Management System
+// ============================================================================
+
 function TabTasks({
   checklistItems,
   currentChecklistItem,
   setCurrentChecklistItem,
   onAddItem,
   onRemoveItem,
+  onAddTemplateItem,
   onPreviousTab,
   onNextTab,
   getPriorityColor,
   calculateEstimatedCosts,
+  customerReportIssues,
+  workRequestedItems,
+  technicalDiagnosisItems,
 }: {
   checklistItems: ChecklistItem[]
   currentChecklistItem: ChecklistItem
   setCurrentChecklistItem: (item: ChecklistItem) => void
   onAddItem: () => void
   onRemoveItem: (id: string) => void
+  onAddTemplateItem: (item: ChecklistItem) => void
   onPreviousTab: () => void
   onNextTab: () => void
   getPriorityColor: (priority: Priority) => string
   calculateEstimatedCosts: () => { totalLaborMinutes: number; totalLaborHours: string; totalLaborCost: string; totalCost: string }
+  customerReportIssues?: string[]
+  workRequestedItems?: string[]
+  technicalDiagnosisItems?: string[]
 }) {
+  // State for enhanced features
+  const customerIssues = customerReportIssues || []
+  const serviceItems = workRequestedItems || []
+  const diagnosisItems = technicalDiagnosisItems || []
   const priorities: Priority[] = ['low', 'medium', 'high', 'urgent']
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
+  const [pendingTemplate, setPendingTemplate] = useState<TaskTemplate | null>(null)
+  const [templateLinks, setTemplateLinks] = useState<{
+    customerIssues: number[]
+    serviceScope: number[]
+    technicalDiagnosis: number[]
+  }>({ customerIssues: [], serviceScope: [], technicalDiagnosis: [] })
 
   const costs = calculateEstimatedCosts()
+
+  // Filter task repository
+  const filteredTemplates = searchTasks(TASK_REPOSITORY, searchQuery)
+    .filter(template => selectedCategory === 'all' || template.category === selectedCategory) as TaskTemplate[]
+
+  // Helper to add template as checklist item
+  const addTemplateToChecklist = (template: TaskTemplate) => {
+    // Store the template and show linking modal
+    setPendingTemplate(template)
+    setTemplateLinks({ customerIssues: [], serviceScope: [], technicalDiagnosis: [] })
+  }
+
+  const confirmAddTemplate = () => {
+    if (!pendingTemplate) return
+
+    const newItem: ChecklistItem = {
+      id: Date.now().toString(),
+      itemName: pendingTemplate.name,
+      description: pendingTemplate.description,
+      category: pendingTemplate.category,
+      priority: pendingTemplate.priority,
+      estimatedMinutes: calculateTaskTime(pendingTemplate),
+      laborRate: pendingTemplate.laborRate,
+      displayOrder: checklistItems.length + 1,
+      subtasks: pendingTemplate.subtasks,
+      linkedToCustomerIssues: templateLinks.customerIssues,
+      linkedToServiceScope: templateLinks.serviceScope,
+      linkedToTechnicalDiagnosis: templateLinks.technicalDiagnosis,
+    }
+    // Directly add to checklist without populating the form
+    onAddTemplateItem(newItem)
+    setPendingTemplate(null)
+    setShowTemplates(false)
+  }
+
+  const cancelTemplateLink = () => {
+    setPendingTemplate(null)
+    setTemplateLinks({ customerIssues: [], serviceScope: [], technicalDiagnosis: [] })
+  }
 
   return (
     <motion.div
@@ -2063,14 +3488,30 @@ function TabTasks({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      {/* Header with Quick Stats */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="h-8 w-1 bg-graphite-700 rounded-full" />
-          <h2 className="text-xl font-semibold text-graphite-900">Tasks & Checklist</h2>
+          <h2 className="text-xl font-semibold text-graphite-900">Tasks & Service Checklist</h2>
         </div>
-        <span className="text-sm text-graphite-600">
-          {checklistItems.length} {checklistItems.length === 1 ? 'task' : 'tasks'} added
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowTemplates(!showTemplates)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+              showTemplates
+                ? "bg-graphite-900 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            )}
+          >
+            <Package className="h-4 w-4" />
+            {showTemplates ? 'Hide Templates' : 'Browse Templates'}
+          </button>
+          <span className="text-sm text-graphite-600 px-3 py-1 bg-gray-100 rounded-lg">
+            {checklistItems.length} {checklistItems.length === 1 ? 'task' : 'tasks'}
+          </span>
+        </div>
       </div>
 
       {/* Task Summary Cards */}
@@ -2082,18 +3523,139 @@ function TabTasks({
           </div>
           <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Total Time</p>
-            <p className="text-2xl font-bold text-gray-900">{Math.floor(costs.totalLaborMinutes / 60)}h {costs.totalLaborMinutes % 60}m</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {Math.floor(costs.totalLaborMinutes / 60)}h {costs.totalLaborMinutes % 60}m
+            </p>
           </div>
-          <div className="col-span-2 bg-brand/10 rounded-xl p-4 border-2 border-brand/30">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Est. Total Cost</p>
-            <p className="text-2xl font-bold text-brand">₹{costs.totalCost}</p>
+          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Est. Labor Cost</p>
+            <p className="text-2xl font-bold text-gray-900">₹{costs.totalLaborCost}</p>
+          </div>
+          <div className="col-span-2 md:col-span-1 bg-gradient-to-br from-graphite-800/10 to-graphite-700/5 rounded-xl p-4 border-2 border-graphite-700/30">
+            <p className="text-xs font-medium uppercase tracking-wider text-graphite-700 mb-1">Total Est. Cost</p>
+            <p className="text-2xl font-bold text-graphite-700">₹{costs.totalCost}</p>
           </div>
         </div>
       )}
 
-      {/* Add Task Form */}
+      {/* Task Repository Panel */}
+      {showTemplates && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <Package className="h-5 w-5 text-graphite-700" />
+              Service Task Templates
+            </h3>
+            <p className="text-sm text-gray-600">{filteredTemplates.length} templates available</p>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-3 mb-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search templates by name or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(['all', 'Engine', 'Electrical', 'Body', 'Maintenance', 'Diagnostic', 'Custom'] as const).map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize",
+                    selectedCategory === cat
+                      ? "bg-graphite-900 text-white"
+                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-gray-400"
+                  )}
+                >
+                  {cat === 'all' ? 'All Categories' : cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Template Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+            {filteredTemplates.slice(0, 12).map((template) => {
+              const templateTime = calculateTaskTime(template)
+              const templateCost = calculateTaskCost(template)
+              
+              return (
+                <motion.button
+                  key={template.id}
+                  type="button"
+                  onClick={() => addTemplateToChecklist(template)}
+                  className="text-left p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-graphite-700 hover:shadow-md transition-all group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-xs font-medium capitalize",
+                      getPriorityColor(template.priority)
+                    )}>
+                      {template.priority}
+                    </span>
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                      {getCategoryIcon(template.category)}
+                      {template.category}
+                    </span>
+                  </div>
+                  
+                  <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-graphite-700 transition-colors">
+                    {template.name}
+                  </h4>
+                  
+                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">{template.description}</p>
+                  
+                  <div className="flex items-center justify-between text-xs text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <Timer className="h-3 w-3" />
+                      {Math.floor(templateTime / 60)}h {templateTime % 60}m
+                    </span>
+                    <span className="font-medium text-graphite-700">₹{templateCost}</span>
+                  </div>
+
+                  {template.subtasks.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <Layers className="h-3 w-3" />
+                        {template.subtasks.length} subtasks
+                      </span>
+                    </div>
+                  )}
+                </motion.button>
+              )
+            })}
+          </div>
+
+          {filteredTemplates.length === 0 && (
+            <div className="text-center py-12">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 font-medium">No templates found</p>
+              <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filter</p>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Add Custom Task Form */}
       <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Add New Task</h3>
+        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Plus className="h-5 w-5 text-graphite-700" />
+          Add Custom Task
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Task Name */}
           <div className="md:col-span-2">
@@ -2107,8 +3669,8 @@ function TabTasks({
                 ...currentChecklistItem,
                 itemName: e.target.value
               })}
-              placeholder="e.g., Oil Change, Brake Inspection"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              placeholder="e.g., Custom Repair, Special Service"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
             />
           </div>
 
@@ -2117,16 +3679,21 @@ function TabTasks({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Category
             </label>
-            <input
-              type="text"
-              value={currentChecklistItem.category}
+            <select
+              value={currentChecklistItem.category || 'Custom'}
               onChange={(e) => setCurrentChecklistItem({
                 ...currentChecklistItem,
                 category: e.target.value
               })}
-              placeholder="General"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
-            />
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+            >
+              <option value="Engine">Engine</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Body">Body</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Diagnostic">Diagnostic</option>
+              <option value="Custom">Custom</option>
+            </select>
           </div>
 
           {/* Priority */}
@@ -2169,7 +3736,7 @@ function TabTasks({
                 estimatedMinutes: parseInt(e.target.value) || 0
               })}
               min="0"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
             />
           </div>
 
@@ -2186,7 +3753,7 @@ function TabTasks({
                 laborRate: parseInt(e.target.value) || 0
               })}
               min="0"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
             />
           </div>
 
@@ -2201,85 +3768,1145 @@ function TabTasks({
                 ...currentChecklistItem,
                 description: e.target.value
               })}
-              placeholder="Task description..."
+              placeholder="Detailed task description..."
               rows={2}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-none"
             />
+          </div>
+
+          {/* Subtasks Section */}
+          <div className="md:col-span-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Subtasks <span className="text-xs text-gray-500 font-normal">(optional)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const newSubtask: Subtask = {
+                    id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    name: '',
+                    description: '',
+                    estimatedMinutes: 15,
+                    completed: false,
+                    displayOrder: (currentChecklistItem.subtasks?.length || 0) + 1,
+                  }
+                  setCurrentChecklistItem({
+                    ...currentChecklistItem,
+                    subtasks: [...(currentChecklistItem.subtasks || []), newSubtask]
+                  })
+                }}
+                className="text-xs flex items-center gap-1 text-graphite-700 hover:text-graphite-900 font-medium"
+              >
+                <Plus className="h-3 w-3" />
+                Add Subtask
+              </button>
+            </div>
+
+            {/* Subtasks List */}
+            {(currentChecklistItem.subtasks?.length ?? 0) > 0 ? (
+              <div className="space-y-2 mb-3">
+                {currentChecklistItem.subtasks?.map((subtask, index) => (
+                  <div key={subtask.id} className="flex gap-2 items-start p-3 bg-gray-50 rounded-lg border-2 border-gray-200">
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="text"
+                        value={subtask.name}
+                        onChange={(e) => {
+                          const updatedSubtasks = [...(currentChecklistItem.subtasks || [])]
+                          updatedSubtasks[index] = { ...updatedSubtasks[index], name: e.target.value }
+                          setCurrentChecklistItem({
+                            ...currentChecklistItem,
+                            subtasks: updatedSubtasks
+                          })
+                        }}
+                        placeholder="Subtask name"
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+                      />
+                      <input
+                        type="text"
+                        value={subtask.description}
+                        onChange={(e) => {
+                          const updatedSubtasks = [...(currentChecklistItem.subtasks || [])]
+                          updatedSubtasks[index] = { ...updatedSubtasks[index], description: e.target.value }
+                          setCurrentChecklistItem({
+                            ...currentChecklistItem,
+                            subtasks: updatedSubtasks
+                          })
+                        }}
+                        placeholder="Subtask description (optional)"
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+                      />
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Time (min)</label>
+                          <input
+                            type="number"
+                            value={subtask.estimatedMinutes}
+                            onChange={(e) => {
+                              const updatedSubtasks = [...(currentChecklistItem.subtasks || [])]
+                              updatedSubtasks[index] = { ...updatedSubtasks[index], estimatedMinutes: parseInt(e.target.value) || 0 }
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                subtasks: updatedSubtasks
+                              })
+                            }}
+                            min="1"
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedSubtasks = currentChecklistItem.subtasks?.filter((_, i) => i !== index) || []
+                            setCurrentChecklistItem({
+                              ...currentChecklistItem,
+                              subtasks: updatedSubtasks
+                            })
+                          }}
+                          className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors mt-4"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 mb-3">
+                <p className="text-sm text-gray-500">No subtasks added yet</p>
+                <p className="text-xs text-gray-400 mt-1">Click "Add Subtask" to break down this task</p>
+              </div>
+            )}
+          </div>
+
+          {/* Link to Issues/Scope/Diagnosis Section */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="border-t-2 border-gray-200 pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Link this task to <span className="text-status-error">*</span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3">Select at least one item from the categories below to track the task</p>
+
+              {/* Customer Reported Issues */}
+              {customerIssues.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Customer Reported Issues
+                  </p>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {customerIssues.map((issue, index) => (
+                      <label
+                        key={index}
+                        className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={currentChecklistItem.linkedToCustomerIssues?.includes(index) || false}
+                          onChange={(e) => {
+                            const currentLinked = currentChecklistItem.linkedToCustomerIssues || []
+                            if (e.target.checked) {
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                linkedToCustomerIssues: [...currentLinked, index]
+                              })
+                            } else {
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                linkedToCustomerIssues: currentLinked.filter(i => i !== index)
+                              })
+                            }
+                          }}
+                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
+                        />
+                        <span className="text-sm text-gray-700 flex-1">{issue}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Service Scope Items */}
+              {serviceItems.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    Service Scope Items
+                  </p>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {serviceItems.map((item, index) => (
+                      <label
+                        key={index}
+                        className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={currentChecklistItem.linkedToServiceScope?.includes(index) || false}
+                          onChange={(e) => {
+                            const currentLinked = currentChecklistItem.linkedToServiceScope || []
+                            if (e.target.checked) {
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                linkedToServiceScope: [...currentLinked, index]
+                              })
+                            } else {
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                linkedToServiceScope: currentLinked.filter(i => i !== index)
+                              })
+                            }
+                          }}
+                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
+                        />
+                        <span className="text-sm text-gray-700 flex-1">{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Technical Diagnosis Items */}
+              {diagnosisItems.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                    <Scan className="h-3 w-3" />
+                    Technical Diagnosis Items
+                  </p>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {diagnosisItems.map((item, index) => (
+                      <label
+                        key={index}
+                        className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={currentChecklistItem.linkedToTechnicalDiagnosis?.includes(index) || false}
+                          onChange={(e) => {
+                            const currentLinked = currentChecklistItem.linkedToTechnicalDiagnosis || []
+                            if (e.target.checked) {
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                linkedToTechnicalDiagnosis: [...currentLinked, index]
+                              })
+                            } else {
+                              setCurrentChecklistItem({
+                                ...currentChecklistItem,
+                                linkedToTechnicalDiagnosis: currentLinked.filter(i => i !== index)
+                              })
+                            }
+                          }}
+                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
+                        />
+                        <span className="text-sm text-gray-700 flex-1">{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {customerIssues.length === 0 && serviceItems.length === 0 && diagnosisItems.length === 0 && (
+                <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <p className="text-sm text-gray-500">No items available from previous pages</p>
+                  <p className="text-xs text-gray-400 mt-1">Please add customer issues, service scope, or diagnosis items in the Details tab</p>
+                </div>
+              )}
+
+              {/* Show link status */}
+              {(
+                (currentChecklistItem.linkedToCustomerIssues?.length || 0) +
+                (currentChecklistItem.linkedToServiceScope?.length || 0) +
+                (currentChecklistItem.linkedToTechnicalDiagnosis?.length || 0)
+              ) > 0 && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-600">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                  <span>
+                    Linked to {(
+                      (currentChecklistItem.linkedToCustomerIssues?.length || 0) +
+                      (currentChecklistItem.linkedToServiceScope?.length || 0) +
+                      (currentChecklistItem.linkedToTechnicalDiagnosis?.length || 0)
+                    )} item(s)
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <button
           type="button"
           onClick={onAddItem}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
+          disabled={!currentChecklistItem.itemName.trim()}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4" />
-          Add Task to Checklist
+          Add Custom Task
         </button>
       </div>
 
-      {/* Task List */}
+      {/* Task List with Enhanced Cards */}
       {checklistItems.length > 0 && (
         <div className="space-y-3">
-          <h4 className="font-semibold text-gray-900">Tasks Added</h4>
-          {checklistItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: index * 0.05 }}
-              className="flex items-start gap-3 p-4 bg-white rounded-xl border-2 border-gray-200"
-            >
-              <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-                <Tool className="h-4 w-4 text-gray-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-gray-900">{item.itemName}</p>
-                  <span
-                    className={cn(
-                      "px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                      getPriorityColor(item.priority)
+          <div className="flex items-center justify-between">
+            <h4 className="font-semibold text-gray-900">Tasks Added</h4>
+            <span className="text-sm text-gray-600">
+              {checklistItems.reduce((sum, item) => sum + item.estimatedMinutes, 0)} total minutes
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {checklistItems.map((item, index) => {
+              const isExpanded = expandedTaskId === item.id
+              const itemCost = Math.round((item.estimatedMinutes / 60) * item.laborRate)
+              const hasLinks =
+                (item.linkedToCustomerIssues?.length || 0) +
+                (item.linkedToServiceScope?.length || 0) +
+                (item.linkedToTechnicalDiagnosis?.length || 0) > 0
+
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className={cn(
+                    "bg-white rounded-xl border-2 transition-all relative overflow-hidden",
+                    isExpanded ? "border-graphite-300" : !hasLinks ? "border-amber-300 shadow-md shadow-amber-100" : "border-gray-200"
+                  )}
+                >
+                  <div className="p-4">
+                    <div className="flex items-start gap-3">
+                      {/* Drag Handle */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <Wrench className="h-4 w-4 text-gray-700" />
+                        </div>
+                      </div>
+
+                      {/* Task Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h5 className="font-semibold text-gray-900">{item.itemName}</h5>
+                          <span
+                            className={cn(
+                              "px-2 py-0.5 rounded-full text-xs font-medium capitalize shrink-0",
+                              getPriorityColor(item.priority)
+                            )}
+                          >
+                            {item.priority}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                            {item.category}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-1">
+                          <span className="flex items-center gap-1">
+                            <Timer className="h-3.5 w-3.5" />
+                            {item.estimatedMinutes} min
+                          </span>
+                          <span className="font-medium text-graphite-700">₹{itemCost}</span>
+                          <span>₹{item.laborRate}/hr</span>
+                        </div>
+
+                        {item.description && (
+                          <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                        )}
+
+                        {/* Linked Items Preview - Modern Badge System */}
+                        {(
+                          (item.linkedToCustomerIssues?.length || 0) +
+                          (item.linkedToServiceScope?.length || 0) +
+                          (item.linkedToTechnicalDiagnosis?.length || 0)
+                        ) > 0 ? (
+                          <div className="mt-2.5 flex items-center flex-wrap gap-1.5">
+                            {item.linkedToCustomerIssues && item.linkedToCustomerIssues.length > 0 && (
+                              <>
+                                {item.linkedToCustomerIssues.slice(0, 2).map((idx, i) => (
+                                  <span
+                                    key={`ci-preview-${i}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200 hover:from-red-100 hover:to-red-150 transition-all cursor-help shadow-sm"
+                                    title={customerIssues[idx]}
+                                  >
+                                    <AlertCircle className="h-3 w-3 shrink-0" />
+                                    <span className="max-w-[120px] truncate">{customerIssues[idx]}</span>
+                                  </span>
+                                ))}
+                                {item.linkedToCustomerIssues.length > 2 && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-100 text-red-600 border border-red-200 shadow-sm">
+                                    +{item.linkedToCustomerIssues.length - 2}
+                                  </span>
+                                )}
+                              </>
+                            )}
+
+                            {item.linkedToServiceScope && item.linkedToServiceScope.length > 0 && (
+                              <>
+                                {item.linkedToServiceScope.slice(0, 2).map((idx, i) => (
+                                  <span
+                                    key={`ss-preview-${i}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-blue-150 transition-all cursor-help shadow-sm"
+                                    title={serviceItems[idx]}
+                                  >
+                                    <FileText className="h-3 w-3 shrink-0" />
+                                    <span className="max-w-[120px] truncate">{serviceItems[idx]}</span>
+                                  </span>
+                                ))}
+                                {item.linkedToServiceScope.length > 2 && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-600 border border-blue-200 shadow-sm">
+                                    +{item.linkedToServiceScope.length - 2}
+                                  </span>
+                                )}
+                              </>
+                            )}
+
+                            {item.linkedToTechnicalDiagnosis && item.linkedToTechnicalDiagnosis.length > 0 && (
+                              <>
+                                {item.linkedToTechnicalDiagnosis.slice(0, 2).map((idx, i) => (
+                                  <span
+                                    key={`td-preview-${i}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 hover:from-purple-100 hover:to-purple-150 transition-all cursor-help shadow-sm"
+                                    title={diagnosisItems[idx]}
+                                  >
+                                    <Scan className="h-3 w-3 shrink-0" />
+                                    <span className="max-w-[120px] truncate">{diagnosisItems[idx]}</span>
+                                  </span>
+                                ))}
+                                {item.linkedToTechnicalDiagnosis.length > 2 && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-600 border border-purple-200 shadow-sm">
+                                    +{item.linkedToTechnicalDiagnosis.length - 2}
+                                  </span>
+                                )}
+                              </>
+                            )}
+
+                            {/* Link count indicator */}
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 border border-gray-200 shadow-sm">
+                              <Link2 className="h-3 w-3" />
+                              <span className="font-semibold">
+                                {(
+                                  (item.linkedToCustomerIssues?.length || 0) +
+                                  (item.linkedToServiceScope?.length || 0) +
+                                  (item.linkedToTechnicalDiagnosis?.length || 0)
+                                )}
+                              </span>
+                            </span>
+                          </div>
+                        ) : (
+                          /* Unlinked Task Warning */
+                          <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200 shadow-sm animate-pulse">
+                            <Unlink className="h-3 w-3" />
+                            <span>Not linked - Click to add connections</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedTaskId(isExpanded ? null : item.id)}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveItem(item.id)}
+                          className="p-1.5 rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="mt-4 pt-4 border-t border-gray-200"
+                      >
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-500 mb-1">Category</p>
+                            <p className="font-medium text-gray-900">{item.category}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 mb-1">Priority</p>
+                            <p className="font-medium capitalize text-gray-900">{item.priority}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 mb-1">Estimated Time</p>
+                            <p className="font-medium text-gray-900">{item.estimatedMinutes} min</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 mb-1">Labor Rate</p>
+                            <p className="font-medium text-gray-900">₹{item.laborRate}/hr</p>
+                          </div>
+                        </div>
+
+                        {item.description && (
+                          <div className="mt-4">
+                            <p className="text-gray-500 mb-1">Description</p>
+                            <p className="text-gray-900">{item.description}</p>
+                          </div>
+                        )}
+
+                        {/* Linked Items Section */}
+                        {(
+                          (item.linkedToCustomerIssues?.length || 0) +
+                          (item.linkedToServiceScope?.length || 0) +
+                          (item.linkedToTechnicalDiagnosis?.length || 0)
+                        ) > 0 && (
+                          <div className="mt-4">
+                            <p className="text-gray-500 mb-2 flex items-center gap-1.5">
+                              <Link2 className="h-4 w-4" />
+                              Linked to
+                            </p>
+                            <div className="space-y-2">
+                              {item.linkedToCustomerIssues && item.linkedToCustomerIssues.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {item.linkedToCustomerIssues.map((idx, i) => (
+                                    <span
+                                      key={`ci-${i}`}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700 border border-red-200"
+                                    >
+                                      <AlertCircle className="h-3 w-3" />
+                                      {customerIssues[idx]}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {item.linkedToServiceScope && item.linkedToServiceScope.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {item.linkedToServiceScope.map((idx, i) => (
+                                    <span
+                                      key={`ss-${i}`}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200"
+                                    >
+                                      <FileText className="h-3 w-3" />
+                                      {serviceItems[idx]}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {item.linkedToTechnicalDiagnosis && item.linkedToTechnicalDiagnosis.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {item.linkedToTechnicalDiagnosis.map((idx, i) => (
+                                    <span
+                                      key={`td-${i}`}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200"
+                                    >
+                                      <Scan className="h-3 w-3" />
+                                      {diagnosisItems[idx]}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="mt-4 p-3 bg-graphite-800/5 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Estimated Cost for this task:</span>
+                            <span className="text-lg font-bold text-graphite-700">₹{itemCost}</span>
+                          </div>
+                        </div>
+                      </motion.div>
                     )}
-                  >
-                    {item.priority}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {item.estimatedMinutes} min • {item.category} • ₹{item.laborRate}/hr
-                </p>
-                {item.description && (
-                  <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => onRemoveItem(item.id)}
-                className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </motion.div>
-          ))}
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onPreviousTab}
-          className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-graphite-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={() => {
+            /* TODO: Implement save as draft functionality */
+            console.log('Save as draft')
+          }}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Back
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">Save as Draft</span>
+          <span className="sm:hidden">Save Draft</span>
         </button>
         <button
           type="button"
           onClick={onNextTab}
-          className="flex items-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
         >
-          Next: Scheduling
+          <span className="hidden sm:inline">Next: Labor & Parts</span>
+          <span className="sm:hidden">Next</span>
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Template Linking Modal */}
+      {pendingTemplate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Link Template Task</h3>
+                <button
+                  type="button"
+                  onClick={cancelTemplateLink}
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <p className="font-medium text-gray-900">{pendingTemplate.name}</p>
+                <p className="text-sm text-gray-600 mt-1">{pendingTemplate.description}</p>
+                <div className="flex items-center gap-3 mt-2 text-sm">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                    {pendingTemplate.category}
+                  </span>
+                  <span className="text-gray-600">
+                    {calculateTaskTime(pendingTemplate)} min
+                  </span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Link this task to <span className="text-status-error">*</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-3">Select at least one item from the categories below</p>
+
+                {/* Customer Reported Issues */}
+                {customerIssues.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Customer Reported Issues
+                    </p>
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                      {customerIssues.map((issue, index) => (
+                        <label
+                          key={index}
+                          className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={templateLinks.customerIssues.includes(index)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTemplateLinks(prev => ({
+                                  ...prev,
+                                  customerIssues: [...prev.customerIssues, index]
+                                }))
+                              } else {
+                                setTemplateLinks(prev => ({
+                                  ...prev,
+                                  customerIssues: prev.customerIssues.filter(i => i !== index)
+                                }))
+                              }
+                            }}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
+                          />
+                          <span className="text-sm text-gray-700 flex-1">{issue}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Service Scope Items */}
+                {serviceItems.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Service Scope Items
+                    </p>
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                      {serviceItems.map((item, index) => (
+                        <label
+                          key={index}
+                          className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={templateLinks.serviceScope.includes(index)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTemplateLinks(prev => ({
+                                  ...prev,
+                                  serviceScope: [...prev.serviceScope, index]
+                                }))
+                              } else {
+                                setTemplateLinks(prev => ({
+                                  ...prev,
+                                  serviceScope: prev.serviceScope.filter(i => i !== index)
+                                }))
+                              }
+                            }}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
+                          />
+                          <span className="text-sm text-gray-700 flex-1">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Technical Diagnosis Items */}
+                {diagnosisItems.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                      <Scan className="h-3 w-3" />
+                      Technical Diagnosis Items
+                    </p>
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                      {diagnosisItems.map((item, index) => (
+                        <label
+                          key={index}
+                          className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={templateLinks.technicalDiagnosis.includes(index)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTemplateLinks(prev => ({
+                                  ...prev,
+                                  technicalDiagnosis: [...prev.technicalDiagnosis, index]
+                                }))
+                              } else {
+                                setTemplateLinks(prev => ({
+                                  ...prev,
+                                  technicalDiagnosis: prev.technicalDiagnosis.filter(i => i !== index)
+                                }))
+                              }
+                            }}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
+                          />
+                          <span className="text-sm text-gray-700 flex-1">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {customerIssues.length === 0 && serviceItems.length === 0 && diagnosisItems.length === 0 && (
+                  <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <p className="text-sm text-gray-500">No items available from previous pages</p>
+                    <p className="text-xs text-gray-400 mt-1">Please add items in the Details tab first</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Link status */}
+              {(
+                templateLinks.customerIssues.length +
+                templateLinks.serviceScope.length +
+                templateLinks.technicalDiagnosis.length
+              ) > 0 && (
+                <div className="mb-4 flex items-center gap-1.5 text-xs text-gray-600">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                  <span>
+                    Linked to {(
+                      templateLinks.customerIssues.length +
+                      templateLinks.serviceScope.length +
+                      templateLinks.technicalDiagnosis.length
+                    )} item(s)
+                  </span>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={cancelTemplateLink}
+                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmAddTemplate}
+                  disabled={
+                    templateLinks.customerIssues.length +
+                    templateLinks.serviceScope.length +
+                    templateLinks.technicalDiagnosis.length ===
+                    0
+                  }
+                  className="flex-1 px-4 py-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Task
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ============================================================================
+// TAB: LABOR & PARTS
+// ============================================================================
+
+interface TabLaborPartsProps {
+  checklistItems: ChecklistItem[]
+  selectedParts: Array<{
+    id: string
+    partId: string | null
+    partName: string
+    partNumber: string | null
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+  }>
+  setSelectedParts: React.Dispatch<React.SetStateAction<Array<{
+    id: string
+    partId: string | null
+    partName: string
+    partNumber: string | null
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+  }>>>
+  calculateEstimatedCosts: () => {
+    totalLaborMinutes: number
+    totalLaborHours: string
+    totalLaborCost: string
+    totalPartsCost: string
+    totalCost: string
+    taskCount: number
+    partsCount: number
+  }
+  onPreviousTab: () => void
+  onNextTab: () => void
+}
+
+function TabLaborParts({
+  checklistItems,
+  selectedParts,
+  setSelectedParts,
+  calculateEstimatedCosts,
+  onPreviousTab,
+  onNextTab,
+}: TabLaborPartsProps) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isLoadingParts, setIsLoadingParts] = useState(false)
+  const [partsSearchResults, setPartsSearchResults] = useState<any[]>([])
+
+  // Calculate costs
+  const costs = calculateEstimatedCosts()
+
+  // Add part handler
+  const handleAddPart = (part: any) => {
+    // The API returns camelCase field names: sellingPrice, partName, partNumber
+    const unitPrice = part.sellingPrice || part.selling_price || 0
+
+    const newPart = {
+      id: Date.now().toString(),
+      partId: part.id || null,
+      partName: part.partName || part.part_name,
+      partNumber: part.partNumber || part.part_number || null,
+      quantity: 1,
+      unitPrice: unitPrice,
+      totalPrice: unitPrice,
+    }
+
+    setSelectedParts([...selectedParts, newPart])
+    setSearchQuery('')
+    setPartsSearchResults([])
+  }
+
+  // Update part quantity
+  const handleUpdatePartQuantity = (partId: string, quantity: number) => {
+    setSelectedParts(selectedParts.map(part => {
+      if (part.id === partId) {
+        const newQuantity = Math.max(1, quantity)
+        return {
+          ...part,
+          quantity: newQuantity,
+          totalPrice: newQuantity * part.unitPrice
+        }
+      }
+      return part
+    }))
+  }
+
+  // Remove part
+  const handleRemovePart = (partId: string) => {
+    setSelectedParts(selectedParts.filter(part => part.id !== partId))
+  }
+
+  // Search parts
+  const handleSearchParts = async (query: string) => {
+    setSearchQuery(query)
+    if (query.length < 2) {
+      setPartsSearchResults([])
+      return
+    }
+
+    setIsLoadingParts(true)
+    try {
+      const response = await fetch('/api/inventory/list?' + new URLSearchParams({
+        search: query,
+        limit: '10'
+      }))
+      const data = await response.json()
+      setPartsSearchResults(data.parts || [])
+    } catch (error) {
+      console.error('Error searching parts:', error)
+      setPartsSearchResults([])
+    } finally {
+      setIsLoadingParts(false)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
+      {/* Header */}
+      <div className="text-center mb-8">
+        <Wrench className="h-12 w-12 mx-auto mb-4 text-graphite-700" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Labor & Parts</h2>
+        <p className="text-gray-600">Review labor time and manage parts for this job</p>
+      </div>
+
+      {/* Cost Summary Tiles */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Tasks */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Total Tasks</p>
+              <p className="text-3xl font-bold text-gray-900">{costs.taskCount}</p>
+            </div>
+            <ClipboardCheck className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-xs text-gray-600 mt-2">{costs.totalLaborHours} hours</p>
+        </div>
+
+        {/* Est Labor Cost */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Est Labor Cost</p>
+              <p className="text-2xl font-bold text-gray-900">₹{costs.totalLaborCost}</p>
+            </div>
+            <Timer className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-xs text-gray-600 mt-2">{costs.totalLaborMinutes} minutes</p>
+        </div>
+
+        {/* Est Parts Cost */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Est Parts Cost</p>
+              <p className="text-2xl font-bold text-gray-900">₹{costs.totalPartsCost}</p>
+            </div>
+            <Package className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-xs text-gray-600 mt-2">{costs.partsCount} parts</p>
+        </div>
+
+        {/* Total Est Cost */}
+        <div className="bg-gradient-to-br from-graphite-700 to-graphite-900 rounded-xl border-2 border-graphite-800 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-300 mb-1">Total Est Cost</p>
+              <p className="text-2xl font-bold text-white">₹{costs.totalCost}</p>
+            </div>
+            <TrendingUp className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-xs text-gray-400 mt-2">Labor + Parts</p>
+        </div>
+      </div>
+
+      {/* Labor Time Tracking Section */}
+      <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Timer className="h-5 w-5 text-gray-600" />
+          Labor Time Tracking
+        </h3>
+        <div className="space-y-3">
+          {checklistItems.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <ClipboardCheck className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <p className="text-gray-600">No tasks added yet. Go to Tasks tab to add tasks.</p>
+            </div>
+          ) : (
+            checklistItems.map((item) => {
+              const laborCost = ((item.estimatedMinutes / 60) * item.laborRate).toFixed(2)
+              return (
+                <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{item.itemName}</p>
+                    <p className="text-sm text-gray-500">{item.estimatedMinutes} min × ₹{item.laborRate}/hr</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-gray-900">₹{laborCost}</p>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Parts Management Section */}
+      <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Package className="h-5 w-5 text-gray-600" />
+          Parts & Materials
+        </h3>
+
+        {/* Add Parts Search */}
+        <div className="mb-6 relative">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search parts by name or number..."
+                value={searchQuery}
+                onChange={(e) => handleSearchParts(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Search Results Dropdown */}
+          {searchQuery.length >= 2 && partsSearchResults.length > 0 && (
+            <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+              {partsSearchResults.map((part) => (
+                <button
+                  key={part.id}
+                  type="button"
+                  onClick={() => handleAddPart(part)}
+                  className="w-full px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{part.partName}</p>
+                      <p className="text-sm text-gray-500">{part.partNumber} • {part.category}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">₹{part.sellingPrice.toFixed(2)}</p>
+                      <p className="text-xs text-gray-500">Stock: {part.onHandStock}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isLoadingParts && (
+            <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-lg p-4 text-center">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" />
+              <p className="text-sm text-gray-600 mt-2">Searching parts...</p>
+            </div>
+          )}
+        </div>
+
+        {/* Selected Parts List */}
+        {selectedParts.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <Package className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-600">No parts added yet. Search and add parts above.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {selectedParts.map((part) => (
+              <div key={part.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{part.partName}</p>
+                  {part.partNumber && (
+                    <p className="text-sm text-gray-500">SKU: {part.partNumber}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdatePartQuantity(part.id, part.quantity - 1)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+                    >
+                      <Minus className="h-4 w-4 text-gray-700" />
+                    </button>
+                    <span className="w-12 text-center font-semibold text-graphite-900">{part.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdatePartQuantity(part.id, part.quantity + 1)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+                    >
+                      <Plus className="h-4 w-4 text-gray-700" />
+                    </button>
+                  </div>
+                  <div className="text-right min-w-[100px]">
+                    <p className="text-lg font-semibold text-gray-900">₹{part.totalPrice.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">₹{part.unitPrice.toFixed(2)} each</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePart(part.id)}
+                    className="p-2 rounded-lg hover:bg-red-100 transition-colors text-red-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={() => {
+            /* TODO: Implement save as draft functionality */
+            console.log('Save as draft')
+          }}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+        >
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">Save as Draft</span>
+          <span className="sm:hidden">Save Draft</span>
+        </button>
+        <button
+          type="button"
+          onClick={onNextTab}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
+        >
+          <span className="hidden sm:inline">Next: Scheduling</span>
+          <span className="sm:hidden">Next</span>
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -2344,7 +4971,7 @@ function TabScheduling({
               type="date"
               value={promisedDate}
               onChange={(e) => setPromisedDate(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
             />
           </div>
         </div>
@@ -2359,7 +4986,7 @@ function TabScheduling({
               type="time"
               value={promisedTime}
               onChange={(e) => setPromisedTime(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
             />
           </div>
         </div>
@@ -2387,14 +5014,16 @@ function TabScheduling({
               value={serviceAdvisorId}
               onChange={(e) => setServiceAdvisorId(e.target.value)}
               disabled={isLoadingEmployees}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Unassigned</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.firstName} {employee.lastName} - {employee.role}
-                </option>
-              ))}
+              {employees
+                .filter((employee) => employee.role === 'Manager')
+                .map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </option>
+                ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
           </div>
@@ -2409,14 +5038,16 @@ function TabScheduling({
               value={leadMechanicId}
               onChange={(e) => setLeadMechanicId(e.target.value)}
               disabled={isLoadingEmployees}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Unassigned</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.firstName} {employee.lastName} - {employee.role}
-                </option>
-              ))}
+              {employees
+                .filter((employee) => employee.role === 'Mechanic')
+                .map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </option>
+                ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
           </div>
@@ -2433,26 +5064,31 @@ function TabScheduling({
           onChange={(e) => setInternalNotes(e.target.value)}
           placeholder="Internal notes for mechanics and staff..."
           rows={3}
-          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
+          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-none"
         />
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onPreviousTab}
-          className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-graphite-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={() => {
+            /* TODO: Implement save as draft functionality */
+            console.log('Save as draft')
+          }}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Back
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">Save as Draft</span>
+          <span className="sm:hidden">Save Draft</span>
         </button>
         <button
           type="button"
           onClick={onNextTab}
-          className="flex items-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
         >
-          Next: Review
+          <span className="hidden sm:inline">Next: Review</span>
+          <span className="sm:hidden">Next</span>
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -2466,9 +5102,8 @@ function TabReview({
   selectedVehicle,
   jobType,
   priority,
-  initialStatus,
-  customerComplaint,
-  workRequested,
+  customerReportIssues,
+  workRequestedItems,
   checklistItems,
   promisedDate,
   promisedTime,
@@ -2489,9 +5124,8 @@ function TabReview({
   selectedVehicle: VehicleData | null
   jobType: JobType
   priority: Priority
-  initialStatus: JobStatus
-  customerComplaint: string
-  workRequested: string
+  customerReportIssues: string[]
+  workRequestedItems: string[]
   checklistItems: ChecklistItem[]
   promisedDate: string
   promisedTime: string
@@ -2583,21 +5217,43 @@ function TabReview({
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Status</p>
-                <p className="font-medium text-gray-900 capitalize">{initialStatus.replace('_', ' ')}</p>
+                <p className="font-medium text-gray-900 capitalize">Queued</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Tasks</p>
                 <p className="font-medium text-gray-900">{checklistItems.length} items</p>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Customer Complaint</p>
-                <p className="text-sm text-gray-900">{customerComplaint}</p>
+                <p className="text-sm text-gray-500 mb-2">Customer Report Issues</p>
+                {customerReportIssues.length > 0 ? (
+                  <ul className="space-y-1">
+                    {customerReportIssues.map((issue, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-gray-900">
+                        <div className="h-1.5 w-1.5 rounded-full bg-graphite-700 mt-1.5 shrink-0" />
+                        <span className="break-words overflow-wrap-anywhere">{issue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-400">No issues reported</p>
+                )}
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Work Requested</p>
-                <p className="text-sm text-gray-900">{workRequested}</p>
+                <p className="text-sm text-gray-500 mb-2">Service Scope Checklist</p>
+                {workRequestedItems.length > 0 ? (
+                  <ul className="space-y-1">
+                    {workRequestedItems.map((item, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-gray-900">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
+                        <span className="break-words overflow-wrap-anywhere">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-400">No service items specified</p>
+                )}
               </div>
             </div>
           </div>
@@ -2612,11 +5268,11 @@ function TabReview({
               <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
                 {checklistItems.map((item, index) => (
                   <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{item.itemName}</p>
+                    <div className="flex-1 min-w-0 pr-4">
+                      <p className="text-sm font-medium text-gray-900 break-words overflow-wrap-anywhere">{item.itemName}</p>
                       <p className="text-xs text-gray-500">{item.estimatedMinutes} min • {item.category}</p>
                     </div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 shrink-0">
                       ₹{((item.estimatedMinutes / 60) * item.laborRate).toFixed(2)}
                     </p>
                   </div>
@@ -2624,7 +5280,7 @@ function TabReview({
               </div>
               <div className="flex justify-between items-center pt-3 border-t-2 border-gray-300">
                 <span className="font-semibold text-gray-900">Total Estimated Cost</span>
-                <span className="text-xl font-bold text-brand">
+                <span className="text-xl font-bold text-graphite-700">
                   ₹{costs.totalCost}
                 </span>
               </div>
@@ -2680,22 +5336,13 @@ function TabReview({
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             type="button"
-            onClick={onPreviousTab}
-            disabled={isLoading || success}
-            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Back
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            type="button"
             onClick={(e) => onSubmit(e as React.FormEvent, true)}
             disabled={isLoading || success}
             className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Save className="h-4 w-4" />
-            Save as Draft
+            <span className="hidden sm:inline">Save as Draft</span>
+            <span className="sm:hidden">Save Draft</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.01 }}
@@ -2707,17 +5354,20 @@ function TabReview({
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Creating Job Card...
+                <span className="hidden sm:inline">Creating Job Card...</span>
+                <span className="sm:hidden">Creating...</span>
               </>
             ) : success ? (
               <>
-                <CheckCircle2 className="h-4 w-4" />
-                Created Successfully!
+                <CheckCircle2 className="h-4 w-4" style={{ color: '#0D9488' }} />
+                <span className="hidden sm:inline">Created Successfully!</span>
+                <span className="sm:hidden">Created!</span>
               </>
             ) : (
               <>
-                <FileText className="h-4 w-4" />
-                Create Job Card
+                <ArrowRight className="h-4 w-4" />
+                <span className="hidden sm:inline">Send to Queue</span>
+                <span className="sm:hidden">Send to Queue</span>
               </>
             )}
           </motion.button>

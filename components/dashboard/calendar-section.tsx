@@ -1,8 +1,14 @@
 /**
  * CalendarSection Component
  *
- * Calendar component for dashboard showing scheduled job cards
- * Supports Day/Week/Month views with FullCalendar integration
+ * Enhanced calendar for dashboard showing scheduled job cards
+ * Features:
+ * - Context menu for quick actions
+ * - Enhanced tooltips
+ * - Progress indicators
+ * - Keyboard shortcuts
+ * - Touch gestures
+ * - Improved color coding
  */
 
 'use client'
@@ -16,6 +22,10 @@ import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2, Calendar as CalendarIcon } from 'lucide-react'
 import type { DashboardCalendarJobCard } from '@/lib/supabase/dashboard-queries'
 import type { CalendarViewMode } from '@/app/job-cards/types/calendar.types'
+import { useCalendarTouchGestures } from '@/app/job-cards/hooks/use-touch-gestures'
+import { EventContextMenu } from '@/app/job-cards/components/calendar/EventContextMenu'
+import { EnhancedTooltip } from '@/app/job-cards/components/calendar/EnhancedTooltip'
+import { EventWithProgress } from '@/app/job-cards/components/calendar/EventWithProgress'
 
 interface CalendarSectionProps {
   jobCards: DashboardCalendarJobCard[]
@@ -26,6 +36,7 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
   const router = useRouter()
   const [viewMode, setViewMode] = useState<CalendarViewMode>('timeGridDay')
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null)
 
   // Transform job cards to calendar events
   const events = useMemo(() => {
@@ -98,18 +109,48 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
     setCurrentDate(newDate)
   }
 
-  // Custom event render
+  // Touch gesture support
+  useCalendarTouchGestures(
+    () => handleDateNavigate('prev'),
+    () => handleDateNavigate('next'),
+    true
+  )
+
+  // Custom event render with enhanced features
   const eventContent = (eventInfo: any) => {
     const props = eventInfo.event.extendedProps
     const jobCard = props.jobCard
+    const isHovered = hoveredEventId === jobCard.id
+
+    // Convert DashboardCalendarJobCard to JobCardViewData format
+    const jobCardViewData = {
+      ...jobCard,
+      customerName: jobCard.customerName || '',
+      leadMechanicName: null,
+    }
 
     return (
-      <div className="p-1 text-xs">
-        <div className="font-semibold truncate text-[10px] sm:text-xs">{jobCard.jobCardNumber}</div>
-        <div className="truncate opacity-90 text-[9px] sm:text-xs hidden sm:block">
-          {jobCard.vehicleMake} {jobCard.vehicleModel}
-        </div>
-      </div>
+      <EventContextMenu
+        jobCard={jobCardViewData}
+        onStatusChange={(status) => {
+          console.log(`📋 Update status: ${jobCard.id} -> ${status}`)
+          // TODO: Implement status update
+        }}
+      >
+        <EnhancedTooltip jobCard={jobCardViewData}>
+          <div
+            onMouseEnter={() => setHoveredEventId(jobCard.id)}
+            onMouseLeave={() => setHoveredEventId(null)}
+            className="h-full w-full"
+          >
+            <EventWithProgress
+              jobCard={jobCardViewData}
+              isHovered={isHovered}
+              compact={viewMode === 'dayGridMonth'}
+            />
+          </div>
+        </EnhancedTooltip>
+      </EventContextMenu>
     )
   }
 
@@ -318,6 +359,12 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
           aspectRatio={1.35}
           dayHeaderFormat={{ weekday: 'short' }}
           eventMinHeight={36}
+          // Accessibility improvements
+          eventDidMount={(info) => {
+            const jobCard = info.event.extendedProps.jobCard
+            info.el.setAttribute('role', 'button')
+            info.el.setAttribute('aria-label', `${jobCard.jobCardNumber} - ${jobCard.vehicleMake} ${jobCard.vehicleModel}, Status: ${jobCard.status}, Priority: ${jobCard.priority}`)
+          }}
         />
       </div>
 

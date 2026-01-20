@@ -334,7 +334,7 @@ ALTER TABLE users ADD CONSTRAINT users_user_role_check
 
 ## License
 
-This test suite is part of the RevOS Garage Management System.
+This test suite is part of the RevvOs Garage Management System.
 
 ---
 

@@ -345,24 +345,25 @@ export function ForgotPasswordModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-          className="relative w-full max-w-md bg-gradient-to-b from-graphite-800 to-graphite-800/95 border border-brand/30 rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.2),0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden"
+          className="relative w-full max-w-md bg-white border rounded-2xl shadow-[0_0_40px_rgba(204,255,0,0.06),0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+          style={{ borderColor: 'rgba(204, 255, 0, 0.2)' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-brand/10">
+          <div className="flex items-center justify-between px-6 py-5 border-b rounded-t-2xl" style={{ borderColor: 'rgba(204, 255, 0, 0.15)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center">
-                {currentStep === 'request' && <Shield className="w-5 h-5 text-brand" strokeWidth={2} />}
-                {currentStep === 'verify' && <Mail className="w-5 h-5 text-brand" strokeWidth={2} />}
-                {currentStep === 'success' && <CheckCircle2 className="w-5 h-5 text-brand" strokeWidth={2} />}
+              <div className="w-10 h-10 rounded-xl bg-graphite-100 flex items-center justify-center">
+                {currentStep === 'request' && <Shield className="w-5 h-5 text-graphite-700" strokeWidth={2} />}
+                {currentStep === 'verify' && <Mail className="w-5 h-5 text-graphite-700" strokeWidth={2} />}
+                {currentStep === 'success' && <CheckCircle2 className="w-5 h-5 text-graphite-700" strokeWidth={2} />}
               </div>
               <div>
-                <h2 className="text-lg font-display font-bold text-white">
+                <h2 className="text-lg font-display font-bold text-gray-900">
                   {currentStep === 'request' && 'Forgot Password'}
                   {currentStep === 'verify' && 'Verify OTP'}
                   {currentStep === 'success' && 'Password Reset'}
                 </h2>
-                <p className="text-xs text-graphite-400">
+                <p className="text-xs text-gray-500">
                   {currentStep === 'request' && 'Reset your password securely'}
                   {currentStep === 'verify' && 'Enter the code sent to your email'}
                   {currentStep === 'success' && 'Your password has been reset'}
@@ -371,10 +372,10 @@ export function ForgotPasswordModal({
             </div>
             <button
               onClick={handleClose}
-              className="w-8 h-8 rounded-lg bg-graphite-900/50 hover:bg-graphite-900 flex items-center justify-center transition-colors duration-200"
+              className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
               aria-label="Close modal"
             >
-              <X className="w-4 h-4 text-graphite-400" strokeWidth={2} />
+              <X className="w-4 h-4 text-gray-600" strokeWidth={2} />
             </button>
           </div>
 
@@ -389,18 +390,18 @@ export function ForgotPasswordModal({
                 />
                 <div
                   className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                    currentStep === 'verify' ? 'bg-brand' : 'bg-graphite-700'
+                    currentStep === 'verify' ? 'bg-brand' : 'bg-gray-300'
                   }`}
                 />
                 <div
-                  className={`h-1 flex-1 rounded-full transition-all duration-300 bg-graphite-700`}
+                  className={`h-1 flex-1 rounded-full transition-all duration-300 bg-gray-300`}
                 />
               </div>
             </div>
           )}
 
           {/* Modal Body */}
-          <div className="p-6">
+          <div className="p-6 bg-white">
             <AnimatePresence mode="wait">
               {/* Step 1: Request Password Reset */}
               {currentStep === 'request' && (
@@ -430,7 +431,7 @@ export function ForgotPasswordModal({
 
                   <form onSubmit={handleSubmitRequest(onRequestSubmit)} className="space-y-5" noValidate>
                     <div className="text-center mb-4">
-                      <p className="text-sm text-graphite-300">
+                      <p className="text-sm text-gray-600">
                         Enter your login ID and we'll send you an OTP code to reset your password.
                       </p>
                     </div>
@@ -439,7 +440,7 @@ export function ForgotPasswordModal({
                     <div className="space-y-3">
                       <label
                         htmlFor="loginId"
-                        className="block text-xs font-bold uppercase tracking-widest text-brand/90 flex items-center gap-2"
+                        className="block text-xs font-bold uppercase tracking-widest text-gray-700 flex items-center gap-2"
                       >
                         <Shield className="w-3.5 h-3.5" />
                         Login ID
@@ -456,18 +457,18 @@ export function ForgotPasswordModal({
                         aria-describedby={requestErrors.loginId ? 'loginId-error' : undefined}
                         className={`
                           w-full h-12 px-4
-                          text-base bg-white text-graphite-900
-                          border rounded-lg
-                          placeholder:text-graphite-500
+                          text-base bg-white text-gray-900
+                          border-2 rounded-lg
+                          placeholder:text-gray-400
                           transition-all duration-200 ease-out
                           disabled:opacity-50 disabled:cursor-not-allowed
                           shadow-sm
                           focus:outline-none
-                          focus:ring-2 focus:ring-brand/20 focus:ring-offset-2 focus:ring-offset-graphite-800
+                          focus:ring-4 focus:ring-graphite-100
                           ${
                             requestErrors.loginId
                               ? 'border-status-error'
-                              : 'border-graphite-600 focus:border-brand/50'
+                              : 'border-gray-300 focus:border-gray-400'
                           }
                         `}
                         {...registerRequest('loginId')}
@@ -502,9 +503,9 @@ export function ForgotPasswordModal({
                       className={`
                         w-full flex items-center justify-center gap-2 group
                         px-5 py-3.5 rounded-xl
-                        bg-brand hover:bg-brand-hover
-                        text-graphite-900 font-bold text-sm
-                        shadow-lg shadow-brand/20 hover:shadow-xl hover:shadow-brand/30
+                        bg-graphite-800 hover:bg-graphite-900
+                        text-white font-bold text-sm
+                        shadow-lg
                         transition-all duration-300 ease-out
                         disabled:opacity-50 disabled:cursor-not-allowed
                         active:scale-[0.98]
@@ -560,17 +561,17 @@ export function ForgotPasswordModal({
 
                   <form onSubmit={handleSubmitVerify(onVerifySubmit)} className="space-y-5" noValidate>
                     <div className="text-center mb-4">
-                      <p className="text-sm text-graphite-300">
-                        We've sent a 6-digit code to <span className="font-semibold text-brand">{loginId}</span>
+                      <p className="text-sm text-gray-600">
+                        We've sent a 6-digit code to <span className="font-semibold text-gray-900">{loginId}</span>
                       </p>
-                      <p className="text-xs text-graphite-500 mt-1">Enter the code below to continue</p>
+                      <p className="text-xs text-gray-500 mt-1">Enter the code below to continue</p>
                     </div>
 
                     {/* OTP Input */}
                     <div className="space-y-3">
                       <label
                         htmlFor="otp"
-                        className="block text-xs font-bold uppercase tracking-widest text-brand/90 flex items-center gap-2"
+                        className="block text-xs font-bold uppercase tracking-widest text-gray-700 flex items-center gap-2"
                       >
                         <Mail className="w-3.5 h-3.5" />
                         OTP Code
@@ -588,19 +589,19 @@ export function ForgotPasswordModal({
                         aria-describedby={verifyErrors.otp ? 'otp-error' : undefined}
                         className={`
                           w-full h-12 px-4
-                          text-base bg-white text-graphite-900
-                          border rounded-lg
-                          placeholder:text-graphite-500
+                          text-base bg-white text-gray-900
+                          border-2 rounded-lg
+                          placeholder:text-gray-400
                           transition-all duration-200 ease-out
                           disabled:opacity-50 disabled:cursor-not-allowed
                           shadow-sm
                           focus:outline-none
-                          focus:ring-2 focus:ring-brand/20 focus:ring-offset-2 focus:ring-offset-graphite-800
+                          focus:ring-4 focus:ring-graphite-100
                           text-center text-xl tracking-[0.5em] font-mono
                           ${
                             verifyErrors.otp
                               ? 'border-status-error'
-                              : 'border-graphite-600 focus:border-brand/50'
+                              : 'border-gray-300 focus:border-gray-400'
                           }
                         `}
                         {...registerVerify('otp')}
@@ -630,15 +631,15 @@ export function ForgotPasswordModal({
 
                     {/* Countdown Timer & Resend */}
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-graphite-400">
-                        Expires in <span className="font-mono font-semibold text-brand">{formatTime(otpCountdown)}</span>
+                      <span className="text-gray-500">
+                        Expires in <span className="font-mono font-semibold text-gray-900">{formatTime(otpCountdown)}</span>
                       </span>
                       {canResendOtp && (
                         <button
                           type="button"
                           onClick={handleResendOtp}
                           disabled={isLoading}
-                          className="flex items-center gap-1.5 text-brand hover:text-brand-hover font-semibold transition-colors duration-200 disabled:opacity-50"
+                          className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 font-semibold transition-colors duration-200 disabled:opacity-50"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           Resend Code
@@ -653,9 +654,9 @@ export function ForgotPasswordModal({
                       className={`
                         w-full flex items-center justify-center gap-2 group
                         px-5 py-3.5 rounded-xl
-                        bg-brand hover:bg-brand-hover
-                        text-graphite-900 font-bold text-sm
-                        shadow-lg shadow-brand/20 hover:shadow-xl hover:shadow-brand/30
+                        bg-graphite-800 hover:bg-graphite-900
+                        text-white font-bold text-sm
+                        shadow-lg
                         transition-all duration-300 ease-out
                         disabled:opacity-50 disabled:cursor-not-allowed
                         active:scale-[0.98]
@@ -684,7 +685,7 @@ export function ForgotPasswordModal({
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-brand/80 hover:text-brand transition-colors duration-200"
+                      className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-gray-700 hover:text-gray-900 transition-colors duration-200"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       Back to Login ID
@@ -705,16 +706,16 @@ export function ForgotPasswordModal({
                   className="text-center py-6"
                 >
                   <motion.div
-                    className="w-20 h-20 mx-auto mb-5 rounded-full bg-brand/20 flex items-center justify-center"
+                    className="w-20 h-20 mx-auto mb-5 rounded-full bg-graphite-100 flex items-center justify-center"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 15 }}
                   >
-                    <CheckCircle2 className="w-10 h-10 text-brand" strokeWidth={2.5} />
+                    <CheckCircle2 className="w-10 h-10 text-graphite-700" strokeWidth={2.5} />
                   </motion.div>
 
                   <motion.h3
-                    className="text-2xl font-display font-bold text-white mb-2"
+                    className="text-2xl font-display font-bold text-gray-900 mb-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
@@ -723,7 +724,7 @@ export function ForgotPasswordModal({
                   </motion.h3>
 
                   <motion.p
-                    className="text-sm text-graphite-300 mb-6"
+                    className="text-sm text-gray-600 mb-6"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
@@ -733,7 +734,7 @@ export function ForgotPasswordModal({
 
                   <motion.button
                     onClick={handleClose}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-brand hover:bg-brand-hover text-graphite-900 font-bold text-sm shadow-lg shadow-brand/20 hover:shadow-xl hover:shadow-brand/30 transition-all duration-300 ease-out active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-graphite-800 hover:bg-graphite-900 text-white font-bold text-sm shadow-lg transition-all duration-300 ease-out active:scale-[0.98]"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}

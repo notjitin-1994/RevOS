@@ -1,6 +1,6 @@
 # Request Make/Model Feature
 
-This feature allows users to submit requests to add new motorcycle makes and models to the RevOS database. Currently, requests are sent via email. Backend integration can be added later.
+This feature allows users to submit requests to add new motorcycle makes and models to the RevvOs database. Currently, requests are sent via email. Backend integration can be added later.
 
 ## How It Works
 
@@ -189,7 +189,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendMakeModelRequestEmail(request: any) {
   return await resend.emails.send({
-    from: 'RevOS Requests <requests@your-domain.com>',
+    from: 'RevvOs Requests <requests@your-domain.com>',
     to: process.env.NEXT_PUBLIC_REQUEST_EMAIL!,
     subject: `New Make/Model Request: ${request.make} ${request.model}`,
     html: `

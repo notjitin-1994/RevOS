@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { AppLayout } from '@/components/layout/app-layout'
 
 export const metadata: Metadata = {
-  title: 'RevOS - Service Scope Management',
+  title: 'RevvOs - Service Scope Management',
   description: 'Manage service scope master data',
 }
 

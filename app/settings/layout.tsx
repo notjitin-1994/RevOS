@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { AppLayout } from '@/components/layout/app-layout'
 
 export const metadata: Metadata = {
-  title: 'RevOS - Settings',
-  description: 'Manage your RevOS account settings',
+  title: 'RevvOs - Settings',
+  description: 'Manage your RevvOs account settings',
 }
 
 export default function SettingsLayout({

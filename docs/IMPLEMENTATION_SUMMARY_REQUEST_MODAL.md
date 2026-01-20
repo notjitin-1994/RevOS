@@ -2,7 +2,7 @@
 
 ## What Was Built
 
-A comprehensive modal-based form for users to request new motorcycle makes and models to be added to the RevOS database.
+A comprehensive modal-based form for users to request new motorcycle makes and models to be added to the RevvOs database.
 
 ## Changes Made
 
@@ -135,7 +135,7 @@ request-make-model-modal.tsx
 - **Responsive**: Works on mobile, tablet, and desktop
 - **Accessible**: Proper labels, focus states, and ARIA attributes
 - **User-Friendly**: Clear error messages and helpful placeholders
-- **Professional**: Consistent with RevOS design system
+- **Professional**: Consistent with RevvOs design system
 
 ## Email Format
 

@@ -146,7 +146,7 @@ export const MobileSidebar = ({
         {...props}
       >
         <div className="flex justify-between z-20 w-full items-center">
-          <span className="text-graphite-900 font-bold text-lg">RevOS</span>
+          <span className="text-graphite-900 font-bold text-lg">RevvOs</span>
           <IconMenu2
             className="text-graphite-900 cursor-pointer"
             onClick={() => setOpen?.(!open)}
@@ -211,22 +211,34 @@ export const SidebarLink = ({
       href={link.href}
       onClick={handleClick}
       className={cn(
-        "flex items-center transition-colors cursor-pointer overflow-visible relative h-12",
+        "flex items-center transition-all cursor-pointer overflow-visible relative h-12",
         open ? "rounded-lg justify-start px-3 w-full" : "rounded-xl justify-center px-2 w-12",
-        "hover:bg-brand-hover/30",
-        isActive && "bg-brand-hover/50",
+        "hover:bg-graphite-700/50",
+        isActive && "bg-graphite-700 shadow-md",
         className
       )}
       {...props}
     >
-      <div className="shrink-0 flex items-center justify-center">
-        {link.icon}
+      <div
+        className="shrink-0 flex items-center justify-center transition-all duration-200"
+        style={{ color: isActive ? '#a3e635' : '#334155' }}
+      >
+        {React.cloneElement(link.icon as React.ReactElement, {
+          className: cn(
+            "h-5 w-5 shrink-0 transition-colors duration-200",
+            isActive && "!text-lime-400",
+            !isActive && "!text-graphite-700",
+            (link.icon as React.ReactElement).props.className
+          ),
+          style: { color: isActive ? '#a3e635' : '#334155' },
+        } as any)}
       </div>
 
       <span
         className={cn(
-          "text-graphite-900 text-sm whitespace-nowrap font-medium ml-3 transition-opacity duration-200",
-          !open && "opacity-0 pointer-events-none absolute"
+          "text-sm whitespace-nowrap font-medium ml-3 transition-opacity duration-200",
+          !open && "opacity-0 pointer-events-none absolute",
+          isActive ? "text-lime-400" : "text-graphite-700"
         )}
         style={{
           opacity: open ? 1 : 0,

@@ -165,7 +165,7 @@ ADDITIONAL NOTES
 ${formData.notes || 'No additional notes provided'}
 
 ---
-This request was submitted via the RevOS Service Scope Management portal.
+This request was submitted via the RevvOs Service Scope Management portal.
 Timestamp: ${new Date().toISOString()}
     `.trim()
 
