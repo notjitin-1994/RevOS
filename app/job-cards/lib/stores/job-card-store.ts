@@ -73,6 +73,7 @@ interface JobCardUIState {
   zoomIn: () => void
   zoomOut: () => void
   resetZoom: () => void
+  initializeZoomLevel: () => void
 }
 
 export const useJobCardStore = create<JobCardUIState>((set) => ({
@@ -115,7 +116,7 @@ export const useJobCardStore = create<JobCardUIState>((set) => ({
     })),
 
   // Zoom state
-  zoomLevel: loadZoomLevel(),
+  zoomLevel: ZOOM_DEFAULT,
   setZoomLevel: (level) => {
     const clampedLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, level))
     set({ zoomLevel: clampedLevel })
@@ -138,5 +139,10 @@ export const useJobCardStore = create<JobCardUIState>((set) => ({
   resetZoom: () => {
     saveZoomLevel(ZOOM_DEFAULT)
     set({ zoomLevel: ZOOM_DEFAULT })
+  },
+  // Initialize zoom level from localStorage after hydration
+  initializeZoomLevel: () => {
+    const savedLevel = loadZoomLevel()
+    set({ zoomLevel: savedLevel })
   },
 }))

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Plus, Minus, RotateCcw } from 'lucide-react'
 import { useJobCardStore } from '../../lib/stores/job-card-store'
 
@@ -18,7 +18,12 @@ import { useJobCardStore } from '../../lib/stores/job-card-store'
  * - Mouse wheel zoom (Ctrl/Cmd + Scroll)
  */
 export function ZoomControls() {
-  const { zoomLevel, zoomIn, zoomOut, resetZoom } = useJobCardStore()
+  const { zoomLevel, zoomIn, zoomOut, resetZoom, initializeZoomLevel } = useJobCardStore()
+
+  // Initialize zoom level from localStorage after client-side hydration
+  useEffect(() => {
+    initializeZoomLevel()
+  }, [initializeZoomLevel])
 
   const canZoomIn = zoomLevel < 150
   const canZoomOut = zoomLevel > 50

@@ -51,6 +51,8 @@ export function useJobCards(garageId: string, filters?: JobCardViewFilters) {
       return data
     },
     enabled: !!garageId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    // For collaborative kanban board, data should be considered stale immediately
+    // This ensures real-time updates when other users make changes
+    staleTime: 0,
   })
 }

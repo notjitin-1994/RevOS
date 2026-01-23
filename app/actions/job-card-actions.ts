@@ -10,6 +10,7 @@ import {
   createChecklistItem,
   updateChecklistItem,
   type CreateJobCardInput,
+  type UpdateJobCardInput,
   type JobCardData,
   type JobCardWithRelations,
   type ChecklistItemData,
@@ -19,6 +20,7 @@ import {
 // Re-export types for convenience
 export type {
   CreateJobCardInput,
+  UpdateJobCardInput,
   JobCardData,
   JobCardWithRelations,
   ChecklistItemData,
@@ -61,7 +63,7 @@ export async function getJobCardByIdAction(jobCardId: string): Promise<JobCardWi
  */
 export async function updateJobCardAction(
   jobCardId: string,
-  updates: Partial<Omit<JobCardData, 'id' | 'jobCardNumber' | 'garageId' | 'createdAt' | 'updatedAt'>>
+  updates: UpdateJobCardInput
 ): Promise<{
   success: boolean
   error?: string

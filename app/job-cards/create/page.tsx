@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, startTransition, Suspense } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   UserPlus,
   User,
@@ -57,6 +58,7 @@ import {
   Sparkles,
   Flame,
   ArrowUpDown,
+  IndianRupee,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -83,6 +85,10 @@ import { createJobCardAction, updateJobCardAction } from '@/app/actions/job-card
 import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
 import { createCustomerAction, addVehicleToCustomerAction, type CreateCustomerInput, type CreateVehicleInput } from '@/app/actions/customer-actions'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
+import { DraftStatusIndicator } from '../components/draft-status-indicator'
+import { useJobCardAutosave } from '../lib/hooks/use-job-card-autosave'
+import { useJobCardDraftStore } from '../lib/stores/job-card-draft-store'
+import { collectJobCardData, validateMinimumDraftData, type CollectJobCardDataOptions } from '../lib/utils/collect-job-card-data'
 
 // ============================================================================
 // TYPES
@@ -726,6 +732,7 @@ interface TabValidation {
 function CreateJobCardPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
   const editJobCardId = searchParams.get('editJobCardId')
   const [isEditingDraft, setIsEditingDraft] = useState(false)
 
@@ -844,6 +851,84 @@ function CreateJobCardPageContent() {
     unitPrice: number
     totalPrice: number
   }>>([])
+
+  // ============================================================================
+  // DRAFT AUTO-SAVE
+  // ============================================================================
+
+  // Get current user for auto-save
+  const sessionUser = sessionStorage.getItem('user')
+  const currentUser = sessionUser ? JSON.parse(sessionUser) : null
+
+  // Get draft ID from store
+  const draftIdFromStore = useJobCardDraftStore((state) => state.draftId)
+
+  // Function to collect all form data for auto-save
+  const getFormDataForAutosave = useCallback(() => {
+    if (!selectedCustomer || !selectedVehicle || !currentUser) {
+      return null
+    }
+
+    try {
+      return collectJobCardData({
+        garageId: currentUser.garageId,
+        userId: currentUser.userUid,
+        selectedCustomer,
+        selectedVehicle,
+        currentMileage,
+        jobType,
+        priority,
+        customerReportIssues,
+        workRequestedItems,
+        customerNotes,
+        technicalDiagnosisItems,
+        checklistItems,
+        selectedParts,
+        promisedDate,
+        promisedTime,
+        leadMechanicId,
+        serviceAdvisorId,
+        technicianNotes,
+      }, true) // saveAsDraft = true
+    } catch (error) {
+      console.error('Error collecting form data for auto-save:', error)
+      return null
+    }
+  }, [
+    selectedCustomer,
+    selectedVehicle,
+    currentUser,
+    currentMileage,
+    jobType,
+    priority,
+    customerReportIssues,
+    workRequestedItems,
+    customerNotes,
+    technicalDiagnosisItems,
+    checklistItems,
+    selectedParts,
+    promisedDate,
+    promisedTime,
+    leadMechanicId,
+    serviceAdvisorId,
+    technicianNotes,
+  ])
+
+  // Auto-save hook (only enable when user is authenticated)
+  const autoSave = useJobCardAutosave({
+    enabled: !!currentUser && !!currentUser.garageId && !!selectedCustomer,
+    garageId: currentUser?.garageId || '',
+    userId: currentUser?.userUid || '',
+    getFormData: getFormDataForAutosave,
+    hasMinData: () => !!selectedCustomer, // Require at least a customer
+    onSaveStart: () => console.log('Auto-saving draft...'),
+    onSaveSuccess: (savedDraftId) => {
+      console.log('Draft auto-saved:', savedDraftId)
+      // Update draft ID in store if this was a new draft
+      useJobCardDraftStore.getState().setDraftId(savedDraftId)
+    },
+    onSaveError: (error) => console.error('Auto-save failed:', error),
+  })
 
   // ============================================================================
   // EFFECTS
@@ -1046,9 +1131,65 @@ function CreateJobCardPageContent() {
             }))
             setSelectedParts(transformedParts)
           }
+
+          // Detect and set the last tab with data
+          // Check in reverse order (last tab first) to find the most recent tab with data
+          if (data.promisedDate || data.promisedTime || data.leadMechanicId) {
+            setActiveTab('scheduling')
+          } else if (data.parts && data.parts.length > 0) {
+            setActiveTab('labor-parts')
+          } else if (data.checklistItems && data.checklistItems.length > 0) {
+            setActiveTab('tasks')
+          } else if (data.jobType || data.priority || data.customerComplaint) {
+            setActiveTab('job-details')
+          } else if (data.customer) {
+            setActiveTab('customer')
+          }
         })
 
         console.log('Draft data loaded successfully')
+
+        // Update draft store with loaded data for persistence
+        useJobCardDraftStore.getState().loadDraftData({
+          draftId: editJobCardId,
+          selectedCustomerId: data.customer?.id || null,
+          selectedVehicleId: data.vehicle?.id || null,
+          currentMileage: data.currentMileage?.toString() || '',
+          jobType: data.jobType || 'repair',
+          priority: data.priority || 'medium',
+          customerReportIssues: data.customerComplaint ? data.customerComplaint.split(' | ').filter(Boolean) : [],
+          workRequestedItems: data.workRequested ? data.workRequested.split(' | ').filter(Boolean) : [],
+          customerNotes: data.customerNotes || '',
+          technicalDiagnosisItems: [],
+          technicianNotes: data.technicianNotes || '',
+          promisedDate: data.promisedDate || '',
+          promisedTime: data.promisedTime || '',
+          leadMechanicId: data.leadMechanicId || '',
+          serviceAdvisorId: data.serviceAdvisorId || '',
+          checklistItems: data.checklistItems?.map((item: any, index: number) => ({
+            id: item.id || Date.now().toString() + index,
+            name: item.itemName || item.item_name || item.task_name || '',
+            description: item.description || item.task_description || '',
+            category: item.category || item.task_category || 'General',
+            priority: item.priority || 'medium',
+            estimatedMinutes: item.estimatedMinutes || item.estimated_minutes || 30,
+            laborRate: item.laborRate || item.labor_rate || 500,
+            completed: item.completed || false,
+            displayOrder: item.displayOrder || item.display_order || index + 1,
+          })) || [],
+          selectedParts: data.parts?.map((part: any) => ({
+            id: part.id || Date.now().toString() + Math.random(),
+            partId: part.partId || part.part_id || '',
+            name: part.partName || part.part_name || '',
+            partNumber: part.partNumber || part.part_number || '',
+            quantity: part.quantityAllocated || part.quantity_allocated || part.quantity_requested || 1,
+            unitPrice: part.unitPrice || part.unit_price || 0,
+            totalPrice: part.totalPrice || part.total_price || 0,
+          })) || [],
+          activeTab: activeTab,
+        })
+        useJobCardDraftStore.getState().markClean()
+        useJobCardDraftStore.getState().updateLastSaved()
       } catch (err) {
         // Don't set error if request was aborted
         if (err instanceof Error && err.name === 'AbortError') {
@@ -1776,67 +1917,85 @@ function CreateJobCardPageContent() {
         throw new Error('Invalid user session')
       }
 
-      const jobCardData = {
+      // Collect all form data from all tabs using the utility function
+      const dataCollectionOptions: CollectJobCardDataOptions = {
         garageId,
-        customerId: selectedCustomer!.id,
-        vehicleId: selectedVehicle!.id,
+        userId: currentUser.userUid,
+        selectedCustomer,
+        selectedVehicle,
+        currentMileage,
         jobType,
         priority,
-        status: saveAsDraft ? ('draft' as const) : ('queued' as const),
-        // Use empty strings for NOT NULL fields when not provided
-        customerComplaint: customerReportIssues.length > 0 ? customerReportIssues.join(' | ') : '',
-        workRequested: workRequestedItems.length > 0 ? workRequestedItems.join(' | ') : '',
-        customerNotes: customerNotes || undefined,
-        currentMileage: currentMileage ? parseInt(currentMileage) : undefined,
-        promisedDate: promisedDate || undefined,
-        promisedTime: promisedTime || undefined,
-        leadMechanicId: leadMechanicId || undefined,
-        technicianNotes: technicianNotes || undefined,
-        checklistItems: checklistItems.length > 0 ? checklistItems.map(item => ({
-          mechanicId: leadMechanicId || null,
-          itemName: item.itemName,
-          description: item.description || null,
-          category: item.category || null,
-          status: 'pending' as const,
-          priority: item.priority,
-          estimatedMinutes: item.estimatedMinutes,
-          actualMinutes: 0,
-          isTimerRunning: false,
-          timerStartedAt: null,
-          totalTimeSpent: 0,
-          laborRate: item.laborRate,
-          laborCost: 0,
-          displayOrder: item.displayOrder,
-          mechanicNotes: null,
-          notes: null,
-          completedAt: null,
-        })) : undefined,
-        parts: selectedParts.length > 0 ? selectedParts.map(part => ({
-          partId: part.partId,
-          partName: part.partName,
-          partNumber: part.partNumber,
-          quantity: part.quantity,
-          unitPrice: part.unitPrice,
-          totalPrice: part.totalPrice,
-        })) : undefined,
-        // Required fields from database schema (provide defaults)
-        customerName: `${selectedCustomer!.firstName} ${selectedCustomer!.lastName}`,
-        customerPhone: selectedCustomer!.phoneNumber,
-        customerEmail: selectedCustomer!.email || undefined,
-        vehicleMake: selectedVehicle!.make,
-        vehicleModel: selectedVehicle!.model,
-        vehicleYear: selectedVehicle!.year,
-        vehicleLicensePlate: selectedVehicle!.licensePlate,
-        vehicleVin: selectedVehicle!.vin || undefined,
-        // Use current user ID as default for service advisor (required field)
-        serviceAdvisorId: serviceAdvisorId || currentUser.userUid,
-        createdBy: currentUser.userUid,
+        customerReportIssues,
+        workRequestedItems,
+        customerNotes,
+        technicalDiagnosisItems,
+        checklistItems,
+        selectedParts,
+        promisedDate,
+        promisedTime,
+        leadMechanicId,
+        serviceAdvisorId,
+        technicianNotes,
       }
+
+      // Use the utility function to collect all data
+      const jobCardData = collectJobCardData(dataCollectionOptions, saveAsDraft)
+
+      // Debug logging to verify data collection
+      console.log('[SAVE DRAFT] Collected data:', {
+        hasChecklistItems: !!jobCardData.checklistItems,
+        checklistItemsCount: jobCardData.checklistItems?.length || 0,
+        hasParts: !!jobCardData.parts,
+        partsCount: jobCardData.parts?.length || 0,
+        hasPromisedDate: !!jobCardData.promisedDate,
+        hasPromisedTime: !!jobCardData.promisedTime,
+        hasLeadMechanicId: !!jobCardData.leadMechanicId,
+        hasServiceAdvisorId: !!jobCardData.serviceAdvisorId,
+        hasTechnicianNotes: !!jobCardData.technicianNotes,
+        checklistItems: jobCardData.checklistItems,
+        parts: jobCardData.parts,
+      })
 
       let result
       if (isEditingDraft && editJobCardId) {
         // Update existing draft
-        result = await updateJobCardAction(editJobCardId, jobCardData)
+        // Extract only the fields that UpdateJobCardInput expects
+        const updateData: {
+          customerId: string
+          vehicleId: string
+          jobType: typeof jobCardData.jobType
+          priority: typeof jobCardData.priority
+          status: typeof jobCardData.status
+          customerComplaint: string
+          workRequested: string
+          customerNotes?: string
+          currentMileage?: number
+          promisedDate?: string
+          promisedTime?: string
+          leadMechanicId?: string
+          technicianNotes?: string
+          checklistItems?: typeof jobCardData.checklistItems
+          parts?: typeof jobCardData.parts
+        } = {
+          customerId: jobCardData.customerId,
+          vehicleId: jobCardData.vehicleId,
+          jobType: jobCardData.jobType,
+          priority: jobCardData.priority,
+          status: jobCardData.status,
+          customerComplaint: jobCardData.customerComplaint,
+          workRequested: jobCardData.workRequested,
+          customerNotes: jobCardData.customerNotes,
+          currentMileage: jobCardData.currentMileage,
+          promisedDate: jobCardData.promisedDate,
+          promisedTime: jobCardData.promisedTime,
+          leadMechanicId: jobCardData.leadMechanicId,
+          technicianNotes: jobCardData.technicianNotes,
+          checklistItems: jobCardData.checklistItems,
+          parts: jobCardData.parts,
+        }
+
+        result = await updateJobCardAction(editJobCardId, updateData)
         if (!result.success) {
           throw new Error(result.error || 'Failed to update draft job card')
         }
@@ -1851,6 +2010,25 @@ function CreateJobCardPageContent() {
       }
 
       setSuccess(true)
+
+      // Update draft store with the draft ID and mark as clean
+      if (saveAsDraft && result.jobCard?.id) {
+        useJobCardDraftStore.getState().setDraftId(result.jobCard.id)
+        useJobCardDraftStore.getState().markClean()
+        useJobCardDraftStore.getState().updateLastSaved()
+      } else if (!saveAsDraft) {
+        // Clear draft store when submitting as final job card
+        useJobCardDraftStore.getState().clearDraft()
+      }
+
+      // Invalidate the job-cards query to ensure fresh data is loaded
+      // when user navigates to the job cards page
+      // Use exact: false to invalidate all job-cards queries regardless of filters
+      await queryClient.invalidateQueries({
+        queryKey: ['job-cards'],
+        exact: false,
+        refetchType: 'active',
+      })
 
       setTimeout(() => {
         router.push('/job-cards')
@@ -1950,18 +2128,23 @@ function CreateJobCardPageContent() {
         transition={{ duration: 0.5 }}
         className="mb-6 md:mb-8"
       >
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-1 bg-graphite-700 rounded-full" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-graphite-900 tracking-tight">
-              {editJobCardId ? 'Continue Draft' : 'Create Job Card'}
-            </h1>
-            <p className="text-sm md:text-base text-graphite-600 mt-1">
-              {editJobCardId
-                ? 'Continue working on your draft job card'
-                : 'Follow the steps to create a comprehensive job card'}
-            </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-1 bg-graphite-700 rounded-full" />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-graphite-900 tracking-tight">
+                {editJobCardId ? 'Continue Draft' : 'Create Job Card'}
+              </h1>
+              <p className="text-sm md:text-base text-graphite-600 mt-1">
+                {editJobCardId
+                  ? 'Continue working on your draft job card'
+                  : 'Follow the steps to create a comprehensive job card'}
+              </p>
+            </div>
           </div>
+
+          {/* Draft Status Indicator */}
+          <DraftStatusIndicator isSaving={autoSave.isSaving} show={!!selectedCustomer} />
         </div>
       </motion.div>
 
@@ -2296,6 +2479,7 @@ function CreateJobCardPageContent() {
               priority={priority}
               customerReportIssues={customerReportIssues}
               workRequestedItems={workRequestedItems}
+              technicalDiagnosisItems={technicalDiagnosisItems}
               checklistItems={checklistItems}
               promisedDate={promisedDate}
               promisedTime={promisedTime}
@@ -5493,6 +5677,7 @@ function TabReview({
   priority,
   customerReportIssues,
   workRequestedItems,
+  technicalDiagnosisItems,
   checklistItems,
   promisedDate,
   promisedTime,
@@ -5516,6 +5701,7 @@ function TabReview({
   priority: Priority
   customerReportIssues: string[]
   workRequestedItems: string[]
+  technicalDiagnosisItems: string[]
   checklistItems: ChecklistItem[]
   promisedDate: string
   promisedTime: string
@@ -5649,31 +5835,146 @@ function TabReview({
             </div>
           </div>
 
-          {/* Tasks Summary */}
+          {/* Tasks & Subtasks Summary */}
           {checklistItems.length > 0 && (
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-5">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <ClipboardCheck className="h-4 w-4" />
-                Tasks & Cost Estimate
+                Tasks & Subtasks
               </h3>
-              <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+              <div className="space-y-4 max-h-96 overflow-y-auto">
                 {checklistItems.map((item, index) => (
-                  <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
-                    <div className="flex-1 min-w-0 pr-4">
-                      <p className="text-sm font-medium text-gray-900 break-words overflow-wrap-anywhere">{item.itemName}</p>
-                      <p className="text-xs text-gray-500">{item.estimatedMinutes} min • {item.category}</p>
+                  <div key={item.id} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
+                    {/* Task Header */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <p className="text-sm font-semibold text-gray-900 break-words overflow-wrap-anywhere">{item.itemName}</p>
+                        <p className="text-xs text-gray-500">{item.estimatedMinutes} min • {item.category}</p>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-900 shrink-0">
-                      ₹{((item.estimatedMinutes / 60) * item.laborRate).toFixed(2)}
-                    </p>
+
+                    {/* Subtasks */}
+                    {item.subtasks && item.subtasks.length > 0 && (
+                      <div className="ml-4 mt-2 space-y-1">
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Subtasks</p>
+                        <ul className="space-y-1">
+                          {item.subtasks.map((subtask) => (
+                            <li key={subtask.id} className="flex items-start gap-2 text-xs text-gray-700">
+                              <div className="h-1 w-1 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <span className="break-words overflow-wrap-anywhere">{subtask.name}</span>
+                                <span className="text-gray-400 ml-2">({subtask.estimatedMinutes}m)</span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Linked Items */}
+                    {(item.linkedToCustomerIssues?.length ||
+                      item.linkedToServiceScope?.length ||
+                      item.linkedToTechnicalDiagnosis?.length) && (
+                      <div className="ml-4 mt-3 space-y-2">
+                        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">Linked Items</p>
+
+                        {/* Linked Customer Issues */}
+                        {item.linkedToCustomerIssues && item.linkedToCustomerIssues.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.linkedToCustomerIssues.map((issueIndex) => (
+                              <span
+                                key={`issue-${index}-${issueIndex}`}
+                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-graphite-100 text-graphite-700"
+                              >
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Issue: {customerReportIssues[issueIndex]?.slice(0, 30)}...
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Linked Service Scope */}
+                        {item.linkedToServiceScope && item.linkedToServiceScope.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.linkedToServiceScope.map((scopeIndex) => (
+                              <span
+                                key={`scope-${index}-${scopeIndex}`}
+                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+                              >
+                                <Wrench className="h-3 w-3 mr-1" />
+                                {workRequestedItems[scopeIndex]?.slice(0, 30)}...
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Linked Technical Diagnosis */}
+                        {item.linkedToTechnicalDiagnosis && item.linkedToTechnicalDiagnosis.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.linkedToTechnicalDiagnosis.map((diagIndex) => (
+                              <span
+                                key={`diag-${index}-${diagIndex}`}
+                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700"
+                              >
+                                <Search className="h-3 w-3 mr-1" />
+                                Diagnosis: {technicalDiagnosisItems[diagIndex]?.slice(0, 30)}...
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between items-center pt-3 border-t-2 border-gray-300">
-                <span className="font-semibold text-gray-900">Total Estimated Cost</span>
-                <span className="text-xl font-bold text-graphite-700">
-                  ₹{costs.totalCost}
-                </span>
+            </div>
+          )}
+
+          {/* Parts & Labor Summary */}
+          {checklistItems.length > 0 && (
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-5">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <IndianRupee className="h-4 w-4" />
+                Parts & Labor
+              </h3>
+              <div className="space-y-3">
+                {/* Labor Breakdown */}
+                <div>
+                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">Labor Cost Breakdown</p>
+                  <div className="space-y-2">
+                    {checklistItems.map((item) => (
+                      <div key={`labor-${item.id}`} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                        <span className="text-sm text-gray-700 break-words overflow-wrap-anywhere flex-1 pr-4">{item.itemName}</span>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <span className="text-xs text-gray-500">{item.estimatedMinutes}m @ ₹{item.laborRate}/hr</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            ₹{((item.estimatedMinutes / 60) * item.laborRate).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex justify-between items-center pt-3 border-t-2 border-gray-300">
+                  <span className="font-semibold text-gray-900">Total Estimated Cost</span>
+                  <span className="text-xl font-bold text-graphite-700">
+                    ₹{costs.totalCost}
+                  </span>
+                </div>
+
+                {/* Labor Summary */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="bg-gray-100 rounded-lg p-3">
+                    <p className="text-xs text-gray-500">Total Labor Time</p>
+                    <p className="text-sm font-semibold text-gray-900">{costs.totalLaborHours}</p>
+                  </div>
+                  <div className="bg-gray-100 rounded-lg p-3">
+                    <p className="text-xs text-gray-500">Total Labor Cost</p>
+                    <p className="text-sm font-semibold text-gray-900">₹{costs.totalLaborCost}</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -5757,8 +6058,8 @@ function TabReview({
             ) : (
               <>
                 <ArrowRight className="h-4 w-4" />
-                <span className="hidden sm:inline">{isEditingDraft ? 'Update Draft' : 'Send to Queue'}</span>
-                <span className="sm:hidden">{isEditingDraft ? 'Update' : 'Send'}</span>
+                <span className="hidden sm:inline">{isEditingDraft ? 'Send to queue' : 'Send to Queue'}</span>
+                <span className="sm:hidden">{isEditingDraft ? 'Send' : 'Send'}</span>
               </>
             )}
           </motion.button>

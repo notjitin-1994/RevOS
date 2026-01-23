@@ -63,6 +63,7 @@ export interface DbJobCard {
   technician_notes: string | null
   service_advisor_notes: string | null
   quality_check_notes: string | null
+  technical_diagnosis: string | null
   promised_date: string | null
   promised_time: string | null
   actual_completion_date: string | null
@@ -96,6 +97,7 @@ export interface JobCardData {
   workRequested: string | null
   customerNotes: string | null
   currentMileage: number | null
+  technicalDiagnosis: string | null
   reportedIssue: string | null
   promisedDate: string | null
   promisedTime: string | null
@@ -118,8 +120,10 @@ export interface JobCardData {
 
 export interface DbChecklistItem {
   id: string
+  garage_id: string
   job_card_id: string
   mechanic_id: string | null
+  created_by: string | null
   item_name: string
   description: string | null
   category: string | null
@@ -133,11 +137,25 @@ export interface DbChecklistItem {
   labor_rate: number
   labor_cost: number
   display_order: number
+  approved_by: string | null
+  approved_at: string | null
+  started_at: string | null
+  completed_at: string | null
   mechanic_notes: string | null
-  notes: string | null
+  // UI-specific fields from subtasks and linking
+  subtasks: Array<{
+    id: string
+    name: string
+    description?: string
+    estimatedMinutes: number
+    completed: boolean
+    displayOrder: number
+  }> | null
+  linked_to_customer_issues: number[] | null
+  linked_to_service_scope: number[] | null
+  linked_to_technical_diagnosis: number[] | null
   created_at: string
   updated_at: string
-  completed_at: string | null
   deleted_at: string | null
 }
 
@@ -159,7 +177,18 @@ export interface ChecklistItemData {
   laborCost: number
   displayOrder: number
   mechanicNotes: string | null
-  notes: string | null
+  // UI-specific fields from subtasks and linking
+  subtasks?: Array<{
+    id: string
+    name: string
+    description?: string
+    estimatedMinutes: number
+    completed: boolean
+    displayOrder: number
+  }>
+  linkedToCustomerIssues?: number[]
+  linkedToServiceScope?: number[]
+  linkedToTechnicalDiagnosis?: number[]
   createdAt: string
   updatedAt: string
   completedAt: string | null
@@ -307,16 +336,30 @@ export interface CreateJobCardInput {
   workRequested?: string
   customerNotes?: string
   currentMileage?: number
+  technicalDiagnosis?: string
   promisedDate?: string
   promisedTime?: string
   leadMechanicId?: string
   technicianNotes?: string
-  checklistItems?: Omit<ChecklistItemData, 'id' | 'jobCardId' | 'createdAt' | 'updatedAt' | 'deletedAt'>[]
+  checklistItems?: Array<Omit<ChecklistItemData, 'id' | 'jobCardId' | 'createdAt' | 'updatedAt' | 'deletedAt'> & {
+    subtasks?: Array<{
+      id: string
+      name: string
+      description?: string
+      estimatedMinutes: number
+      completed: boolean
+      displayOrder: number
+    }>
+    linkedToCustomerIssues?: number[]
+    linkedToServiceScope?: number[]
+    linkedToTechnicalDiagnosis?: number[]
+  }>
   parts?: JobCardPartInput[]
-  // Required fields from database schema
+  // Customer snapshot fields (required by database - NOT NULL constraints)
   customerName: string
   customerPhone: string
   customerEmail?: string
+  // Vehicle snapshot fields (required by database - NOT NULL constraints)
   vehicleMake: string
   vehicleModel: string
   vehicleYear: number
@@ -324,6 +367,27 @@ export interface CreateJobCardInput {
   vehicleVin?: string
   serviceAdvisorId: string
   createdBy: string
+}
+
+export interface UpdateJobCardInput {
+  customerId?: string
+  vehicleId?: string
+  jobType?: JobType
+  priority?: Priority
+  status?: JobCardStatus
+  customerComplaint?: string | null
+  workRequested?: string | null
+  customerNotes?: string | null
+  currentMileage?: number | null
+  technicalDiagnosis?: string | null
+  promisedDate?: string | null
+  promisedTime?: string | null
+  leadMechanicId?: string | null
+  technicianNotes?: string | null
+  serviceAdvisorNotes?: string | null
+  qualityCheckNotes?: string | null
+  checklistItems?: Omit<ChecklistItemData, 'id' | 'jobCardId' | 'createdAt' | 'updatedAt' | 'deletedAt'>[]
+  parts?: JobCardPartInput[]
 }
 
 export interface JobCardFilters {
@@ -379,6 +443,7 @@ function transformJobCardData(dbJobCard: DbJobCard): JobCardData {
     workRequested: dbJobCard.work_requested,
     customerNotes: dbJobCard.customer_notes,
     currentMileage: dbJobCard.current_mileage,
+    technicalDiagnosis: dbJobCard.technical_diagnosis,
     reportedIssue: null, // Not in current schema
     promisedDate: dbJobCard.promised_date,
     promisedTime: dbJobCard.promised_time,
@@ -423,6 +488,7 @@ function jobCardToDbInput(input: CreateJobCardInput): Omit<DbJobCard, 'id' | 'jo
     technician_notes: input.technicianNotes ?? null,
     service_advisor_notes: null,
     quality_check_notes: null,
+    technical_diagnosis: input.technicalDiagnosis ?? null,
     promised_date: input.promisedDate ?? null,
     promised_time: input.promisedTime ?? null,
     actual_completion_date: null,
@@ -453,7 +519,11 @@ function transformChecklistItem(dbItem: DbChecklistItem): ChecklistItemData {
     laborCost: Number(dbItem.labor_cost),
     displayOrder: dbItem.display_order,
     mechanicNotes: dbItem.mechanic_notes,
-    notes: dbItem.notes,
+    // Include UI-specific fields
+    subtasks: dbItem.subtasks || undefined,
+    linkedToCustomerIssues: dbItem.linked_to_customer_issues || undefined,
+    linkedToServiceScope: dbItem.linked_to_service_scope || undefined,
+    linkedToTechnicalDiagnosis: dbItem.linked_to_technical_diagnosis || undefined,
     createdAt: dbItem.created_at,
     updatedAt: dbItem.updated_at,
     completedAt: dbItem.completed_at,
@@ -684,17 +754,31 @@ export async function createJobCard(
     // Create checklist items if provided
     if (input.checklistItems && input.checklistItems.length > 0) {
       const itemsToInsert = input.checklistItems.map((item) => ({
+        garage_id: jobCardData.garage_id,
         job_card_id: jobCardData.id,
         mechanic_id: item.mechanicId || jobCardData.lead_mechanic_id,
+        created_by: input.createdBy,
         item_name: item.itemName,
         description: item.description || null,
         category: item.category || null,
         status: item.status,
         priority: item.priority,
         estimated_minutes: item.estimatedMinutes,
+        actual_minutes: item.actualMinutes || 0,
+        is_timer_running: item.isTimerRunning || false,
+        timer_started_at: item.timerStartedAt || null,
+        total_time_spent: item.totalTimeSpent || 0,
         labor_rate: item.laborRate,
+        labor_cost: item.laborCost || 0,
         display_order: item.displayOrder,
-        notes: item.notes || null,
+        started_at: null,
+        completed_at: null,
+        mechanic_notes: item.mechanicNotes || null,
+        // UI-specific fields: subtasks and linking
+        subtasks: item.subtasks || null,
+        linked_to_customer_issues: item.linkedToCustomerIssues || null,
+        linked_to_service_scope: item.linkedToServiceScope || null,
+        linked_to_technical_diagnosis: item.linkedToTechnicalDiagnosis || null,
       }))
 
       const { error: itemsError } = await supabase
@@ -768,46 +852,198 @@ export async function createJobCard(
  */
 export async function updateJobCard(
   jobCardId: string,
-  updates: Partial<Omit<JobCardData, 'id' | 'jobCardNumber' | 'garageId' | 'createdAt' | 'updatedAt'>>
+  updates: UpdateJobCardInput
 ): Promise<{ success: boolean; error?: string; jobCard?: JobCardData }> {
   const supabase = createAdminClient()
 
-  // Transform updates to DB format
-  const dbUpdates: Record<string, any> = {}
-  if (updates.customerId !== undefined) dbUpdates.customer_id = updates.customerId
-  if (updates.vehicleId !== undefined) dbUpdates.vehicle_id = updates.vehicleId
-  if (updates.jobType !== undefined) dbUpdates.job_type = updates.jobType
-  if (updates.priority !== undefined) dbUpdates.priority = updates.priority
-  if (updates.status !== undefined) dbUpdates.status = updates.status
-  if (updates.customerComplaint !== undefined) dbUpdates.customer_complaint = updates.customerComplaint
-  if (updates.workRequested !== undefined) dbUpdates.work_requested = updates.workRequested
-  if (updates.customerNotes !== undefined) dbUpdates.customer_notes = updates.customerNotes
-  if (updates.currentMileage !== undefined) dbUpdates.current_mileage = updates.currentMileage
-  if (updates.promisedDate !== undefined) dbUpdates.promised_date = updates.promisedDate
-  if (updates.promisedTime !== undefined) dbUpdates.promised_time = updates.promisedTime
-  if (updates.leadMechanicId !== undefined) dbUpdates.lead_mechanic_id = updates.leadMechanicId
-  if (updates.technicianNotes !== undefined) dbUpdates.technician_notes = updates.technicianNotes
-  if (updates.serviceAdvisorNotes !== undefined) dbUpdates.service_advisor_notes = updates.serviceAdvisorNotes
-  if (updates.qualityCheckNotes !== undefined) dbUpdates.quality_check_notes = updates.qualityCheckNotes
+  try {
+    // Transform updates to DB format
+    const dbUpdates: Record<string, any> = {}
+    if (updates.customerId !== undefined) dbUpdates.customer_id = updates.customerId
+    if (updates.vehicleId !== undefined) dbUpdates.vehicle_id = updates.vehicleId
+    if (updates.jobType !== undefined) dbUpdates.job_type = updates.jobType
+    if (updates.priority !== undefined) dbUpdates.priority = updates.priority
+    if (updates.status !== undefined) dbUpdates.status = updates.status
+    if (updates.customerComplaint !== undefined) dbUpdates.customer_complaint = updates.customerComplaint
+    if (updates.workRequested !== undefined) dbUpdates.work_requested = updates.workRequested
+    if (updates.customerNotes !== undefined) dbUpdates.customer_notes = updates.customerNotes
+    if (updates.currentMileage !== undefined) dbUpdates.current_mileage = updates.currentMileage
+    if (updates.technicalDiagnosis !== undefined) dbUpdates.technical_diagnosis = updates.technicalDiagnosis
+    if (updates.promisedDate !== undefined) dbUpdates.promised_date = updates.promisedDate
+    if (updates.promisedTime !== undefined) dbUpdates.promised_time = updates.promisedTime
+    if (updates.leadMechanicId !== undefined) dbUpdates.lead_mechanic_id = updates.leadMechanicId
+    if (updates.technicianNotes !== undefined) dbUpdates.technician_notes = updates.technicianNotes
+    if (updates.serviceAdvisorNotes !== undefined) dbUpdates.service_advisor_notes = updates.serviceAdvisorNotes
+    if (updates.qualityCheckNotes !== undefined) dbUpdates.quality_check_notes = updates.qualityCheckNotes
 
-  const { data: jobCardData, error } = await supabase
-    .from('job_cards')
-    .update(dbUpdates)
-    .eq('id', jobCardId)
-    .select()
-    .single()
+    // Update main job card
+    const { data: jobCardData, error: updateError } = await supabase
+      .from('job_cards')
+      .update(dbUpdates)
+      .eq('id', jobCardId)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error updating job card:', error)
+    if (updateError) {
+      console.error('Error updating job card:', updateError)
+      return {
+        success: false,
+        error: `Failed to update job card: ${updateError.message}`,
+      }
+    }
+
+    // Handle checklist items update
+    if (updates.checklistItems !== undefined) {
+      // First, delete existing checklist items for this job card
+      const { error: deleteItemsError } = await supabase
+        .from('job_card_checklist_items')
+        .delete()
+        .eq('job_card_id', jobCardId)
+
+      if (deleteItemsError) {
+        console.error('Error deleting existing checklist items:', deleteItemsError)
+        // Continue anyway - try to insert new items
+      }
+
+      // Insert new checklist items if provided
+      if (updates.checklistItems.length > 0) {
+        // Get garage_id from job card
+        const { data: jobCardWithGarage } = await supabase
+          .from('job_cards')
+          .select('garage_id')
+          .eq('id', jobCardId)
+          .single()
+
+        const garageId = jobCardWithGarage?.garage_id
+        const userId = jobCardData.created_by || updates.leadMechanicId || 'system'
+
+        const itemsToInsert = updates.checklistItems.map((item) => ({
+          garage_id: garageId,
+          job_card_id: jobCardId,
+          mechanic_id: item.mechanicId || jobCardData.lead_mechanic_id,
+          created_by: userId,
+          item_name: item.itemName,
+          description: item.description || null,
+          category: item.category || null,
+          status: item.status,
+          priority: item.priority,
+          estimated_minutes: item.estimatedMinutes,
+          actual_minutes: item.actualMinutes || 0,
+          is_timer_running: item.isTimerRunning || false,
+          timer_started_at: item.timerStartedAt || null,
+          total_time_spent: item.totalTimeSpent || 0,
+          labor_rate: item.laborRate,
+          labor_cost: item.laborCost || 0,
+          display_order: item.displayOrder,
+          started_at: null,
+          completed_at: null,
+          mechanic_notes: item.mechanicNotes || null,
+          // UI-specific fields: subtasks and linking
+          subtasks: item.subtasks || null,
+          linked_to_customer_issues: item.linkedToCustomerIssues || null,
+          linked_to_service_scope: item.linkedToServiceScope || null,
+          linked_to_technical_diagnosis: item.linkedToTechnicalDiagnosis || null,
+        }))
+
+        const { error: itemsError } = await supabase
+          .from('job_card_checklist_items')
+          .insert(itemsToInsert)
+
+        if (itemsError) {
+          console.error('Error creating checklist items:', itemsError)
+          // Job card was updated but items failed
+          console.error('Job card updated successfully but checklist items failed')
+        }
+      }
+    }
+
+    // Handle parts update
+    if (updates.parts !== undefined) {
+      // First, delete existing part allocations for this job card
+      const { error: deletePartsError } = await supabase
+        .from('job_card_parts')
+        .delete()
+        .eq('job_card_id', jobCardId)
+
+      if (deletePartsError) {
+        console.error('Error deleting existing parts:', deletePartsError)
+        // Continue anyway - try to allocate new parts
+      }
+
+      // Reset estimated_parts_cost to 0 since we're replacing parts
+      // The RPC will add the new parts cost
+      const { error: resetCostError } = await supabase
+        .from('job_cards')
+        .update({ estimated_parts_cost: 0 })
+        .eq('id', jobCardId)
+
+      if (resetCostError) {
+        console.error('Error resetting parts cost:', resetCostError)
+        // Continue anyway - the RPC will still add to existing value
+      }
+
+      // Allocate new parts if provided
+      if (updates.parts.length > 0) {
+        try {
+          // Get the created_by user ID for parts allocation
+          const { data: jobCardWithCreatedBy } = await supabase
+            .from('job_cards')
+            .select('created_by')
+            .eq('id', jobCardId)
+            .single()
+
+          const userId = jobCardWithCreatedBy?.created_by || updates.leadMechanicId || 'system'
+
+          // Prepare parts data for RPC function
+          const partsData = updates.parts.map(part => ({
+            partId: part.partId,
+            partName: part.partName,
+            partNumber: part.partNumber,
+            quantity: part.quantity,
+            unitPrice: part.unitPrice,
+            totalPrice: part.totalPrice,
+            manufacturer: part.manufacturer || null,
+            category: part.category || null,
+          }))
+
+          // Call the RPC function
+          const { data: allocationResult, error: allocationError } = await supabase.rpc('allocate_parts_to_job_card', {
+            p_job_card_id: jobCardId,
+            p_parts: JSON.stringify(partsData),
+            p_user_id: userId,
+            p_user_name: null, // Could fetch user name if needed
+          })
+
+          if (allocationError) {
+            console.error('Error allocating parts:', allocationError)
+            // Job card was updated but parts allocation failed
+            console.error('Job card updated successfully but parts allocation failed')
+          } else if (allocationResult) {
+            const result = allocationResult as { success: boolean; error?: string; data?: any }
+            if (!result.success) {
+              console.error('Parts allocation returned error:', result.error)
+            } else {
+              console.log('Parts allocated successfully:', result.data)
+            }
+          }
+        } catch (partsError) {
+          console.error('Exception in parts allocation:', partsError)
+          // Job card was updated but parts allocation failed
+          console.error('Job card updated successfully but parts allocation threw exception')
+        }
+      }
+    }
+
+    return {
+      success: true,
+      jobCard: transformJobCardData(jobCardData),
+    }
+  } catch (error) {
+    console.error('Error in updateJobCard:', error)
     return {
       success: false,
-      error: `Failed to update job card: ${error.message}`,
+      error: error instanceof Error ? error.message : 'An error occurred while updating job card',
     }
-  }
-
-  return {
-    success: true,
-    jobCard: transformJobCardData(jobCardData),
   }
 }
 
@@ -954,17 +1190,17 @@ export async function createChecklistItem(
     description: input.description || null,
     category: input.category || null,
     status: input.status || 'pending',
-    priority: input.priority || 'medium',
+    // TODO: Run migration to add these columns:
+    // priority: input.priority || 'medium',
     estimated_minutes: input.estimatedMinutes || 0,
     actual_minutes: 0,
-    is_timer_running: false,
-    timer_started_at: null,
-    total_time_spent: 0,
-    labor_rate: input.laborRate || 0,
-    labor_cost: 0,
+    // is_timer_running: false,
+    // timer_started_at: null,
+    // total_time_spent: 0,
+    // labor_rate: input.laborRate || 0,
+    // labor_cost: 0,
     display_order: input.displayOrder || 0,
-    mechanic_notes: null,
-    notes: input.notes || null,
+    mechanic_notes: input.notes || null,  // Store notes in mechanic_notes
     completed_at: null,
   }
 
@@ -1007,7 +1243,6 @@ export async function updateChecklistItem(
   if (updates.laborRate !== undefined) dbUpdates.labor_rate = updates.laborRate
   if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder
   if (updates.mechanicNotes !== undefined) dbUpdates.mechanic_notes = updates.mechanicNotes
-  if (updates.notes !== undefined) dbUpdates.notes = updates.notes
 
   const { data, error } = await supabase
     .from('job_card_checklist_items')

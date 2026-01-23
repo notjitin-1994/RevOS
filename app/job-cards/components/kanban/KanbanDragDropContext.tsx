@@ -88,6 +88,7 @@ export function KanbanDragDropContext({
       jobCardId: activeId,
       newStatus,
       userId,
+      garageId,
     })
   }
 

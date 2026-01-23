@@ -199,8 +199,8 @@ export function SystemDiagnosticPanel() {
         </p>
       </div>
 
-      {/* CTA Link */}
-      <div className="mb-10 md:mb-8">
+      {/* CTA Links */}
+      <div className="mb-10 md:mb-8 space-y-3">
         <a
           href="/sign-up"
           className="group inline-flex items-center gap-2 text-base sm:text-sm md:text-sm text-brand hover:text-brand/90 transition-colors duration-200 font-semibold drop-shadow-md shadow-brand/30"
@@ -216,6 +216,37 @@ export function SystemDiagnosticPanel() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </a>
+        <div className="flex items-center gap-4 pt-2">
+          <a
+            href="/pricing"
+            className="group inline-flex items-center gap-2 text-sm text-white/70 hover:text-brand transition-colors duration-200"
+          >
+            <span>View Pricing</span>
+            <svg
+              className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+          <span className="text-white/20">|</span>
+          <a
+            href="/terms"
+            className="text-sm text-white/70 hover:text-brand transition-colors duration-200"
+          >
+            Terms
+          </a>
+          <span className="text-white/20">|</span>
+          <a
+            href="/privacy"
+            className="text-sm text-white/70 hover:text-brand transition-colors duration-200"
+          >
+            Privacy
+          </a>
+        </div>
       </div>
 
       {/* Section Header */}
