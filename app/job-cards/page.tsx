@@ -31,6 +31,7 @@ import { KanbanColumn } from './components/kanban/KanbanColumn'
 import { KanbanCard } from './components/kanban/KanbanCard'
 import { KanbanSwimlane } from './components/kanban/KanbanSwimlane'
 import { KanbanBoardSkeleton } from './components/shared/KanbanBoardSkeleton'
+import { ZoomControls } from './components/kanban/ZoomControls'
 import { useJobCards } from './hooks/use-job-cards'
 import { useJobCardStore } from './lib/stores/job-card-store'
 import { useUpdateJobCardStatus } from './hooks/use-job-card-mutations'
@@ -165,6 +166,10 @@ export default function JobCardsPage() {
     setViewMode: setStoreViewMode,
     swimlaneType,
     setSwimlaneType,
+    zoomLevel,
+    zoomIn,
+    zoomOut,
+    resetZoom,
   } = useJobCardStore()
 
   // View mode state (Phase 2: add timeline option, Phase 4: add analytics)
@@ -217,8 +222,9 @@ export default function JobCardsPage() {
       const clientWidth = el.clientWidth
       const maxScroll = scrollWidth - clientWidth
 
-      // Check if scrollbar is needed
-      const needsScrollbar = scrollWidth > clientWidth
+      // Check if scrollbar is needed (accounting for zoom level)
+      const scaledContentWidth = scrollWidth * (zoomLevel / 100)
+      const needsScrollbar = scaledContentWidth > clientWidth
       setShowScrollbar(needsScrollbar)
 
       if (!needsScrollbar) return
@@ -237,7 +243,7 @@ export default function JobCardsPage() {
       updateScrollbar()
     }
 
-    // Also update on resize
+    // Also update on resize and zoom change
     window.addEventListener('resize', updateScrollbar)
 
     return () => {
@@ -246,7 +252,7 @@ export default function JobCardsPage() {
       }
       window.removeEventListener('resize', updateScrollbar)
     }
-  }, [searchQuery, statusFilter, jobCards])
+  }, [searchQuery, statusFilter, jobCards, zoomLevel])
 
   // Handle scrollbar thumb drag
   const handleThumbMouseDown = useCallback((e: React.MouseEvent) => {
@@ -365,9 +371,42 @@ export default function JobCardsPage() {
       const filterSelect = document.querySelector('select[value="' + statusFilter + '"]') as HTMLSelectElement
       filterSelect?.focus()
     },
+    onZoomIn: zoomIn,
+    onZoomOut: zoomOut,
+    onResetZoom: resetZoom,
   })
 
   useKeyboardShortcuts({ shortcuts, isEnabled: true })
+
+  // Mouse wheel zoom handler (Ctrl/Cmd + Scroll)
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Check if Ctrl or Cmd key is pressed
+      if (e.ctrlKey || e.metaKey) {
+        // Only apply zoom when in kanban view
+        if (viewMode !== 'kanban') return
+
+        // Prevent default browser zoom behavior
+        e.preventDefault()
+
+        // Determine zoom direction
+        if (e.deltaY < 0) {
+          // Scrolling up - zoom in
+          zoomIn()
+        } else {
+          // Scrolling down - zoom out
+          zoomOut()
+        }
+      }
+    }
+
+    // Add event listener with passive: false to allow preventDefault
+    window.addEventListener('wheel', handleWheel, { passive: false })
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel)
+    }
+  }, [viewMode, zoomIn, zoomOut])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
@@ -522,6 +561,9 @@ export default function JobCardsPage() {
 
                 {/* Phase 3: Keyboard Shortcuts Help */}
                 <KeyboardShortcutButton onClick={() => setShowShortcutsHelp(true)} />
+
+                {/* Zoom Controls (Desktop/Tablet only) */}
+                {viewMode === 'kanban' && <ZoomControls />}
               </div>
             </div>
           </motion.div>
@@ -767,10 +809,20 @@ export default function JobCardsPage() {
                       WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
                     }}
                   >
-                    <KanbanSwimlane
-                      jobCards={jobCards.filter((jc) => statusFilter === 'all' || jc.status === statusFilter)}
-                      columns={KANBAN_COLUMNS.filter((col) => statusFilter === 'all' || col.status === statusFilter)}
-                    />
+                    {/* Zoom wrapper - applies CSS transform for zoom */}
+                    <div
+                      style={{
+                        transform: `scale(${zoomLevel / 100})`,
+                        transformOrigin: 'top left',
+                        transition: 'transform 0.2s ease',
+                        willChange: 'transform',
+                      }}
+                    >
+                      <KanbanSwimlane
+                        jobCards={jobCards.filter((jc) => statusFilter === 'all' || jc.status === statusFilter)}
+                        columns={KANBAN_COLUMNS.filter((col) => statusFilter === 'all' || col.status === statusFilter)}
+                      />
+                    </div>
                   </div>
                 </KanbanDragDropContext>
               </div>

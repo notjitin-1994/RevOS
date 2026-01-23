@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Package,
@@ -23,6 +23,8 @@ import {
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFormAutoSave } from '@/lib/hooks/useFormAutoSave'
+import { VehicleFitmentSelector } from '@/components/inventory/vehicle-fitment-selector'
+import type { CompatibleVehicle } from '@/components/inventory/vehicle-fitment-selector'
 
 /**
  * Add Part Page
@@ -193,9 +195,18 @@ export default function AddPartPage() {
 
   // Motorcycles from catalog
   const [motorcycles, setMotorcycles] = useState<FlatMotorcycleData[]>([])
-  const [filteredMotorcycles, setFilteredMotorcycles] = useState<FlatMotorcycleData[]>([])
-  const [motorcycleSearchQuery, setMotorcycleSearchQuery] = useState('')
   const [isMotorcyclesLoading, setIsMotorcyclesLoading] = useState(true)
+
+  // Transform motorcycles for VehicleFitmentSelector
+  const compatibleVehicles = useMemo(() => {
+    return motorcycles.map(m => ({
+      id: m.id,
+      make: m.make,
+      model: m.model,
+      years: m.years || [],
+      category: m.category,
+    })) as CompatibleVehicle[]
+  }, [motorcycles])
 
   const [formData, setFormData] = useState<FormData>({
     // Basic Information
@@ -319,23 +330,6 @@ export default function AddPartPage() {
     router.push('/inventory')
   }
 
-  // Filter motorcycles based on search query
-  useEffect(() => {
-    if (!motorcycleSearchQuery) {
-      setFilteredMotorcycles(motorcycles)
-      return
-    }
-
-    const filtered = motorcycles.filter(
-      (motorcycle) =>
-        motorcycle.make.toLowerCase().includes(motorcycleSearchQuery.toLowerCase()) ||
-        motorcycle.model.toLowerCase().includes(motorcycleSearchQuery.toLowerCase()) ||
-        motorcycle.category.toLowerCase().includes(motorcycleSearchQuery.toLowerCase()) ||
-        motorcycle.yearRange.includes(motorcycleSearchQuery)
-    )
-    setFilteredMotorcycles(filtered)
-  }, [motorcycleSearchQuery, motorcycles])
-
   const loadMotorcycles = async () => {
     try {
       const response = await fetch('/api/motorcycles/list')
@@ -365,7 +359,6 @@ export default function AddPartPage() {
           })
         })
         setMotorcycles(flatList)
-        setFilteredMotorcycles(flatList)
       }
     } catch (err) {
       console.error('Error loading motorcycle catalog:', err)
@@ -449,7 +442,7 @@ export default function AddPartPage() {
     }))
   }
 
-  const handleChange = (field: keyof FormData, value: string | number | boolean) => {
+  const handleChange = (field: keyof FormData, value: string | number | boolean | string[] | BackupSupplier[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -1022,143 +1015,34 @@ export default function AddPartPage() {
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Settings className="h-5 w-5 text-gray-700" />
-                Motorcycle Fitment
+                Vehicle Fitment
               </h3>
               <p className="text-sm text-gray-500">
-                Select motorcycles from your vehicle catalog that this part is compatible with. Part manufacturer brand is in Basic Info.
+                Select motorcycles from your vehicle catalog that this part is compatible with, or mark as universal fitment.
               </p>
 
-              {/* Selected Motorcycles */}
-              {formData.compatibleVehicles.length > 0 && (
-                <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                    Selected Motorcycles ({formData.compatibleVehicles.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {formData.compatibleVehicles.map((motorcycleId) => {
-                      const motorcycle = motorcycles.find((m) => m.id === motorcycleId)
-                      if (!motorcycle) return null
-                      return (
-                        <div
-                          key={motorcycle.id}
-                          className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border border-gray-200">
-                              <Package className="h-5 w-5 text-gray-700" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {motorcycle.make} {motorcycle.model}
-                              </p>
-                              <div className="flex items-center gap-2 text-xs text-gray-600">
-                                <span>{motorcycle.yearRange}</span>
-                                <span>•</span>
-                                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
-                                  {motorcycle.category}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMotorcycle(motorcycle.id)}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Remove motorcycle"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
+              {/* Vehicle Fitment Selector Component */}
+              {isMotorcyclesLoading ? (
+                <div className="flex items-center justify-center py-12 bg-white rounded-2xl shadow-card border border-gray-200">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+                  <span className="text-sm text-gray-600">Loading vehicle catalog...</span>
                 </div>
+              ) : (
+                <VehicleFitmentSelector
+                  vehicles={compatibleVehicles}
+                  selectedVehicleIds={formData.compatibleVehicles}
+                  isUniversal={formData.isUniversalFitment}
+                  onSelectionChange={(ids) => handleChange('compatibleVehicles', ids)}
+                  onUniversalChange={(isUniversal) => {
+                    handleChange('isUniversalFitment', isUniversal)
+                    // Clear individual selections when switching to universal
+                    if (isUniversal) {
+                      handleChange('compatibleVehicles', [])
+                    }
+                  }}
+                  maxVisible={4}
+                />
               )}
-
-              {/* Motorcycle Search & Selection */}
-              <div className="border-t border-gray-200 pt-6">
-                <h4 className="text-sm font-semibold text-gray-900 mb-4">
-                  Add Compatible Motorcycles
-                </h4>
-
-                {/* Search Input */}
-                <div className="relative mb-4">
-                  <input
-                    type="text"
-                    placeholder="Search by make, model, category, or year..."
-                    value={motorcycleSearchQuery}
-                    onChange={(e) => setMotorcycleSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
-                  />
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                </div>
-
-                {/* Motorcycle List */}
-                {isMotorcyclesLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">Loading motorcycle catalog...</span>
-                  </div>
-                ) : motorcycles.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                    <p className="text-sm text-gray-500">No motorcycles in catalog</p>
-                    <p className="text-xs text-gray-400 mt-1">Add motorcycles to your vehicle catalog first</p>
-                  </div>
-                ) : filteredMotorcycles.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                    <p className="text-sm text-gray-500">No motorcycles match your search</p>
-                    <button
-                      onClick={() => setMotorcycleSearchQuery('')}
-                      className="text-sm text-graphite-700 font-medium hover:underline mt-1"
-                    >
-                      Clear search
-                    </button>
-                  </div>
-                ) : (
-                  <div className="max-h-80 overflow-y-auto space-y-2 pr-2">
-                    {filteredMotorcycles
-                      .filter((m) => !formData.compatibleVehicles.includes(m.id))
-                      .slice(0, 20)
-                      .map((motorcycle) => (
-                        <div
-                          key={motorcycle.id}
-                          className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border border-gray-200">
-                              <Package className="h-5 w-5 text-gray-700" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {motorcycle.make} {motorcycle.model}
-                              </p>
-                              <div className="flex items-center gap-2 text-xs text-gray-600">
-                                <span>{motorcycle.yearRange}</span>
-                                <span>•</span>
-                                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
-                                  {motorcycle.category}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleAddMotorcycle(motorcycle.id)}
-                            className="px-3 py-1.5 bg-graphite-50 text-graphite-700 rounded-lg text-sm font-medium hover:bg-graphite-100 transition-colors flex items-center gap-1"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add
-                          </button>
-                        </div>
-                      ))}
-                    {filteredMotorcycles.filter((m) => !formData.compatibleVehicles.includes(m.id)).length > 20 && (
-                      <p className="text-xs text-gray-500 text-center py-2">
-                        Showing 20 of {filteredMotorcycles.length - formData.compatibleVehicles.length} motorcycles. Search for more.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           )}
 

@@ -63,11 +63,11 @@ export function AnalyticsDashboard({
   if (jobCards.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-card p-12 text-center">
-        <Activity className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+        <Activity className="h-16 w-16 text-graphite-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           No analytics data available
         </h3>
-        <p className="text-gray-600">
+        <p className="text-graphite-600">
           Create some job cards to see analytics
         </p>
       </div>
@@ -166,12 +166,12 @@ export function AnalyticsDashboard({
           {analytics.priorityDistribution.map((item) => {
             const colorClass =
               item.priority === 'urgent'
-                ? 'bg-red-500'
+                ? 'bg-graphite-900'
                 : item.priority === 'high'
-                ? 'bg-orange-500'
+                ? 'bg-graphite-800'
                 : item.priority === 'medium'
-                ? 'bg-yellow-500'
-                : 'bg-green-500'
+                ? 'bg-graphite-700'
+                : 'bg-graphite-600'
 
             return (
               <div key={item.priority}>
@@ -246,10 +246,10 @@ export function AnalyticsDashboard({
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           mechanic.completionRate >= 80
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-gray-100 text-graphite-900'
                             : mechanic.completionRate >= 50
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
+                            ? 'bg-gray-200 text-graphite-800'
+                            : 'bg-gray-300 text-graphite-900'
                         }`}
                       >
                         {mechanic.completionRate}%
@@ -276,11 +276,11 @@ export function AnalyticsDashboard({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(analytics.revenueByStatus).map(([status, revenue]) => (
             <div key={status} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1 capitalize">
+              <p className="text-xs font-medium uppercase tracking-wider text-graphite-600 mb-1 capitalize">
                 {status.replace('_', ' ')}
               </p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${revenue.toFixed(2)}
+              <p className="text-2xl font-bold text-graphite-900">
+                ₹{revenue.toFixed(2)}
               </p>
             </div>
           ))}

@@ -34,34 +34,34 @@ interface StatCardProps {
 
 const colorClasses = {
   blue: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-700',
-    icon: 'text-blue-600',
+    bg: 'bg-gray-100',
+    border: 'border-graphite-600',
+    text: 'text-graphite-900',
+    icon: 'text-graphite-700',
   },
   green: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-700',
-    icon: 'text-green-600',
+    bg: 'bg-gray-50',
+    border: 'border-graphite-400',
+    text: 'text-graphite-900',
+    icon: 'text-graphite-600',
   },
   yellow: {
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
-    text: 'text-yellow-700',
-    icon: 'text-yellow-600',
+    bg: 'bg-gray-200',
+    border: 'border-graphite-700',
+    text: 'text-graphite-900',
+    icon: 'text-graphite-800',
   },
   red: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-700',
-    icon: 'text-red-600',
+    bg: 'bg-gray-300',
+    border: 'border-graphite-800',
+    text: 'text-graphite-900',
+    icon: 'text-graphite-900',
   },
   gray: {
     bg: 'bg-gray-50',
-    border: 'border-gray-200',
-    text: 'text-gray-700',
-    icon: 'text-gray-600',
+    border: 'border-graphite-600',
+    text: 'text-graphite-800',
+    icon: 'text-graphite-700',
   },
 }
 
@@ -130,10 +130,10 @@ export function StatCard({
           <div
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
               trend.direction === 'up'
-                ? 'bg-green-100 text-green-700'
+                ? 'bg-gray-100 text-graphite-900'
                 : trend.direction === 'down'
-                ? 'bg-red-100 text-red-700'
-                : 'bg-gray-100 text-gray-700'
+                ? 'bg-gray-300 text-graphite-900'
+                : 'bg-gray-200 text-graphite-800'
             }`}
           >
             {React.createElement(trendIcons[trend.direction], {
@@ -144,7 +144,7 @@ export function StatCard({
           </div>
 
           {trend.label && (
-            <span className="text-xs text-gray-600">{trend.label}</span>
+            <span className="text-xs text-graphite-600">{trend.label}</span>
           )}
         </div>
       )}

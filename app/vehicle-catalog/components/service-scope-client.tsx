@@ -40,13 +40,16 @@ function MakeLogo({ logoUrl, makeName }: { logoUrl: string | null; makeName: str
   const [imageError, setImageError] = React.useState(false)
 
   if (logoUrl && !imageError) {
-    // Check if it's a local SVG file
+    // Check if it's a local SVG file - SVGs should use unoptimized
     if (logoUrl.startsWith('/logos/')) {
       return (
-        <img
+        <Image
           src={logoUrl}
           alt={`${makeName} logo`}
+          width={32}
+          height={32}
           className="h-8 w-8 object-contain"
+          unoptimized
           onError={() => {
             console.log(`Failed to load logo for ${makeName}: ${logoUrl}`)
             setImageError(true)
@@ -55,12 +58,16 @@ function MakeLogo({ logoUrl, makeName }: { logoUrl: string | null; makeName: str
       )
     }
 
-    // External URL
+    // External URL - use Next.js Image with optimization
     return (
-      <img
+      <Image
         src={logoUrl}
         alt={`${makeName} logo`}
+        width={32}
+        height={32}
         className="h-8 w-8 object-contain"
+        sizes="32px"
+        quality={80}
         onError={() => {
           console.log(`Failed to load logo for ${makeName}: ${logoUrl}`)
           setImageError(true)

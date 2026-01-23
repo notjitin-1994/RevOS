@@ -109,6 +109,9 @@ export async function POST(request: NextRequest) {
       sku: body.sku || null,
       oem_part_number: body.oemPartNumber || null,
 
+      // Universal Fitment
+      is_universal_fitment: body.isUniversalFitment === true,
+
       // Vendor Information
       supplier: body.supplier || null,
       supplier_phone: body.supplierPhone || null,
@@ -154,29 +157,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle compatible vehicles (fitment)
-    // If universal fitment is marked, we'll store it as a special flag
-    // For now, we'll store it in the parts table as a boolean
     const isUniversalFitment = body.isUniversalFitment === true
 
-    // Update the part with universal fitment flag
-    if (isUniversalFitment) {
-      const { error: updateError } = await supabase
-        .from('parts')
-        .update({
-          // Store universal fitment flag in the description or as a special marker
-          // For now, we'll use a special fitment entry with motorcycle_id = 'universal'
-          description: partData.description
-            ? `${partData.description}\n\nUNIVERSAL FITMENT: Fits all motorcycles`
-            : 'UNIVERSAL FITMENT: Fits all motorcycles',
-        })
-        .eq('id', newPart.id)
-
-      if (updateError) {
-        console.error('Error updating universal fitment flag:', updateError)
-      }
-    }
-
-    // Only create fitment records if not universal and vehicles are selected
+    // Only create fitment records if not universal AND vehicles are selected
     if (!isUniversalFitment && body.compatibleVehicles && body.compatibleVehicles.length > 0) {
       const fitmentData = body.compatibleVehicles.map((motorcycleId: string) => ({
         part_id: newPart.id,

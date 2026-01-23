@@ -569,11 +569,16 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Function to compute part metrics
 CREATE OR REPLACE FUNCTION public.compute_part_metrics()
 RETURNS TRIGGER AS $$
+DECLARE
+  total_stock INTEGER;
 BEGIN
-  -- Compute stock status
-  IF NEW.on_hand_stock = 0 THEN
+  -- Calculate total stock (on_hand_stock + warehouse_stock)
+  total_stock := COALESCE(NEW.on_hand_stock, 0) + COALESCE(NEW.warehouse_stock, 0);
+
+  -- Compute stock status based on TOTAL stock
+  IF total_stock = 0 THEN
     NEW.stock_status := 'out-of-stock';
-  ELSIF NEW.on_hand_stock <= NEW.low_stock_threshold THEN
+  ELSIF total_stock <= COALESCE(NEW.low_stock_threshold, 0) THEN
     NEW.stock_status := 'low-stock';
   ELSE
     NEW.stock_status := 'in-stock';

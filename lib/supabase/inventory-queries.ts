@@ -16,7 +16,7 @@ export type Part = {
   margin: number
   location: string | null
   supplier: string | null
-  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock'
+  status: 'in-stock' | 'low-stock' | 'out-of-stock'
   createdAt: string
   updatedAt: string
 }
@@ -51,10 +51,16 @@ export async function getParts(filters: PartsFilters = {}): Promise<PartsListRes
     pageSize = 10,
   } = filters
 
-  // Start building the query
+  // Apply pagination and ordering
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  // Build the complete query with ordering, pagination, and count
   let query = supabase
     .from('parts')
     .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to)
 
   // Apply search filter (searches across multiple fields)
   if (search) {
@@ -77,21 +83,8 @@ export async function getParts(filters: PartsFilters = {}): Promise<PartsListRes
     query = query.eq('stock_status', statusMap[stockStatus] || stockStatus)
   }
 
-  // Get total count before pagination
-  const { count, error: countError } = await query
-
-  if (countError) {
-    console.error('Error counting parts:', countError)
-    throw new Error(`Failed to count parts: ${countError.message}`)
-  }
-
-  // Apply pagination and ordering
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
-
-  const { data: parts, error } = await query
-    .order('created_at', { ascending: false })
-    .range(from, to)
+  // Execute query (returns both data and count)
+  const { data: parts, count, error } = await query
 
   if (error) {
     console.error('Error fetching parts:', error)
@@ -115,7 +108,7 @@ export async function getParts(filters: PartsFilters = {}): Promise<PartsListRes
     margin: parseFloat(part.profit_margin_pct || '0'),
     location: part.location,
     supplier: part.supplier,
-    stockStatus: part.stock_status as 'in-stock' | 'low-stock' | 'out-of-stock',
+    status: part.stock_status as 'in-stock' | 'low-stock' | 'out-of-stock',
     createdAt: part.created_at,
     updatedAt: part.updated_at,
   }))
@@ -166,7 +159,7 @@ export async function getPartById(partId: string): Promise<Part | null> {
     margin: parseFloat(part.profit_margin_pct || '0'),
     location: part.location,
     supplier: part.supplier,
-    stockStatus: part.stock_status as 'in-stock' | 'low-stock' | 'out-of-stock',
+    status: part.stock_status as 'in-stock' | 'low-stock' | 'out-of-stock',
     createdAt: part.created_at,
     updatedAt: part.updated_at,
   }
@@ -225,7 +218,7 @@ export async function getLowStockParts(): Promise<Part[]> {
     margin: parseFloat(part.profit_margin_pct || '0'),
     location: part.location,
     supplier: part.supplier,
-    stockStatus: part.stock_status as 'in-stock' | 'low-stock' | 'out-of-stock',
+    status: part.stock_status as 'in-stock' | 'low-stock' | 'out-of-stock',
     createdAt: part.created_at,
     updatedAt: part.updated_at,
   }))

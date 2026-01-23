@@ -316,327 +316,6 @@ interface JobCardDetail {
 }
 
 // ============================================================================
-// MOCK DATA
-// ============================================================================
-
-const getMockJobCard = (id: string): JobCardDetail => ({
-  id,
-  jobCardNumber: `JC-2025-${id.padStart(4, '0')}`,
-  jobType: 'repair',
-  priority: 'high',
-  status: 'in_progress',
-  createdAt: '2025-01-18T09:30:00Z',
-  updatedAt: '2025-01-18T14:20:00Z',
-  promisedDate: '2025-01-20',
-  promisedTime: '14:00',
-
-  customer: {
-    id: 'cust-1',
-    firstName: 'Rajesh',
-    lastName: 'Kumar',
-    phoneNumber: '+91 98765 43210',
-    email: 'rajesh.kumar@email.com',
-    address: '123, Main Street',
-    city: 'Bangalore',
-    state: 'Karnataka',
-    pincode: '560001',
-    customerSince: '2022-03-15',
-    totalVehicles: 2,
-    totalJobs: 8,
-    loyaltyTier: 'gold',
-  },
-
-  vehicle: {
-    id: 'veh-1',
-    make: 'Honda',
-    model: 'Activa 6G',
-    year: 2023,
-    licensePlate: 'KA-03-EM-2345',
-    vin: 'MA1JB5412MC345678',
-    color: 'Pearl White',
-    fuelType: 'Petrol',
-    transmission: 'Automatic',
-    currentMileage: 45000,
-    engineNumber: 'JB51E2345678',
-    chassisNumber: 'MA1JB5412MC345678',
-    lastServiceDate: '2024-12-15',
-    insuranceExpiry: '2025-06-15',
-    warrantyExpiry: '2025-03-15',
-  },
-
-  manager: {
-    id: 'mgr-1',
-    firstName: 'Vikram',
-    lastName: 'Singh',
-    role: 'manager',
-    email: 'vikram.singh@garage.com',
-    phoneNumber: '+91 98765 11111',
-    rating: 4.8,
-    activeJobs: 12,
-  },
-
-  mechanic: {
-    id: 'mech-1',
-    firstName: 'Amit',
-    lastName: 'Sharma',
-    role: 'mechanic',
-    email: 'amit.sharma@garage.com',
-    phoneNumber: '+91 98765 22222',
-    specialization: ['Engine', 'Transmission', 'Electrical'],
-    rating: 4.7,
-    activeJobs: 5,
-  },
-
-  customerReportedIssues: [
-    'Engine making strange grinding noise when accelerating above 40 km/h',
-    'Vehicle vibrating at high speeds',
-    'Brake pads making squeaking noise',
-  ],
-
-  workRequestedItems: [
-    'Diagnose and fix engine noise',
-    'Check suspension system',
-    'Inspect and replace brake pads if needed',
-    'General service check',
-  ],
-
-  technicalDiagnosisItems: [
-    'Timing belt worn out - needs replacement',
-    'Tensioner showing signs of wear',
-    'Front wheel bearings need attention',
-  ],
-
-  tasks: [
-    {
-      id: 'task-1',
-      name: 'Diagnose engine noise issue',
-      description: 'Perform thorough inspection of engine compartment, check timing belt, tensioner, and related components',
-      status: 'completed',
-      priority: 'high',
-      category: 'Engine',
-      estimatedMinutes: 90,
-      laborRate: 600,
-      displayOrder: 1,
-      linkedToIssues: [0],
-      linkedToServiceItems: [0],
-      linkedToTechnicalDiagnosis: [0, 1],
-      assignedTo: {
-        id: 'mech-1',
-        firstName: 'Amit',
-        lastName: 'Sharma',
-        role: 'mechanic',
-        rating: 4.7,
-      },
-      actualMinutes: 120,
-      parts: [
-        {
-          id: 'part-1',
-          partName: 'Engine Oil (for diagnosis)',
-          partNumber: 'OIL-4T-10W30-1L',
-          quantity: 0.5,
-          unit: 'L',
-          unitPrice: 350,
-          totalPrice: 175,
-          source: 'inventory',
-          status: 'installed',
-        },
-      ],
-      subtasks: [
-        { id: 'st-1', name: 'Visual inspection', description: 'Check engine compartment visually', estimatedMinutes: 30, completed: true, displayOrder: 1 },
-        { id: 'st-2', name: 'Test drive', description: 'Verify the noise issue', estimatedMinutes: 30, completed: true, displayOrder: 2 },
-        { id: 'st-3', name: 'Document findings', description: 'Create diagnosis report', estimatedMinutes: 30, completed: true, displayOrder: 3 },
-      ],
-      createdAt: '2025-01-18T09:45:00Z',
-      updatedAt: '2025-01-18T11:45:00Z',
-      completedAt: '2025-01-18T11:45:00Z',
-      tags: ['diagnostics', 'engine'],
-      checklist: [
-        { id: 'chk-1', title: 'Visual inspection', completed: true, completedAt: '2025-01-18T10:30:00Z' },
-        { id: 'chk-2', title: 'Test drive', completed: true, completedAt: '2025-01-18T11:30:00Z' },
-        { id: 'chk-3', title: 'Document findings', completed: true, completedAt: '2025-01-18T11:45:00Z' },
-      ],
-      comments: [
-        { id: 'cmt-1', author: 'Amit Sharma', text: 'Noise confirmed from timing belt area', createdAt: '2025-01-18T10:30:00Z' },
-      ],
-    },
-    {
-      id: 'task-2',
-      name: 'Replace timing belt and tensioner',
-      description: 'Replace worn timing belt and tensioner assembly, re-time engine, verify operation',
-      status: 'in_progress',
-      priority: 'high',
-      category: 'Engine',
-      estimatedMinutes: 180,
-      laborRate: 700,
-      displayOrder: 2,
-      linkedToIssues: [0],
-      linkedToServiceItems: [0],
-      linkedToTechnicalDiagnosis: [0, 1],
-      assignedTo: {
-        id: 'mech-1',
-        firstName: 'Amit',
-        lastName: 'Sharma',
-        role: 'mechanic',
-        rating: 4.7,
-      },
-      actualMinutes: 90,
-      parts: [
-        {
-          id: 'part-2',
-          partName: 'Timing Belt',
-          partNumber: 'TB-HON-2023-001',
-          quantity: 1,
-          unit: 'pcs',
-          unitPrice: 1800,
-          totalPrice: 1800,
-          source: 'ordered',
-          status: 'received',
-          notes: 'Genuine Honda part',
-        },
-        {
-          id: 'part-3',
-          partName: 'Timing Belt Tensioner',
-          partNumber: 'TBT-HON-2023-045',
-          quantity: 1,
-          unit: 'pcs',
-          unitPrice: 1200,
-          totalPrice: 1200,
-          source: 'ordered',
-          status: 'received',
-        },
-      ],
-      subtasks: [
-        { id: 'st-4', name: 'Drain coolant', description: 'Drain radiator coolant', estimatedMinutes: 20, completed: true, displayOrder: 1 },
-        { id: 'st-5', name: 'Remove old belt', description: 'Remove timing belt cover and old belt', estimatedMinutes: 40, completed: true, displayOrder: 2 },
-        { id: 'st-6', name: 'Install new belt', description: 'Install new timing belt', estimatedMinutes: 60, completed: true, displayOrder: 3 },
-        { id: 'st-7', name: 'Re-time engine', description: 'Set timing correctly', estimatedMinutes: 40, completed: false, displayOrder: 4 },
-        { id: 'st-8', name: 'Refill coolant', description: 'Refill with fresh coolant', estimatedMinutes: 10, completed: false, displayOrder: 5 },
-        { id: 'st-9', name: 'Test start engine', description: 'Start and verify operation', estimatedMinutes: 10, completed: false, displayOrder: 6 },
-      ],
-      createdAt: '2025-01-18T11:50:00Z',
-      updatedAt: '2025-01-18T13:30:00Z',
-      startedAt: '2025-01-18T12:00:00Z',
-      tags: ['engine', 'timing-belt', 'critical'],
-      checklist: [
-        { id: 'chk-4', title: 'Drain coolant', completed: true, completedAt: '2025-01-18T12:00:00Z' },
-        { id: 'chk-5', title: 'Remove old belt', completed: true, completedAt: '2025-01-18T12:30:00Z' },
-        { id: 'chk-6', title: 'Install new belt', completed: true, completedAt: '2025-01-18T13:00:00Z' },
-        { id: 'chk-7', title: 'Re-time engine', completed: false },
-        { id: 'chk-8', title: 'Refill coolant', completed: false },
-        { id: 'chk-9', title: 'Test start engine', completed: false },
-        { id: 'chk-10', title: 'Final inspection', completed: false },
-      ],
-    },
-    {
-      id: 'task-3',
-      name: 'Check suspension for vibration',
-      description: 'Inspect front and rear suspension, check wheel bearings, check tire balance',
-      status: 'pending',
-      priority: 'medium',
-      category: 'Suspension',
-      estimatedMinutes: 120,
-      laborRate: 550,
-      displayOrder: 3,
-      linkedToIssues: [1],
-      linkedToServiceItems: [1],
-      linkedToTechnicalDiagnosis: [2],
-      parts: [],
-      subtasks: [
-        { id: 'st-10', name: 'Visual inspection', description: 'Check suspension components', estimatedMinutes: 30, completed: false, displayOrder: 1 },
-        { id: 'st-11', name: 'Wheel bearing check', description: 'Test wheel bearings', estimatedMinutes: 45, completed: false, displayOrder: 2 },
-        { id: 'st-12', name: 'Test drive', description: 'Test drive to verify vibration', estimatedMinutes: 30, completed: false, displayOrder: 3 },
-        { id: 'st-13', name: 'Tire balancing', description: 'Balance wheels if needed', estimatedMinutes: 15, completed: false, displayOrder: 4 },
-      ],
-      createdAt: '2025-01-18T11:50:00Z',
-      updatedAt: '2025-01-18T11:50:00Z',
-      tags: ['suspension', 'vibration'],
-    },
-    {
-      id: 'task-4',
-      name: 'Inspect and replace brake pads',
-      description: 'Check front and rear brake pads, measure thickness, replace if worn',
-      status: 'pending',
-      priority: 'low',
-      category: 'Brakes',
-      estimatedMinutes: 60,
-      laborRate: 500,
-      displayOrder: 4,
-      linkedToIssues: [2],
-      linkedToServiceItems: [2],
-      parts: [],
-      subtasks: [
-        { id: 'st-14', name: 'Remove wheels', description: 'Remove all wheels', estimatedMinutes: 15, completed: false, displayOrder: 1 },
-        { id: 'st-15', name: 'Measure pad thickness', description: 'Measure brake pad thickness', estimatedMinutes: 15, completed: false, displayOrder: 2 },
-        { id: 'st-16', name: 'Check rotors', description: 'Inspect brake rotors', estimatedMinutes: 15, completed: false, displayOrder: 3 },
-        { id: 'st-17', name: 'Replace if needed', description: 'Replace brake pads if worn', estimatedMinutes: 15, completed: false, displayOrder: 4 },
-      ],
-      createdAt: '2025-01-18T12:00:00Z',
-      updatedAt: '2025-01-18T12:00:00Z',
-      tags: ['brakes', 'safety'],
-    },
-  ],
-
-  activities: [
-    {
-      id: 'act-1',
-      type: 'status_change',
-      title: 'Job card created',
-      author: 'Vikram Singh',
-      timestamp: '2025-01-18T09:30:00Z',
-    },
-    {
-      id: 'act-2',
-      type: 'assignment',
-      title: 'Amit Sharma assigned as lead mechanic',
-      author: 'Vikram Singh',
-      timestamp: '2025-01-18T09:35:00Z',
-    },
-    {
-      id: 'act-3',
-      type: 'task_update',
-      title: 'Task "Diagnose engine noise issue" completed',
-      author: 'Amit Sharma',
-      timestamp: '2025-01-18T11:45:00Z',
-      description: 'Confirmed timing belt issue, replacement recommended',
-    },
-    {
-      id: 'act-4',
-      type: 'comment',
-      title: 'Comment added to task',
-      author: 'Amit Sharma',
-      timestamp: '2025-01-18T10:30:00Z',
-      description: 'Noise confirmed from timing belt area',
-    },
-    {
-      id: 'act-5',
-      type: 'system',
-      title: 'Parts ordered - Timing Belt and Tensioner',
-      timestamp: '2025-01-18T11:50:00Z',
-    },
-    {
-      id: 'act-6',
-      type: 'time_logged',
-      title: 'Time logged for task "Replace timing belt"',
-      author: 'Amit Sharma',
-      timestamp: '2025-01-18T13:30:00Z',
-      description: '90 minutes logged',
-    },
-  ],
-
-  estimatedCost: 7500,
-  actualCost: 5175,
-  laborMinutes: 390,
-  laborCost: 3850,
-  partsCost: 3175,
-
-  customerNotes: 'Please call before doing any major work. I need the vehicle back by Tuesday evening.',
-  internalNotes: 'Customer is a regular, prioritize this job. He has referred 3 other customers.',
-  mechanicNotes: 'Need to check timing belt and tensioner. Customer mentioned noise started after last service from another garage.',
-
-  tags: ['engine', 'timing-belt', 'priority', 'regular-customer'],
-})
-
-// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -712,6 +391,207 @@ function formatDuration(minutes: number): string {
 }
 
 // ============================================================================
+// DATA TRANSFORMATION
+// ============================================================================
+
+interface DbJobCardWithRelations {
+  id: string
+  jobCardNumber: string
+  jobType: string
+  priority: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  promisedDate: string | null
+  promisedTime: string | null
+  actualCompletionDate: string | null
+  customerComplaint: string | null
+  workRequested: string | null
+  customerNotes: string | null
+  internalNotes: string | null
+  mechanicNotes: string | null
+  laborHours: number
+  laborCost: number
+  partsCost: number
+  totalCost: number
+  totalChecklistItems: number
+  completedChecklistItems: number
+  progressPercentage: number
+  leadMechanicId: string | null
+  customer: {
+    id: string
+    firstName: string
+    lastName: string
+    phoneNumber: string
+    email: string | null
+  }
+  vehicle: {
+    id: string
+    make: string
+    model: string
+    year: number
+    licensePlate: string
+    vin: string | null
+    color: string | null
+  }
+  leadMechanic: {
+    id: string
+    firstName: string
+    lastName: string
+  } | null
+  checklistItems: Array<{
+    id: string
+    itemName: string
+    description: string | null
+    status: string
+    priority: string
+    estimatedMinutes: number
+    actualMinutes: number
+    laborRate: number
+    displayOrder: number
+    mechanicId: string | null
+    completedAt: string | null
+  }>
+  parts: Array<{
+    id: string
+    partName: string
+    partNumber: string | null
+    quantityAllocated: number
+    unitPrice: number
+    totalPrice: number
+    status: string
+  }>
+}
+
+function transformDbJobCardToJobCardDetail(dbJobCard: DbJobCardWithRelations): JobCardDetail {
+  // Parse customer complaint and work requested into arrays
+  const customerReportedIssues = dbJobCard.customerComplaint
+    ? dbJobCard.customerComplaint.split('\n').filter(Boolean)
+    : []
+
+  const workRequestedItems = dbJobCard.workRequested
+    ? dbJobCard.workRequested.split('\n').filter(Boolean)
+    : []
+
+  // Transform checklist items to tasks
+  const tasks: Task[] = dbJobCard.checklistItems.map((item, index) => ({
+    id: item.id,
+    name: item.itemName,
+    description: item.description || '',
+    status: item.status as TaskStatus,
+    priority: item.priority as Priority,
+    category: 'Service',
+    estimatedMinutes: item.estimatedMinutes,
+    actualMinutes: item.actualMinutes || 0,
+    laborRate: item.laborRate,
+    displayOrder: item.displayOrder,
+    assignedTo: dbJobCard.leadMechanic ? {
+      id: dbJobCard.leadMechanic.id,
+      firstName: dbJobCard.leadMechanic.firstName,
+      lastName: dbJobCard.leadMechanic.lastName,
+      role: 'mechanic',
+    } : undefined,
+    parts: [], // Parts are at job card level, not task level
+    subtasks: [],
+    checklist: item.status === 'completed' ? [{ id: `${item.id}-chk`, title: item.itemName, completed: true, completedAt: item.completedAt || undefined }] : [],
+    tags: [],
+    createdAt: dbJobCard.createdAt,
+    updatedAt: dbJobCard.updatedAt,
+    completedAt: item.completedAt || undefined,
+    startedAt: undefined,
+    linkedToIssues: [],
+    linkedToServiceItems: [],
+    linkedToTechnicalDiagnosis: [],
+    comments: [],
+    attachments: [],
+  }))
+
+  // Calculate costs
+  const laborMinutes = Math.round(dbJobCard.laborHours * 60)
+  const estimatedCost = dbJobCard.totalCost || 0
+  const actualCost = dbJobCard.totalCost || 0
+
+  // Create activity items
+  const activities: Activity[] = [
+    {
+      id: 'act-1',
+      type: 'status_change',
+      title: 'Job card created',
+      timestamp: dbJobCard.createdAt,
+    },
+  ]
+
+  if (dbJobCard.updatedAt !== dbJobCard.createdAt) {
+    activities.push({
+      id: 'act-2',
+      type: 'system',
+      title: 'Job card updated',
+      timestamp: dbJobCard.updatedAt,
+    })
+  }
+
+  if (dbJobCard.completedChecklistItems > 0) {
+    activities.push({
+      id: 'act-3',
+      type: 'task_update',
+      title: `${dbJobCard.completedChecklistItems} of ${dbJobCard.totalChecklistItems} tasks completed`,
+      timestamp: dbJobCard.updatedAt,
+      description: `Progress: ${dbJobCard.progressPercentage}%`,
+    })
+  }
+
+  return {
+    id: dbJobCard.id,
+    jobCardNumber: dbJobCard.jobCardNumber,
+    jobType: dbJobCard.jobType,
+    priority: dbJobCard.priority as Priority,
+    status: dbJobCard.status as JobCardStatus,
+    createdAt: dbJobCard.createdAt,
+    updatedAt: dbJobCard.updatedAt,
+    promisedDate: dbJobCard.promisedDate || undefined,
+    promisedTime: dbJobCard.promisedTime || undefined,
+    actualCompletionDate: dbJobCard.actualCompletionDate || undefined,
+    customer: {
+      id: dbJobCard.customer.id,
+      firstName: dbJobCard.customer.firstName,
+      lastName: dbJobCard.customer.lastName,
+      phoneNumber: dbJobCard.customer.phoneNumber,
+      email: dbJobCard.customer.email || undefined,
+    },
+    vehicle: {
+      id: dbJobCard.vehicle.id,
+      make: dbJobCard.vehicle.make,
+      model: dbJobCard.vehicle.model,
+      year: dbJobCard.vehicle.year,
+      licensePlate: dbJobCard.vehicle.licensePlate,
+      vin: dbJobCard.vehicle.vin || undefined,
+      color: dbJobCard.vehicle.color || undefined,
+    },
+    manager: undefined, // Not tracked in current schema
+    mechanic: dbJobCard.leadMechanic ? {
+      id: dbJobCard.leadMechanic.id,
+      firstName: dbJobCard.leadMechanic.firstName,
+      lastName: dbJobCard.leadMechanic.lastName,
+      role: 'mechanic',
+    } : undefined,
+    customerReportedIssues,
+    workRequestedItems,
+    technicalDiagnosisItems: [], // Not tracked in current schema
+    tasks,
+    activities,
+    estimatedCost,
+    actualCost,
+    laborMinutes,
+    laborCost: dbJobCard.laborCost || 0,
+    partsCost: dbJobCard.partsCost || 0,
+    customerNotes: dbJobCard.customerNotes || undefined,
+    internalNotes: dbJobCard.internalNotes || undefined,
+    mechanicNotes: dbJobCard.mechanicNotes || undefined,
+    tags: [],
+  }
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -726,13 +606,35 @@ export default function ViewJobCardPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      if (params.id) {
-        setJobCard(getMockJobCard(params.id as string))
+    async function fetchJobCard() {
+      if (!params.id) return
+
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/job-cards/${params.id}`)
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch job card')
+        }
+
+        const data = await response.json()
+
+        if (!data.success || !data.jobCard) {
+          throw new Error('Job card not found')
+        }
+
+        // Transform database data to UI format
+        const transformed = transformDbJobCardToJobCardDetail(data.jobCard)
+        setJobCard(transformed)
+      } catch (err) {
+        console.error('Error fetching job card:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load job card')
+      } finally {
         setLoading(false)
       }
-    }, 500)
+    }
+
+    fetchJobCard()
   }, [params.id])
 
   const toggleSection = useCallback((section: string) => {
@@ -813,6 +715,15 @@ export default function ViewJobCardPage() {
 
             {/* Status badges - only on mobile header */}
             <div className="flex items-center gap-1 md:hidden">
+              {jobCard.status === 'draft' && (
+                <button
+                  onClick={() => router.push(`/job-cards/create?editJobCardId=${jobCard.id}`)}
+                  className="px-3 py-1.5 bg-graphite-700 text-white text-xs font-semibold rounded-lg hover:bg-graphite-600 transition-colors flex items-center gap-1"
+                >
+                  <Edit className="h-3 w-3" />
+                  Continue
+                </button>
+              )}
               <span className={cn('px-2 py-1 rounded-lg border text-xs font-semibold', getStatusColor(jobCard.status))}>
                 {jobCard.status.replace('_', ' ')}
               </span>
@@ -838,9 +749,24 @@ export default function ViewJobCardPage() {
               <button className="h-11 px-3 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors" title="Share">
                 <Share2 className="h-4 w-4 text-gray-700" />
               </button>
-              <button className="h-11 px-3 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors" title="Edit">
-                <Edit className="h-4 w-4 text-gray-700" />
-              </button>
+              {jobCard.status === 'draft' ? (
+                <button
+                  onClick={() => router.push(`/job-cards/create?editJobCardId=${jobCard.id}`)}
+                  className="h-11 px-4 flex items-center gap-2 bg-graphite-700 text-white font-semibold rounded-lg hover:bg-graphite-600 transition-colors"
+                  title="Continue Draft"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden lg:inline">Continue Draft</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push(`/job-cards/create?editJobCardId=${jobCard.id}`)}
+                  className="h-11 px-3 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4 text-gray-700" />
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -21,10 +21,16 @@ import {
   Copy,
   AlertTriangle,
   CheckCircle,
+  Phone,
+  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DetailViewSkeleton } from '@/components/ui/skeleton/detail-view-skeleton'
+import { ActionsDropdown } from '@/components/inventory/actions-dropdown'
+import { EditPartModal } from '@/components/inventory/edit-part-modal'
+import { OrderLogSheet, OrderLogData } from '@/components/inventory/order-log-sheet'
+import { VehicleFitmentDisplay, CompatibleVehicle } from '@/components/inventory/vehicle-fitment-display'
 
 /**
  * Part Detail Page
@@ -150,6 +156,9 @@ export default function PartDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isOrderLogOpen, setIsOrderLogOpen] = useState(false)
+  const [communicationType, setCommunicationType] = useState<'phone' | 'email'>('phone')
   const [activeTab, setActiveTab] = useState<'overview' | 'fitment' | 'vendor' | 'lifecycle' | 'technical'>('overview')
   const [activeBackupSupplier, setActiveBackupSupplier] = useState(0)
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -244,8 +253,100 @@ export default function PartDetailPage() {
   }
 
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    alert('Edit functionality to be implemented')
+    setIsEditModalOpen(true)
+  }
+
+  const handleCallVendor = () => {
+    if (!part?.supplierPhone) {
+      alert('No phone number available for this vendor')
+      return
+    }
+
+    // Open phone call
+    window.open(`tel:${part.supplierPhone}`, '_blank')
+
+    // Show order log sheet after a short delay
+    setCommunicationType('phone')
+    setTimeout(() => {
+      setIsOrderLogOpen(true)
+    }, 500)
+  }
+
+  const handleEmailVendor = () => {
+    if (!part?.supplierEmail) {
+      alert('No email address available for this vendor')
+      return
+    }
+
+    // Open email client
+    const subject = encodeURIComponent(`Inquiry about ${part.partName} (${part.partNumber})`)
+    const body = encodeURIComponent(`Hi ${part.supplier},\n\nI'm writing to inquire about...`)
+    window.open(`mailto:${part.supplierEmail}?subject=${subject}&body=${body}`, '_blank')
+
+    // Show order log sheet after a short delay
+    setCommunicationType('email')
+    setTimeout(() => {
+      setIsOrderLogOpen(true)
+    }, 500)
+  }
+
+  const handleLogOrder = () => {
+    setIsOrderLogOpen(true)
+  }
+
+  const handleSavePart = async (updatedPart: Partial<Part>) => {
+    try {
+      const response = await fetch(`/api/inventory/part/${partId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPart),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update part')
+      }
+
+      // Update local state with new part data
+      setPart(result.part as Part)
+
+      // Show success message
+      alert('Part updated successfully!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred'
+      console.error('Error updating part:', err)
+      alert(`Failed to update part: ${message}`)
+      throw err
+    }
+  }
+
+  const handleLogCommunication = async (data: OrderLogData) => {
+    try {
+      const response = await fetch('/api/inventory/log-communication', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to log communication')
+      }
+
+      console.log('Communication logged successfully:', result.communication)
+
+      // If order was placed, refresh part data to update stock
+      if (data.outcome === 'order-placed') {
+        await loadPart()
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred'
+      console.error('Error logging communication:', err)
+      alert(`Failed to log communication: ${message}`)
+      throw err
+    }
   }
 
   const handleDelete = () => {
@@ -589,78 +690,37 @@ export default function PartDetailPage() {
                 </>
               )}
 
-              {activeTab === 'fitment' && part.compatibleVehicles && part.compatibleVehicles.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Motorcycle Fitment
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Compatible motorcycles from vehicle catalog ({part.compatibleVehicles.length})
-                    </p>
+              {activeTab === 'fitment' && (
+                isMotorcyclesLoading ? (
+                  <div className="bg-white rounded-2xl shadow-card border border-gray-200 p-12">
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+                      <span className="text-sm text-gray-600">Loading vehicle catalog...</span>
+                    </div>
                   </div>
-                  <div className="p-6">
-                    {isMotorcyclesLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-600">Loading motorcycle catalog...</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {part.compatibleVehicles.map((motorcycleId) => {
-                          const motorcycle = motorcycles.find((m) => m.id === motorcycleId)
-                          if (!motorcycle) return null
-                          return (
-                            <div
-                              key={motorcycle.id}
-                              className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border border-gray-200">
-                                  <Package className="h-5 w-5 text-gray-700" />
-                                </div>
-                                <div>
-                                  <p className="text-base font-semibold text-gray-900">
-                                    {motorcycle.make} {motorcycle.model}
-                                  </p>
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <span>{motorcycle.yearRange}</span>
-                                    <span>•</span>
-                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
-                                      {motorcycle.category}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                        {part.compatibleVehicles.some((id) => !motorcycles.find((m) => m.id === id)) && (
-                          <p className="text-xs text-gray-500 italic">
-                            Some motorcycles could not be found in the catalog
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'fitment' && (!part.compatibleVehicles || part.compatibleVehicles.length === 0) && (
-                <div className="bg-white rounded-2xl shadow-card border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Motorcycle Fitment
-                    </h3>
-                  </div>
-                  <div className="p-12 text-center">
-                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No compatible motorcycles specified</p>
-                    <p className="text-sm text-gray-500 mt-1">Edit this part to add compatible motorcycles from the catalog</p>
-                  </div>
-                </div>
+                ) : (
+                  <VehicleFitmentDisplay
+                    vehicles={(() => {
+                      // Transform motorcycle data to CompatibleVehicle format
+                      const compatibleVehiclesData = part?.compatibleVehicles
+                        ?.map((motorcycleId) => {
+                          const moto = motorcycles.find((m) => m.id === motorcycleId)
+                          return moto
+                            ? {
+                                id: moto.id,
+                                make: moto.make,
+                                model: moto.model,
+                                years: moto.years || [],
+                                category: moto.category,
+                              }
+                            : null
+                        })
+                        .filter(Boolean) as CompatibleVehicle[]
+                      return compatibleVehiclesData
+                    })()}
+                    maxVisible={4}
+                  />
+                )
               )}
 
               {activeTab === 'vendor' && (
@@ -979,26 +1039,41 @@ export default function PartDetailPage() {
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
                 </div>
-                <div className="p-4 space-y-2">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleEdit}
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
-                  >
-                    <Edit className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-900">Edit Part</span>
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleDelete}
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
-                  >
-                    <Trash2 className="h-4 w-4 text-status-error" />
-                    <span className="text-sm font-medium text-status-error">Delete Part</span>
-                  </motion.button>
+                <div className="p-4">
+                  <ActionsDropdown
+                    onCallVendor={handleCallVendor}
+                    onEmailVendor={handleEmailVendor}
+                    onEdit={handleEdit}
+                    onLogOrder={handleLogOrder}
+                    onDelete={handleDelete}
+                    partName={part ? `${part.partName} (${part.partNumber})` : ''}
+                    className="w-full"
+                  />
                 </div>
+
+                {/* Direct Contact Actions */}
+                {(part?.supplierPhone || part?.supplierEmail) && (
+                  <div className="px-4 pb-4 space-y-2">
+                    {part.supplierPhone && (
+                      <a
+                        href={`tel:${part.supplierPhone}`}
+                        className="flex items-center gap-3 px-4 py-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all group sm:hidden"
+                      >
+                        <Phone className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-900">Call Vendor</span>
+                      </a>
+                    )}
+                    {part.supplierEmail && (
+                      <a
+                        href={`mailto:${part.supplierEmail}`}
+                        className="flex items-center gap-3 px-4 py-3 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all group hidden sm:flex"
+                      >
+                        <Mail className="h-4 w-4 text-purple-600" />
+                        <span className="text-sm font-medium text-gray-900">Email Vendor</span>
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -1012,6 +1087,30 @@ export default function PartDetailPage() {
         partName={part ? `${part.partName} (${part.partNumber})` : ''}
         onConfirm={confirmDelete}
       />
+
+      {/* Edit Part Modal */}
+      {part && (
+        <EditPartModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          part={part}
+          onSave={handleSavePart}
+          motorcycles={motorcycles}
+        />
+      )}
+
+      {/* Order Log Sheet */}
+      {part && (
+        <OrderLogSheet
+          isOpen={isOrderLogOpen}
+          onClose={() => setIsOrderLogOpen(false)}
+          vendorName={part.supplier || 'Unknown'}
+          communicationType={communicationType}
+          partId={part.id}
+          partName={`${part.partName} (${part.partNumber})`}
+          onSubmit={handleLogCommunication}
+        />
+      )}
     </>
   )
 }

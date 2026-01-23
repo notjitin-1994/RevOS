@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [API] Fetching job cards for garage:', garageId)
 
-    // Build query with joins to get customer and vehicle data
+    // Build query with joins to get customer, vehicle, and parts data
     let query = supabase
       .from('job_cards')
       .select(`
@@ -55,7 +55,13 @@ export async function GET(request: NextRequest) {
           model,
           year,
           license_plate,
-          vin
+          vin,
+          color
+        ),
+        job_card_parts (
+          id,
+          quantity_used,
+          unit_price
         )
       `)
       .eq('garage_id', garageId)
@@ -104,6 +110,17 @@ export async function GET(request: NextRequest) {
     const transformedData = (jobCards || []).map((item: any) => {
       const customer = item.customers
       const vehicle = item.customer_vehicles
+      const parts = item.job_card_parts || []
+
+      // Calculate actual parts cost from job_card_parts (quantity_used * unit_price)
+      const actualPartsCost = parts.reduce(
+        (sum: number, part: any) => sum + (Number(part.quantity_used) || 0) * (Number(part.unit_price) || 0),
+        0
+      )
+
+      // Use actual labor cost if available, otherwise fall back to estimated
+      const actualLaborCost = Number(item.actual_labor_cost) || Number(item.estimated_labor_cost) || 0
+      const totalActualCost = actualLaborCost + actualPartsCost
 
       return {
         id: item.id,
@@ -122,15 +139,16 @@ export async function GET(request: NextRequest) {
         promisedTime: item.promised_time,
         actualCompletionDate: item.actual_completion_date,
         leadMechanicId: item.lead_mechanic_id,
-        laborHours: Number(item.labor_hours) || 0,
-        laborCost: Number(item.labor_cost) || 0,
-        partsCost: Number(item.parts_cost) || 0,
-        totalCost: Number(item.total_cost) || 0,
+        laborHours: 0, // Not tracked in current schema
+        laborCost: actualLaborCost,
+        partsCost: actualPartsCost,
+        totalCost: totalActualCost,
         totalChecklistItems: item.total_checklist_items || 0,
         completedChecklistItems: item.completed_checklist_items || 0,
         progressPercentage: item.progress_percentage || 0,
-        internalNotes: item.internal_notes,
-        mechanicNotes: item.mechanic_notes,
+        technicianNotes: item.technician_notes,
+        serviceAdvisorNotes: item.service_advisor_notes,
+        qualityCheckNotes: item.quality_check_notes,
         createdAt: item.created_at,
         updatedAt: item.updated_at,
         deletedAt: item.deleted_at,
@@ -145,6 +163,7 @@ export async function GET(request: NextRequest) {
         vehicleYear: vehicle.year,
         vehicleLicensePlate: vehicle.license_plate,
         vehicleVin: vehicle.vin,
+        vehicleColor: vehicle.color,
       }
     })
 

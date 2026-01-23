@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, useCallback, startTransition, Suspense } from 'react'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import {
   UserPlus,
   User,
@@ -79,7 +79,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
-import { createJobCardAction } from '@/app/actions/job-card-actions'
+import { createJobCardAction, updateJobCardAction } from '@/app/actions/job-card-actions'
 import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
 import { createCustomerAction, addVehicleToCustomerAction, type CreateCustomerInput, type CreateVehicleInput } from '@/app/actions/customer-actions'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
@@ -723,9 +723,14 @@ interface TabValidation {
 // MAIN COMPONENT
 // ============================================================================
 
-export default function CreateJobCardPage() {
+function CreateJobCardPageContent() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const editJobCardId = searchParams.get('editJobCardId')
+  const [isEditingDraft, setIsEditingDraft] = useState(false)
+
+  // Initialize isLoading to true if we're loading a draft, false otherwise
+  const [isLoading, setIsLoading] = useState(!!editJobCardId)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -804,7 +809,7 @@ export default function CreateJobCardPage() {
   const [currentMileage, setCurrentMileage] = useState('')
   const [technicalDiagnosisItems, setTechnicalDiagnosisItems] = useState<string[]>([])
   const [currentTechnicalDiagnosis, setCurrentTechnicalDiagnosis] = useState('')
-  const [internalNotes, setInternalNotes] = useState('')
+  const [technicianNotes, setTechnicianNotes] = useState('')
 
   // Scheduling states
   const [promisedDate, setPromisedDate] = useState('')
@@ -856,13 +861,229 @@ export default function CreateJobCardPage() {
     loadMakes()
   }, [router])
 
+  // Load existing draft data when editJobCardId is present
   useEffect(() => {
-    if (selectedCustomer?.vehicles && selectedCustomer.vehicles.length > 0) {
+    if (!editJobCardId) return
+
+    let isCancelled = false
+    const abortController = new AbortController()
+
+    const loadDraftData = async () => {
+      try {
+        // isLoading is already true from initial state, no need to set it again
+        console.log('Loading draft job card:', editJobCardId)
+
+        // Fetch draft data with abort signal
+        const response = await fetch(`/api/job-cards/${editJobCardId}`, {
+          signal: abortController.signal
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to load draft job card')
+        }
+
+        const result = await response.json()
+        console.log('Draft data loaded:', result)
+
+        if (!result.success || !result.jobCard) {
+          throw new Error(result.error || 'Failed to load draft job card')
+        }
+
+        const data = result.jobCard
+        console.log('Job card data:', data)
+
+        // Check if component was cancelled during fetch
+        if (isCancelled) return
+
+        // Set editing mode
+        setIsEditingDraft(true)
+
+        // Fetch complete customer data with all vehicles
+        if (data.customer) {
+          try {
+            // Fetch the customer with all their vehicles
+            const customerResponse = await fetch(`/api/customers/${data.customer.id}`)
+            if (customerResponse.ok) {
+              const customerResult = await customerResponse.json()
+              if (customerResult.success && customerResult.customer) {
+                const customerWithAllVehicles = customerResult.customer
+
+                // Add the customer to the customers list
+                setCustomers(prevCustomers => {
+                  // Remove the customer if they already exist, then add the updated version
+                  const filtered = prevCustomers.filter(c => c.id !== customerWithAllVehicles.id)
+                  return [...filtered, customerWithAllVehicles]
+                })
+
+                // Set as selected customer
+                setSelectedCustomer(customerWithAllVehicles)
+
+                // Set the draft's vehicle as selected
+                if (data.vehicle) {
+                  const draftVehicle = customerWithAllVehicles.vehicles.find(
+                    (v: VehicleData) => v.id === data.vehicle.id
+                  )
+                  if (draftVehicle) {
+                    setSelectedVehicle(draftVehicle)
+                  }
+                }
+              }
+            } else {
+              // Fallback to old behavior if API call fails
+              console.error('Failed to fetch customer data, using fallback')
+              const customerObj = {
+                id: data.customer.id,
+                firstName: data.customer.firstName,
+                lastName: data.customer.lastName,
+                phoneNumber: data.customer.phoneNumber,
+                email: data.customer.email,
+                vehicles: data.vehicle ? [data.vehicle] : []
+              }
+              setCustomers([customerObj])
+              setSelectedCustomer(customerObj)
+
+              if (data.vehicle) {
+                const vehicleObj = {
+                  id: data.vehicle.id,
+                  make: data.vehicle.make,
+                  model: data.vehicle.model,
+                  year: data.vehicle.year,
+                  licensePlate: data.vehicle.licensePlate,
+                  vin: data.vehicle.vin,
+                  color: data.vehicle.color
+                }
+                setSelectedVehicle(vehicleObj)
+              }
+            }
+          } catch (error) {
+            // Fallback to old behavior if fetch fails
+            console.error('Error fetching customer data:', error)
+            const customerObj = {
+              id: data.customer.id,
+              firstName: data.customer.firstName,
+              lastName: data.customer.lastName,
+              phoneNumber: data.customer.phoneNumber,
+              email: data.customer.email,
+              vehicles: data.vehicle ? [data.vehicle] : []
+            }
+            setCustomers([customerObj])
+            setSelectedCustomer(customerObj)
+
+            if (data.vehicle) {
+              const vehicleObj = {
+                id: data.vehicle.id,
+                make: data.vehicle.make,
+                model: data.vehicle.model,
+                year: data.vehicle.year,
+                licensePlate: data.vehicle.licensePlate,
+                vin: data.vehicle.vin,
+                color: data.vehicle.color
+              }
+              setSelectedVehicle(vehicleObj)
+            }
+          }
+        }
+
+        // Set employees if available
+        if (data.leadMechanic) {
+          const employeeObj = {
+            id: data.leadMechanic.id,
+            firstName: data.leadMechanic.firstName,
+            lastName: data.leadMechanic.lastName,
+            role: 'Mechanic' // Default role for lead mechanic
+          }
+          setEmployees([employeeObj])
+        }
+
+        // Batch all state updates together to minimize re-renders
+        startTransition(() => {
+          // Job details
+          if (data.jobType) setJobType(data.jobType)
+          if (data.priority) setPriority(data.priority)
+          if (data.customerComplaint) {
+            const issues = data.customerComplaint.split(' | ').filter(Boolean)
+            setCustomerReportIssues(issues)
+          }
+          if (data.workRequested) {
+            const work = data.workRequested.split(' | ').filter(Boolean)
+            setWorkRequestedItems(work)
+          }
+          if (data.customerNotes) setCustomerNotes(data.customerNotes)
+          if (data.currentMileage) setCurrentMileage(data.currentMileage.toString())
+          if (data.technicianNotes) setTechnicianNotes(data.technicianNotes)
+
+          // Scheduling
+          if (data.promisedDate) setPromisedDate(data.promisedDate)
+          if (data.promisedTime) setPromisedTime(data.promisedTime)
+          if (data.leadMechanicId) setLeadMechanicId(data.leadMechanicId)
+          if (data.serviceAdvisorId) setServiceAdvisorId(data.serviceAdvisorId)
+
+          // Checklist items
+          if (data.checklistItems && data.checklistItems.length > 0) {
+            const transformedItems = data.checklistItems.map((item: any, index: number) => ({
+              id: item.id || Date.now().toString() + index,
+              itemName: item.itemName || item.item_name || item.task_name || '',
+              description: item.description || item.task_description || '',
+              category: item.category || item.task_category || 'General',
+              priority: item.priority || 'medium',
+              estimatedMinutes: item.estimatedMinutes || item.estimated_minutes || 30,
+              laborRate: item.laborRate || item.labor_rate || 500,
+              displayOrder: item.displayOrder || item.display_order || index + 1,
+            }))
+            setChecklistItems(transformedItems)
+          }
+
+          // Parts
+          if (data.parts && data.parts.length > 0) {
+            const transformedParts = data.parts.map((part: any) => ({
+              id: part.id || Date.now().toString() + Math.random(),
+              partId: part.partId || part.part_id || null,
+              partName: part.partName || part.part_name || '',
+              partNumber: part.partNumber || part.part_number || null,
+              quantity: part.quantityAllocated || part.quantity_allocated || part.quantity_requested || 1,
+              unitPrice: part.unitPrice || part.unit_price || 0,
+              totalPrice: part.totalPrice || part.total_price || 0,
+            }))
+            setSelectedParts(transformedParts)
+          }
+        })
+
+        console.log('Draft data loaded successfully')
+      } catch (err) {
+        // Don't set error if request was aborted
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.log('Draft data fetch was aborted')
+          return
+        }
+        console.error('Error loading draft:', err)
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load draft job card')
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadDraftData()
+
+    // Cleanup function
+    return () => {
+      isCancelled = true
+      abortController.abort()
+    }
+  }, [editJobCardId]) // Only depend on editJobCardId, NOT customers
+
+  useEffect(() => {
+    // Only auto-select first vehicle if no vehicle is currently selected
+    // This preserves the draft's vehicle selection when loading a draft
+    if (selectedCustomer?.vehicles && selectedCustomer.vehicles.length > 0 && !selectedVehicle) {
       setSelectedVehicle(selectedCustomer.vehicles[0])
-    } else {
+    } else if (!selectedCustomer?.vehicles || selectedCustomer.vehicles.length === 0) {
       setSelectedVehicle(null)
     }
-  }, [selectedCustomer])
+  }, [selectedCustomer, selectedVehicle])
 
   // Update tab validation state based on form data and navigation
   // This ensures required tabs (Customer, Details) are validated based on actual data
@@ -1513,11 +1734,30 @@ export default function CreateJobCardPage() {
     }
   }, [checklistItems, selectedParts])
 
+  const handleSaveAsDraft = async () => {
+    // For draft, only validate customer and vehicle (minimum required data)
+    if (!selectedCustomer) {
+      setTabErrors(prev => ({ ...prev, customer: 'Please select a customer' }))
+      setActiveTab('customer')
+      return
+    }
+    if (!selectedVehicle) {
+      setTabErrors(prev => ({ ...prev, customer: 'Please select a vehicle' }))
+      setActiveTab('customer')
+      return
+    }
+    // Clear any customer tab errors
+    setTabErrors(prev => ({ ...prev, customer: '' }))
+    // Call handleSubmit with saveAsDraft=true - it will create a form event
+    await handleSubmit(new Event('submit') as any, true)
+  }
+
   const handleSubmit = async (e: React.FormEvent, saveAsDraft: boolean = false) => {
     e.preventDefault()
     setError(null)
 
-    if (!validateReviewTab()) {
+    // For draft, skip full validation (already validated in handleSaveAsDraft)
+    if (!saveAsDraft && !validateReviewTab()) {
       return
     }
 
@@ -1542,16 +1782,16 @@ export default function CreateJobCardPage() {
         vehicleId: selectedVehicle!.id,
         jobType,
         priority,
-        status: saveAsDraft ? 'draft' : 'queued',
-        customerComplaint: customerReportIssues.join(' | '),
-        workRequested: workRequestedItems.join(' | '),
+        status: saveAsDraft ? ('draft' as const) : ('queued' as const),
+        // Use empty strings for NOT NULL fields when not provided
+        customerComplaint: customerReportIssues.length > 0 ? customerReportIssues.join(' | ') : '',
+        workRequested: workRequestedItems.length > 0 ? workRequestedItems.join(' | ') : '',
         customerNotes: customerNotes || undefined,
         currentMileage: currentMileage ? parseInt(currentMileage) : undefined,
-        reportedIssue: technicalDiagnosisItems.length > 0 ? technicalDiagnosisItems.join(' | ') : undefined,
         promisedDate: promisedDate || undefined,
         promisedTime: promisedTime || undefined,
         leadMechanicId: leadMechanicId || undefined,
-        internalNotes: internalNotes || undefined,
+        technicianNotes: technicianNotes || undefined,
         checklistItems: checklistItems.length > 0 ? checklistItems.map(item => ({
           mechanicId: leadMechanicId || null,
           itemName: item.itemName,
@@ -1579,15 +1819,36 @@ export default function CreateJobCardPage() {
           unitPrice: part.unitPrice,
           totalPrice: part.totalPrice,
         })) : undefined,
+        // Required fields from database schema (provide defaults)
+        customerName: `${selectedCustomer!.firstName} ${selectedCustomer!.lastName}`,
+        customerPhone: selectedCustomer!.phoneNumber,
+        customerEmail: selectedCustomer!.email || undefined,
+        vehicleMake: selectedVehicle!.make,
+        vehicleModel: selectedVehicle!.model,
+        vehicleYear: selectedVehicle!.year,
+        vehicleLicensePlate: selectedVehicle!.licensePlate,
+        vehicleVin: selectedVehicle!.vin || undefined,
+        // Use current user ID as default for service advisor (required field)
+        serviceAdvisorId: serviceAdvisorId || currentUser.userUid,
+        createdBy: currentUser.userUid,
       }
 
-      const result = await createJobCardAction(jobCardData)
-
-      if (!result.success || !result.jobCard) {
-        throw new Error(result.error || 'Failed to create job card')
+      let result
+      if (isEditingDraft && editJobCardId) {
+        // Update existing draft
+        result = await updateJobCardAction(editJobCardId, jobCardData)
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update draft job card')
+        }
+        console.log('Draft updated successfully:', result.jobCard)
+      } else {
+        // Create new job card
+        result = await createJobCardAction(jobCardData)
+        if (!result.success || !result.jobCard) {
+          throw new Error(result.error || 'Failed to create job card')
+        }
+        console.log('Job card created successfully:', result.jobCard)
       }
-
-      console.log('Job card created successfully:', result.jobCard)
 
       setSuccess(true)
 
@@ -1693,14 +1954,92 @@ export default function CreateJobCardPage() {
           <div className="h-10 w-1 bg-graphite-700 rounded-full" />
           <div>
             <h1 className="text-2xl md:text-3xl font-display font-bold text-graphite-900 tracking-tight">
-              Create Job Card
+              {editJobCardId ? 'Continue Draft' : 'Create Job Card'}
             </h1>
             <p className="text-sm md:text-base text-graphite-600 mt-1">
-              Follow the steps to create a comprehensive job card
+              {editJobCardId
+                ? 'Continue working on your draft job card'
+                : 'Follow the steps to create a comprehensive job card'}
             </p>
           </div>
         </div>
       </motion.div>
+
+      {/* Draft Loading Skeleton */}
+      {isLoading && editJobCardId && (
+        <div className="space-y-6">
+          {/* Progress indicator */}
+          <div className="flex items-center justify-center gap-3 py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-graphite-700" />
+            <p className="text-lg font-medium text-graphite-700">Loading draft data...</p>
+          </div>
+
+          {/* Skeleton for tabs */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 space-y-6">
+            {/* Customer & Vehicle Section Skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-48 animate-pulse" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+                </div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Job Details Section Skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-40 animate-pulse" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-3/5 animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Tasks Section Skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
+                    </div>
+                    <div className="h-6 bg-gray-200 rounded w-16 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Notes Section Skeleton */}
+            <div className="space-y-3">
+              <div className="h-6 bg-gray-200 rounded w-28 animate-pulse" />
+              <div className="h-24 bg-gray-200 rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Message */}
       <AnimatePresence>
@@ -1741,6 +2080,9 @@ export default function CreateJobCardPage() {
         )}
       </AnimatePresence>
 
+      {/* Tabs Navigation - Hidden when loading draft */}
+      {!(isLoading && editJobCardId) && (
+        <>
       {/* Tabs Navigation */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -1841,6 +2183,8 @@ export default function CreateJobCardPage() {
               currentMileage={currentMileage}
               setCurrentMileage={setCurrentMileage}
               onNextTab={() => handleTabChange('job-details')}
+              onSaveAsDraft={handleSaveAsDraft}
+              isLoading={isLoading}
               tabError={tabErrors.customer}
               tabValidation={tabValidation.customer}
               newlyAddedVehicleId={newlyAddedVehicleId}
@@ -1872,6 +2216,10 @@ export default function CreateJobCardPage() {
               onRemoveTechnicalDiagnosis={handleRemoveTechnicalDiagnosis}
               onPreviousTab={() => handleTabChange('customer')}
               onNextTab={() => handleTabChange('tasks')}
+              onSaveAsDraft={handleSaveAsDraft}
+              isLoading={isLoading}
+              selectedCustomer={selectedCustomer}
+              selectedVehicle={selectedVehicle}
               tabError={tabErrors.jobDetails}
               getJobTypeIcon={getJobTypeIcon}
               getJobTypeLabel={getJobTypeLabel}
@@ -1890,6 +2238,10 @@ export default function CreateJobCardPage() {
               onAddTemplateItem={(item) => setChecklistItems([...checklistItems, item])}
               onPreviousTab={() => handleTabChange('job-details')}
               onNextTab={() => handleTabChange('labor-parts')}
+              onSaveAsDraft={handleSaveAsDraft}
+              isLoading={isLoading}
+              selectedCustomer={selectedCustomer}
+              selectedVehicle={selectedVehicle}
               getPriorityColor={getPriorityColor}
               calculateEstimatedCosts={calculateEstimatedCosts}
               customerReportIssues={customerReportIssues}
@@ -1906,6 +2258,10 @@ export default function CreateJobCardPage() {
               calculateEstimatedCosts={calculateEstimatedCosts}
               onPreviousTab={() => handleTabChange('tasks')}
               onNextTab={() => handleTabChange('scheduling')}
+              onSaveAsDraft={handleSaveAsDraft}
+              isLoading={isLoading}
+              selectedCustomer={selectedCustomer}
+              selectedVehicle={selectedVehicle}
             />
           )}
 
@@ -1921,10 +2277,14 @@ export default function CreateJobCardPage() {
               setServiceAdvisorId={setServiceAdvisorId}
               employees={employees}
               isLoadingEmployees={isLoadingEmployees}
-              internalNotes={internalNotes}
-              setInternalNotes={setInternalNotes}
+              technicianNotes={technicianNotes}
+              setTechnicianNotes={setTechnicianNotes}
               onPreviousTab={() => handleTabChange('labor-parts')}
               onNextTab={() => handleTabChange('review')}
+              onSaveAsDraft={handleSaveAsDraft}
+              isLoading={isLoading}
+              selectedCustomer={selectedCustomer}
+              selectedVehicle={selectedVehicle}
             />
           )}
 
@@ -1951,10 +2311,13 @@ export default function CreateJobCardPage() {
               getJobTypeLabel={getJobTypeLabel}
               getPriorityColor={getPriorityColor}
               calculateEstimatedCosts={calculateEstimatedCosts}
+              isEditingDraft={isEditingDraft}
             />
           )}
         </div>
       </motion.div>
+        </>
+      )}
 
       {/* ============================================================================
           CUSTOMER MODAL (Preserved from original)
@@ -2479,6 +2842,8 @@ function TabCustomer({
   currentMileage,
   setCurrentMileage,
   onNextTab,
+  onSaveAsDraft,
+  isLoading,
   tabError,
   tabValidation,
   newlyAddedVehicleId,
@@ -2495,6 +2860,8 @@ function TabCustomer({
   currentMileage: string
   setCurrentMileage: (value: string) => void
   onNextTab: () => void
+  onSaveAsDraft: () => void
+  isLoading: boolean
   tabError?: string
   tabValidation: boolean
   newlyAddedVehicleId?: string | null
@@ -2824,11 +3191,9 @@ function TabCustomer({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => {
-            /* TODO: Implement save as draft functionality */
-            console.log('Save as draft')
-          }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={onSaveAsDraft}
+          disabled={isLoading || !selectedCustomer || !selectedVehicle}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           <span className="hidden sm:inline">Save as Draft</span>
@@ -2874,6 +3239,10 @@ function TabJobDetails({
   onRemoveTechnicalDiagnosis,
   onPreviousTab,
   onNextTab,
+  onSaveAsDraft,
+  isLoading,
+  selectedCustomer,
+  selectedVehicle,
   tabError,
   getJobTypeIcon,
   getJobTypeLabel,
@@ -2903,6 +3272,10 @@ function TabJobDetails({
   onRemoveTechnicalDiagnosis: (index: number) => void
   onPreviousTab: () => void
   onNextTab: () => void
+  onSaveAsDraft: () => void
+  isLoading: boolean
+  selectedCustomer: CustomerData | null
+  selectedVehicle: VehicleData | null
   tabError?: string
   getJobTypeIcon: (type: JobType) => React.ReactNode
   getJobTypeLabel: (type: JobType) => string
@@ -3366,11 +3739,9 @@ function TabJobDetails({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => {
-            /* TODO: Implement save as draft functionality */
-            console.log('Save as draft')
-          }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={onSaveAsDraft}
+          disabled={isLoading || !selectedCustomer || !selectedVehicle}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           <span className="hidden sm:inline">Save as Draft</span>
@@ -3403,6 +3774,10 @@ function TabTasks({
   onAddTemplateItem,
   onPreviousTab,
   onNextTab,
+  onSaveAsDraft,
+  isLoading,
+  selectedCustomer,
+  selectedVehicle,
   getPriorityColor,
   calculateEstimatedCosts,
   customerReportIssues,
@@ -3417,6 +3792,10 @@ function TabTasks({
   onAddTemplateItem: (item: ChecklistItem) => void
   onPreviousTab: () => void
   onNextTab: () => void
+  onSaveAsDraft: () => void
+  isLoading: boolean
+  selectedCustomer: CustomerData | null
+  selectedVehicle: VehicleData | null
   getPriorityColor: (priority: Priority) => string
   calculateEstimatedCosts: () => { totalLaborMinutes: number; totalLaborHours: string; totalLaborCost: string; totalCost: string }
   customerReportIssues?: string[]
@@ -4335,11 +4714,9 @@ function TabTasks({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => {
-            /* TODO: Implement save as draft functionality */
-            console.log('Save as draft')
-          }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={onSaveAsDraft}
+          disabled={isLoading || !selectedCustomer || !selectedVehicle}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           <span className="hidden sm:inline">Save as Draft</span>
@@ -4601,6 +4978,10 @@ interface TabLaborPartsProps {
   }
   onPreviousTab: () => void
   onNextTab: () => void
+  onSaveAsDraft: () => void
+  isLoading: boolean
+  selectedCustomer: CustomerData | null
+  selectedVehicle: VehicleData | null
 }
 
 function TabLaborParts({
@@ -4610,6 +4991,10 @@ function TabLaborParts({
   calculateEstimatedCosts,
   onPreviousTab,
   onNextTab,
+  onSaveAsDraft,
+  isLoading,
+  selectedCustomer,
+  selectedVehicle,
 }: TabLaborPartsProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoadingParts, setIsLoadingParts] = useState(false)
@@ -4890,11 +5275,9 @@ function TabLaborParts({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => {
-            /* TODO: Implement save as draft functionality */
-            console.log('Save as draft')
-          }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={onSaveAsDraft}
+          disabled={isLoading || !selectedCustomer || !selectedVehicle}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           <span className="hidden sm:inline">Save as Draft</span>
@@ -4926,10 +5309,14 @@ function TabScheduling({
   setServiceAdvisorId,
   employees,
   isLoadingEmployees,
-  internalNotes,
-  setInternalNotes,
+  technicianNotes,
+  setTechnicianNotes,
   onPreviousTab,
   onNextTab,
+  onSaveAsDraft,
+  isLoading,
+  selectedCustomer,
+  selectedVehicle,
 }: {
   promisedDate: string
   setPromisedDate: (value: string) => void
@@ -4941,10 +5328,14 @@ function TabScheduling({
   setServiceAdvisorId: (value: string) => void
   employees: EmployeeData[]
   isLoadingEmployees: boolean
-  internalNotes: string
-  setInternalNotes: (value: string) => void
+  technicianNotes: string
+  setTechnicianNotes: (value: string) => void
   onPreviousTab: () => void
   onNextTab: () => void
+  onSaveAsDraft: () => void
+  isLoading: boolean
+  selectedCustomer: CustomerData | null
+  selectedVehicle: VehicleData | null
 }) {
   return (
     <motion.div
@@ -5054,15 +5445,15 @@ function TabScheduling({
         </div>
       </div>
 
-      {/* Internal Notes */}
+      {/* Technician Notes */}
       <div>
         <label className="block text-sm font-medium text-graphite-700 mb-2">
-          Internal Notes
+          Technician Notes
         </label>
         <textarea
-          value={internalNotes}
-          onChange={(e) => setInternalNotes(e.target.value)}
-          placeholder="Internal notes for mechanics and staff..."
+          value={technicianNotes}
+          onChange={(e) => setTechnicianNotes(e.target.value)}
+          placeholder="Notes for the technician..."
           rows={3}
           className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-none"
         />
@@ -5072,11 +5463,9 @@ function TabScheduling({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => {
-            /* TODO: Implement save as draft functionality */
-            console.log('Save as draft')
-          }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          onClick={onSaveAsDraft}
+          disabled={isLoading || !selectedCustomer || !selectedVehicle}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           <span className="hidden sm:inline">Save as Draft</span>
@@ -5119,6 +5508,7 @@ function TabReview({
   getJobTypeLabel,
   getPriorityColor,
   calculateEstimatedCosts,
+  isEditingDraft,
 }: {
   selectedCustomer: CustomerData | null
   selectedVehicle: VehicleData | null
@@ -5141,6 +5531,7 @@ function TabReview({
   getJobTypeLabel: (type: JobType) => string
   getPriorityColor: (priority: Priority) => string
   calculateEstimatedCosts: () => { totalLaborMinutes: number; totalLaborHours: string; totalLaborCost: string; totalCost: string }
+  isEditingDraft: boolean
 }) {
   const leadMechanic = employees.find(e => e.id === leadMechanicId)
   const serviceAdvisor = employees.find(e => e.id === serviceAdvisorId)
@@ -5354,25 +5745,34 @@ function TabReview({
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="hidden sm:inline">Creating Job Card...</span>
-                <span className="sm:hidden">Creating...</span>
+                <span className="hidden sm:inline">{isEditingDraft ? 'Updating Draft...' : 'Creating Job Card...'}</span>
+                <span className="sm:hidden">{isEditingDraft ? 'Updating...' : 'Creating...'}</span>
               </>
             ) : success ? (
               <>
                 <CheckCircle2 className="h-4 w-4" style={{ color: '#0D9488' }} />
-                <span className="hidden sm:inline">Created Successfully!</span>
-                <span className="sm:hidden">Created!</span>
+                <span className="hidden sm:inline">{isEditingDraft ? 'Updated Successfully!' : 'Created Successfully!'}</span>
+                <span className="sm:hidden">{isEditingDraft ? 'Updated!' : 'Created!'}</span>
               </>
             ) : (
               <>
                 <ArrowRight className="h-4 w-4" />
-                <span className="hidden sm:inline">Send to Queue</span>
-                <span className="sm:hidden">Send to Queue</span>
+                <span className="hidden sm:inline">{isEditingDraft ? 'Update Draft' : 'Send to Queue'}</span>
+                <span className="sm:hidden">{isEditingDraft ? 'Update' : 'Send'}</span>
               </>
             )}
           </motion.button>
         </div>
       </form>
     </motion.div>
+  )
+}
+
+// Wrapper component with Suspense boundary
+export default function CreateJobCardPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-graphite-700" /></div>}>
+      <CreateJobCardPageContent />
+    </Suspense>
   )
 }

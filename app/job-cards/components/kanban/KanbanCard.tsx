@@ -2,7 +2,7 @@
 
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { User, Wrench, Calendar, Eye } from 'lucide-react'
+import { User, Wrench, Calendar, Eye, FileEdit } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
@@ -151,20 +151,39 @@ function KanbanCardComponent({
           )}
         </div>
 
-        {/* View Action */}
-        <div className="flex items-center justify-end mt-3 pt-3 border-t border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              router.push(`/job-cards/${id}`)
-            }}
-            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
-            title="View Details"
-            aria-label="View job card details"
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        {/* Continue Draft Button - Only for draft status */}
+        {status === 'draft' && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/job-cards/create?editJobCardId=${id}`)
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-graphite-700 text-white text-xs font-semibold rounded-lg hover:bg-graphite-600 transition-all duration-200 shadow-sm hover:shadow"
+              title="Continue working on this draft"
+            >
+              <FileEdit className="h-3.5 w-3.5" />
+              Continue Draft
+            </button>
+          </div>
+        )}
+
+        {/* View Action - Hide for draft status (has Continue button instead) */}
+        {status !== 'draft' && (
+          <div className="flex items-center justify-end mt-3 pt-3 border-t border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/job-cards/${id}`)
+              }}
+              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
+              title="View Details"
+              aria-label="View job card details"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

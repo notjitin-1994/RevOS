@@ -99,11 +99,17 @@ export function useJobCardShortcuts({
   onCreateNew,
   onSearchFocus,
   onFilterToggle,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
 }: {
   onViewModeChange: (mode: 'kanban' | 'timeline' | 'calendar' | 'analytics') => void
   onCreateNew: () => void
   onSearchFocus: () => void
   onFilterToggle: () => void
+  onZoomIn?: () => void
+  onZoomOut?: () => void
+  onResetZoom?: () => void
 }) {
   const shortcuts: ShortcutConfig[] = [
     // View mode shortcuts
@@ -168,6 +174,38 @@ export function useJobCardShortcuts({
       action: onCreateNew,
       description: 'New job card',
     },
+
+    // Zoom shortcuts (desktop only)
+    ...(onZoomIn ? [{
+      key: '=',
+      ctrlKey: true,
+      action: onZoomIn,
+      description: 'Zoom in',
+    }] : []),
+    ...(onZoomIn ? [{
+      key: '+',
+      ctrlKey: true,
+      action: onZoomIn,
+      description: 'Zoom in',
+    }] : []),
+    ...(onZoomOut ? [{
+      key: '-',
+      ctrlKey: true,
+      action: onZoomOut,
+      description: 'Zoom out',
+    }] : []),
+    ...(onZoomOut ? [{
+      key: '_',
+      ctrlKey: true,
+      action: onZoomOut,
+      description: 'Zoom out',
+    }] : []),
+    ...(onResetZoom ? [{
+      key: '0',
+      ctrlKey: true,
+      action: onResetZoom,
+      description: 'Reset zoom',
+    }] : []),
   ]
 
   return { shortcuts }
