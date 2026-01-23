@@ -108,10 +108,10 @@ export function SystemDiagnosticPanel() {
 
       {/* Content Container */}
       <div className="relative h-full overflow-y-auto px-4 sm:px-5 md:px-6 py-6 md:py-8 mb-6 lg:mb-0">
-      {/* RevvOs Brand Header */}
+      {/* RevvOS Brand Header */}
       <div className="mb-8 md:mb-8">
         <h1 className="text-4xl sm:text-3xl md:text-3xl font-display font-bold text-brand tracking-tight mb-3 drop-shadow-lg shadow-brand/50">
-          RevvOs
+          RevvOS
         </h1>
         <p className="text-base sm:text-sm md:text-sm text-white/90 font-display tracking-wide">
           AUTOMOTIVE SERVICE INTELLIGENCE
@@ -195,7 +195,7 @@ export function SystemDiagnosticPanel() {
       {/* Introduction Text */}
       <div className="mb-6 md:mb-6">
         <p className="text-base sm:text-sm md:text-sm text-gray-300 leading-loose sm:leading-relaxed md:leading-relaxed">
-          Discover how RevvOs transforms garage operations with intelligent features designed for automotive excellence below.
+          Discover how RevvOS transforms garage operations with intelligent features designed for automotive excellence below.
         </p>
       </div>
 
@@ -205,7 +205,7 @@ export function SystemDiagnosticPanel() {
           href="/sign-up"
           className="group inline-flex items-center gap-2 text-base sm:text-sm md:text-sm text-brand hover:text-brand/90 transition-colors duration-200 font-semibold drop-shadow-md shadow-brand/30"
         >
-          <span>Start using RevvOs to manage your Garage now</span>
+          <span>Start using RevvOS to manage your Garage now</span>
           <svg
             className="w-4 h-4 sm:w-4 sm:h-4 md:w-4 md:h-4 transition-transform duration-200 group-hover:translate-x-1"
             fill="none"

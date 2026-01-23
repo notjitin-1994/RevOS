@@ -1,6 +1,6 @@
 # Job Card Tracking System - Implementation Plan
 
-**RevvOs Automotive Garage Management System**
+**RevvOS Automotive Garage Management System**
 
 **Version:** 1.0  
 **Date:** January 19, 2026  
@@ -24,7 +24,7 @@
 
 ## Executive Summary
 
-This implementation plan provides a comprehensive roadmap for overhauling the Job Card Tracking System in RevvOs. The current system has a solid foundation with well-defined workflows but lacks modern interactive features like drag-and-drop, timeline views, and real-time updates.
+This implementation plan provides a comprehensive roadmap for overhauling the Job Card Tracking System in RevvOS. The current system has a solid foundation with well-defined workflows but lacks modern interactive features like drag-and-drop, timeline views, and real-time updates.
 
 ### Key Objectives
 
@@ -1216,7 +1216,7 @@ CREATE INDEX IF NOT EXISTS idx_job_cards_mechanic
    - [Next.js Error Handling Best Practices](https://devanddeliver.com/blog/frontend/next-js-15-error-handling-best-practices-for-code-and-routes)
    - [Getting Started: Error Handling](https://nextjs.org/docs/app/getting-started/error-handling)
 
-10. **RevvOs Roadmap**
+10. **RevvOS Roadmap**
     - [Job Card Tracking System Roadmap](/roadmap.md)
     - Current implementation analysis
     - Database schema review
@@ -1225,7 +1225,7 @@ CREATE INDEX IF NOT EXISTS idx_job_cards_mechanic
 
 ## Conclusion
 
-This implementation plan provides a comprehensive, research-backed roadmap for modernizing the Job Card Tracking System in RevvOs. By following this guide, you'll create a best-in-class automotive garage management system that:
+This implementation plan provides a comprehensive, research-backed roadmap for modernizing the Job Card Tracking System in RevvOS. By following this guide, you'll create a best-in-class automotive garage management system that:
 
 - ✅ Uses modern drag-and-drop (@dnd-kit)
 - ✅ Includes Timeline/Gantt visualization

@@ -2,7 +2,7 @@
 
 ## 🎉 Both Features Fully Implemented!
 
-Your RevvOs application now has **two complete, world-class account recovery flows**:
+Your RevvOS application now has **two complete, world-class account recovery flows**:
 
 1. **Forgot Password** - Multi-step OTP-based password reset
 2. **Forgot Login ID** - Simple email-based login ID retrieval
@@ -113,7 +113,7 @@ POST /api/auth/forgot-login-id/resend
 
 ### Password Reset Email
 ```
-Subject: Reset Your RevvOs Password
+Subject: Reset Your RevvOS Password
 
 Your verification code: [OTP_CODE]
 Expires in 5 minutes.
@@ -121,7 +121,7 @@ Expires in 5 minutes.
 
 ### Login ID Retrieval Email
 ```
-Subject: Your RevvOs Login ID
+Subject: Your RevvOS Login ID
 
 Your Login ID: [LOGIN_ID]
 Use this to sign in to your account.

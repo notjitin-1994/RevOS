@@ -1,6 +1,6 @@
-# RevvOs Maintenance Scripts
+# RevvOS Maintenance Scripts
 
-This directory contains scripts for maintaining data integrity and managing the RevvOs motorcycle database.
+This directory contains scripts for maintaining data integrity and managing the RevvOS motorcycle database.
 
 ## Data Integrity
 
@@ -117,7 +117,7 @@ WHERE id = '<model-id>';
 
 # Make Logos Update Scripts
 
-This directory also contains scripts to automatically fetch and update logos for all motorcycle makes in your RevvOs database.
+This directory also contains scripts to automatically fetch and update logos for all motorcycle makes in your RevvOS database.
 
 ## Overview
 

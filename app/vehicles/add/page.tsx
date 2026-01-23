@@ -11,7 +11,7 @@ import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
  * Add Bike Page - Vehicle Registry
  *
  * Register a customer's motorcycle with ownership and identification details.
- * Based on RevvOs-features.md specification.
+ * Based on RevvOS-features.md specification.
  */
 
 interface FormData {

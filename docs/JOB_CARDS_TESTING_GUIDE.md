@@ -4,7 +4,7 @@
 
 Before testing, ensure:
 - [ ] You have a valid garage account
-- [ ] You're logged into RevvOs
+- [ ] You're logged into RevvOS
 - [ ] Database migration has been run
 - [ ] At least one customer exists in the system
 - [ ] At least one vehicle exists for that customer
@@ -37,7 +37,7 @@ SELECT generate_job_card_number('YOUR_GARAGE_ID_HERE');
 
 ## Step 2: Test API via Browser Console
 
-Open browser DevTools (F12) on any RevvOs page and run:
+Open browser DevTools (F12) on any RevvOS page and run:
 
 ### Get Your Garage ID
 ```javascript

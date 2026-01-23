@@ -204,7 +204,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-[462px] mx-auto px-2.5 sm:px-4 h-[100dvh] flex flex-col justify-start overflow-y-auto overflow-x-hidden sm:h-auto sm:min-h-0 sm:justify-start sm:overflow-visible sm:pt-1">
+    <div className="w-full max-w-[462px] mx-auto px-2.5 sm:px-4 flex flex-col justify-start">
       {/* Single Parent Card */}
       <div className="relative h-[620px] sm:mt-[2px] bg-graphite-900/50 backdrop-blur-xl border border-[0.5px] rounded-2xl shadow-[0_0_20px_rgba(204,255,0,0.15),0_4px_16px_rgba(0,0,0,0.4)] sm:shadow-[0_0_60px_rgba(204,255,0,0.25),0_0_30px_rgba(204,255,0,0.15),0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden" style={{ borderColor: 'rgba(204, 255, 0, 0.15)' }}>
         {/* Ambient background glow effects */}
@@ -224,7 +224,7 @@ export function LoginForm() {
                   src={user.profileImageUrl}
                   alt={`${user.firstName} ${user.lastName}`}
                   fill
-                  className="object-cover blur-xl scale-110"
+                  className="object-cover blur-[10.08px] scale-110"
                   sizes="(max-width: 768px) 100vw, 420px"
                   priority
                   quality={75}
@@ -234,7 +234,7 @@ export function LoginForm() {
                   src="https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/6504b85a-95ba-4b37-936f-23e91249e7a0/fbb6c4fec01a1b12177b36cf7ae051f3.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1768808995&Signature=jlQehSRAT2yQD4F7hH9e16rwBgk="
                   alt="Password background"
                   fill
-                  className="object-cover blur-xl scale-110"
+                  className="object-cover blur-[10.08px] scale-110"
                   sizes="(max-width: 768px) 100vw, 420px"
                   priority
                   quality={75}
@@ -711,11 +711,43 @@ export function LoginForm() {
             )}
           </AnimatePresence>
 
-          {/* Footer - Inside the card */}
-          <div className="mt-auto pt-4 pb-8 text-center">
+          {/* Footer - Inside the card - Desktop only */}
+          <div className="hidden lg:block mt-auto pt-5 pb-8 text-center">
+            {/* Links */}
+            <nav className="flex items-center justify-center gap-6 mb-3" aria-label="Footer navigation">
+              <a
+                href="/pricing"
+                className="relative group text-xs font-medium text-white/60 hover:text-[#CCFF00] transition-all duration-200 py-1"
+              >
+                <span className="relative z-10">Pricing</span>
+                <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#CCFF00] scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center" />
+              </a>
+
+              <span className="text-white/20">|</span>
+
+              <a
+                href="/terms"
+                className="relative group text-xs font-medium text-white/60 hover:text-[#CCFF00] transition-all duration-200 py-1"
+              >
+                <span className="relative z-10">Terms</span>
+                <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#CCFF00] scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center" />
+              </a>
+
+              <span className="text-white/20">|</span>
+
+              <a
+                href="/privacy"
+                className="relative group text-xs font-medium text-white/60 hover:text-[#CCFF00] transition-all duration-200 py-1"
+              >
+                <span className="relative z-10">Privacy</span>
+                <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#CCFF00] scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center" />
+              </a>
+            </nav>
+
+            {/* Copyright */}
             <div className="flex items-center justify-center gap-2 text-xs text-white/60">
               <span className="text-white/70">© 2026 </span>
-              <span className="text-lime-400 font-semibold">RevvOs</span>
+              <span className="text-lime-400 font-semibold">RevvOS</span>
               <span className="text-white/50">|</span>
               <span className="font-display font-semibold tracking-wide text-white/70">
                 POWERED BY{' '}
@@ -880,7 +912,7 @@ export function LoginForm() {
                     </div>
                     <div>
                       <h2 className="text-lg font-display font-bold text-gray-900">Request a Quote</h2>
-                      <p className="text-xs text-gray-500">Get started with RevvOs for your business</p>
+                      <p className="text-xs text-gray-500">Get started with RevvOS for your business</p>
                     </div>
                   </div>
                   <button

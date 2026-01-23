@@ -153,7 +153,7 @@ BEGIN
   RETURNING user_uid INTO v_owner_user_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, user_role, date_of_joining, is_active, created_at)
-  VALUES (v_owner_user_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Rajesh', 'Mehta', 'rajesh.mehta', 'owner@revosgarage.com', '+91 98765 11111', 'owner', '2022-01-15', true, NOW() - INTERVAL '2 years')
+  VALUES (v_owner_user_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Rajesh', 'Mehta', 'rajesh.mehta', 'owner@revosgarage.com', '+91 98765 11111', 'owner', '2022-01-15', true, NOW() - INTERVAL '2 years')
   ON CONFLICT (user_uid) DO NOTHING;
 
   -- Admin
@@ -163,7 +163,7 @@ BEGIN
   RETURNING user_uid INTO v_admin_user_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, user_role, date_of_joining, is_active, created_at)
-  VALUES (v_admin_user_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Sneha', 'Patel', 'sneha.patel', 'admin@revosgarage.com', '+91 98765 11112', 'admin', '2022-02-01', true, NOW() - INTERVAL '2 years')
+  VALUES (v_admin_user_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Sneha', 'Patel', 'sneha.patel', 'admin@revosgarage.com', '+91 98765 11112', 'admin', '2022-02-01', true, NOW() - INTERVAL '2 years')
   ON CONFLICT (user_uid) DO NOTHING;
 
   -- Service Advisor 1
@@ -173,7 +173,7 @@ BEGIN
   RETURNING user_uid INTO v_service_advisor_1_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, alternate_phone, address, city, state, user_role, date_of_joining, is_active, created_at)
-  VALUES (v_service_advisor_1_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Vikram', 'Singh', 'vikram.singh', 'vikram.singh@revosgarage.com', '+91 98765 11113', '+91 98765 11114', '123, MG Road', 'Bangalore', 'Karnataka', 'service_advisor', '2023-06-15', true, NOW() - INTERVAL '18 months')
+  VALUES (v_service_advisor_1_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Vikram', 'Singh', 'vikram.singh', 'vikram.singh@revosgarage.com', '+91 98765 11113', '+91 98765 11114', '123, MG Road', 'Bangalore', 'Karnataka', 'service_advisor', '2023-06-15', true, NOW() - INTERVAL '18 months')
   ON CONFLICT (user_uid) DO NOTHING;
 
   -- Service Advisor 2
@@ -183,7 +183,7 @@ BEGIN
   RETURNING user_uid INTO v_service_advisor_2_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, city, state, user_role, date_of_joining, is_active, created_at)
-  VALUES (v_service_advisor_2_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Priya', 'Sharma', 'priya.sharma', 'priya.sharma@revosgarage.com', '+91 98765 11115', 'Mumbai', 'Maharashtra', 'service_advisor', '2024-01-10', true, NOW() - INTERVAL '12 months')
+  VALUES (v_service_advisor_2_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Priya', 'Sharma', 'priya.sharma', 'priya.sharma@revosgarage.com', '+91 98765 11115', 'Mumbai', 'Maharashtra', 'service_advisor', '2024-01-10', true, NOW() - INTERVAL '12 months')
   ON CONFLICT (user_uid) DO NOTHING;
 
   -- Lead Mechanic 1
@@ -193,7 +193,7 @@ BEGIN
   RETURNING user_uid INTO v_mechanic_1_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, address, city, state, user_role, date_of_joining, certifications, specializations, is_active, created_at)
-  VALUES (v_mechanic_1_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Amit', 'Kumar', 'amit.kumar', 'amit.kumar@revosgarage.com', '+91 98765 11116', '45, Industrial Area', 'Bangalore', 'Karnataka', 'mechanic', '2022-03-01',
+  VALUES (v_mechanic_1_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Amit', 'Kumar', 'amit.kumar', 'amit.kumar@revosgarage.com', '+91 98765 11116', '45, Industrial Area', 'Bangalore', 'Karnataka', 'mechanic', '2022-03-01',
     '["Honda Certified Mechanic", "Two-Wheeler Expert"]'::jsonb,
     '["Engine Repair", "Electrical Systems", "Fuel Injection"]'::jsonb,
     true, NOW() - INTERVAL '2 years')
@@ -206,7 +206,7 @@ BEGIN
   RETURNING user_uid INTO v_mechanic_2_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, city, state, user_role, date_of_joining, specializations, is_active, created_at)
-  VALUES (v_mechanic_2_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Rahul', 'Verma', 'rahul.verma', 'rahul.verma@revosgarage.com', '+91 98765 11117', 'Delhi', 'Delhi', 'mechanic', '2023-09-01',
+  VALUES (v_mechanic_2_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Rahul', 'Verma', 'rahul.verma', 'rahul.verma@revosgarage.com', '+91 98765 11117', 'Delhi', 'Delhi', 'mechanic', '2023-09-01',
     '["Brake Systems", "Suspension", "Wheel Alignment"]'::jsonb,
     true, NOW() - INTERVAL '15 months')
   ON CONFLICT (user_uid) DO NOTHING;
@@ -218,7 +218,7 @@ BEGIN
   RETURNING user_uid INTO v_mechanic_3_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, user_role, date_of_joining, is_active, created_at)
-  VALUES (v_mechanic_3_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Suresh', 'Iyengar', 'suresh.iyengar', 'suresh.iyengar@revosgarage.com', '+91 98765 11118', 'Bangalore', 'Karnataka', 'mechanic', '2024-03-01', true, NOW() - INTERVAL '10 months')
+  VALUES (v_mechanic_3_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Suresh', 'Iyengar', 'suresh.iyengar', 'suresh.iyengar@revosgarage.com', '+91 98765 11118', 'Bangalore', 'Karnataka', 'mechanic', '2024-03-01', true, NOW() - INTERVAL '10 months')
   ON CONFLICT (user_uid) DO NOTHING;
 
   -- Technician
@@ -228,7 +228,7 @@ BEGIN
   RETURNING user_uid INTO v_technician_uid;
 
   INSERT INTO public.users (user_uid, garage_uid, garage_id, garage_name, first_name, last_name, login_id, email, phone_number, user_role, date_of_joining, is_active, created_at)
-  VALUES (v_technician_uid, GARAGE_ID, 'GARAGE-001', 'RevvOs Garage', 'Dinesh', 'Rao', 'dinesh.rao', 'dinesh.rao@revosgarage.com', '+91 98765 11119', 'Chennai', 'Tamil Nadu', 'employee', '2024-05-01', true, NOW() - INTERVAL '8 months')
+  VALUES (v_technician_uid, GARAGE_ID, 'GARAGE-001', 'RevvOS Garage', 'Dinesh', 'Rao', 'dinesh.rao', 'dinesh.rao@revosgarage.com', '+91 98765 11119', 'Chennai', 'Tamil Nadu', 'employee', '2024-05-01', true, NOW() - INTERVAL '8 months')
   ON CONFLICT (user_uid) DO NOTHING;
 
   -- ============================================================================

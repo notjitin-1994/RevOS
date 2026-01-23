@@ -1,6 +1,6 @@
-# RevvOs Architecture
+# RevvOS Architecture
 
-Technical architecture and implementation details for RevvOs.
+Technical architecture and implementation details for RevvOS.
 
 > **Last Updated:** January 2026
 > **Framework:** Next.js 14 (App Router)
@@ -63,7 +63,7 @@ Technical architecture and implementation details for RevvOs.
 ## Project Structure
 
 ```
-RevvOs/
+RevvOS/
 ├── app/                          # Next.js App Router
 │   ├── (auth)/                   # Auth routes (future)
 │   ├── login/                    # Login page
@@ -318,7 +318,7 @@ RevvOs/
 
 ### No Global State Management
 
-RevvOs does **NOT** use Redux, Zustand, or Jotai.
+RevvOS does **NOT** use Redux, Zustand, or Jotai.
 - ✅ Server Components for data fetching
 - ✅ URL params for shared state
 - ✅ React Context for auth only (if needed)
@@ -552,6 +552,6 @@ For more details, see:
 
 ---
 
-**RevvOs** - Automotive Garage Management System
+**RevvOS** - Automotive Garage Management System
 **Version:** 1.0.0
 **Last Updated:** January 2026

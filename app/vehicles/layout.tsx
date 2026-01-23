@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { AppLayout } from '@/components/layout/app-layout'
 
 export const metadata: Metadata = {
-  title: 'RevvOs - Vehicle Management',
+  title: 'RevvOS - Vehicle Management',
   description: 'Manage all registered vehicles',
 }
 

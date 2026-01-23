@@ -67,7 +67,7 @@
 - [x] Accessibility features included
 - [x] ARIA labels present
 - [x] Keyboard navigation works
-- [x] Follows RevvOs code patterns
+- [x] Follows RevvOS code patterns
 - [x] No console errors
 - [x] Clean code structure
 - [x] Proper file organization

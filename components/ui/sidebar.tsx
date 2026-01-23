@@ -146,7 +146,7 @@ export const MobileSidebar = ({
         {...props}
       >
         <div className="flex justify-between z-20 w-full items-center">
-          <span className="text-graphite-900 font-bold text-lg">RevvOs</span>
+          <span className="text-graphite-900 font-bold text-lg">RevvOS</span>
           <IconMenu2
             className="text-graphite-900 cursor-pointer"
             onClick={() => setOpen?.(!open)}

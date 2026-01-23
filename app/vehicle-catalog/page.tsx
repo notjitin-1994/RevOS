@@ -7,7 +7,7 @@ import { ServiceScopeClient } from './components/service-scope-client'
  *
  * Manages the universe of supported vehicles.
  * Defines makes, models, and applicable years.
- * Based on RevvOs-features.md specification.
+ * Based on RevvOS-features.md specification.
  */
 
 export default async function ServiceScopePage() {

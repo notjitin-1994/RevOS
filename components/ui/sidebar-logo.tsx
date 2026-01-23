@@ -6,7 +6,7 @@ import { useSidebar } from './sidebar'
 /**
  * Sidebar Logo Component
  *
- * Displays the RevvOs logo with smooth animations:
+ * Displays the RevvOS logo with smooth animations:
  * - Icon-only when collapsed (centered like nav icons)
  * - Icon + text when expanded
  * - Simple, clean fade transitions
@@ -35,7 +35,7 @@ export function SidebarLogo() {
           opacity: open ? 1 : 0,
         }}
       >
-        RevvOs
+        RevvOS
       </span>
     </a>
   )

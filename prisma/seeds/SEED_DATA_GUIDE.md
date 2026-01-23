@@ -1,6 +1,6 @@
 # Comprehensive Seed Data Guide
 
-This guide explains how to use the comprehensive seed data for the RevvOs Garage Management System.
+This guide explains how to use the comprehensive seed data for the RevvOS Garage Management System.
 
 ---
 

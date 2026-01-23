@@ -1,8 +1,8 @@
-# RevvOs Design System
+# RevvOS Design System
 
 ## Overview
 
-RevvOs uses a **light mode** design system with graphite accents and lime (brand) highlights. The design emphasizes clean, professional aesthetics suitable for automotive workshop environments.
+RevvOS uses a **light mode** design system with graphite accents and lime (brand) highlights. The design emphasizes clean, professional aesthetics suitable for automotive workshop environments.
 
 > **Last Updated:** January 2026
 > **Design System Name:** Precision Volt (Light Mode)
@@ -95,7 +95,7 @@ RevvOs uses a **light mode** design system with graphite accents and lime (brand
 
 ## Spacing Scale
 
-RevvOs uses a **4px base unit** for spacing:
+RevvOS uses a **4px base unit** for spacing:
 
 | Token | Value | Usage |
 |-------|-------|-------|

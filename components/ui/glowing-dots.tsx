@@ -58,7 +58,7 @@ class Particle {
  * - Slow, gentle movement for aesthetic appeal
  * - Canvas-based for optimal performance (60fps)
  * - Responsive to window resize
- * - Matches RevvOs Digital Volt theme
+ * - Matches RevvOS Digital Volt theme
  * - Proper React cleanup to prevent memory leaks
  *
  * Design System: Digital Volt

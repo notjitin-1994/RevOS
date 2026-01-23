@@ -1,5 +1,5 @@
 -- =====================================================
--- RevvOs Job Card Placeholder Data
+-- RevvOS Job Card Placeholder Data
 -- Design System: Precision Volt (Light Mode)
 -- Brand Accent: Graphite (not Lime)
 -- =====================================================

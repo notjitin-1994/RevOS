@@ -1,6 +1,6 @@
-# RevvOs - Automotive Garage Management System
+# RevvOS - Automotive Garage Management System
 
-RevvOs is a comprehensive **workshop management solution** designed to streamline automotive service operations. Built with Next.js 14, featuring a modern light mode design with graphite accents and lime highlights.
+RevvOS is a comprehensive **workshop management solution** designed to streamline automotive service operations. Built with Next.js 14, featuring a modern light mode design with graphite accents and lime highlights.
 
 ## ✨ Key Features
 
@@ -16,7 +16,7 @@ RevvOs is a comprehensive **workshop management solution** designed to streamlin
 
 ## 🎨 Design System
 
-RevvOs uses a **light mode** design system with professional gray tones and lime accents.
+RevvOS uses a **light mode** design system with professional gray tones and lime accents.
 
 ### Quick Design Reference
 
@@ -71,7 +71,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📁 Project Structure
 
 ```
-RevvOs/
+RevvOS/
 ├── app/                      # Next.js App Router
 │   ├── (auth)/              # Auth routes (future)
 │   ├── login/               # Login page
@@ -159,7 +159,7 @@ RevvOs/
 
 ## 🔐 Authentication
 
-RevvOs uses **Login ID** based authentication (not email).
+RevvOS uses **Login ID** based authentication (not email).
 
 **Features:**
 - ✅ Login ID authentication
@@ -270,15 +270,15 @@ npx prisma studio        # Open Prisma Studio
 
 ## 📄 License
 
-Copyright © 2026 RevvOs. All rights reserved.
+Copyright © 2026 RevvOS. All rights reserved.
 
 ## 🤝 Contributing
 
-This is a private project. For questions or support, please contact the RevvOs team.
+This is a private project. For questions or support, please contact the RevvOS team.
 
 ---
 
-**RevvOs** - Automotive Garage Management System
+**RevvOS** - Automotive Garage Management System
 **Version:** 1.0.0
 **Last Updated:** January 2026
 
