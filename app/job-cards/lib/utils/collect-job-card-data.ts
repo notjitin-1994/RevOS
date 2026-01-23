@@ -19,7 +19,10 @@ export interface ChecklistItem {
   subtasks?: Array<{
     id: string
     name: string
+    description?: string
+    estimatedMinutes: number
     completed: boolean
+    displayOrder: number
   }>
   linkedToCustomerIssues?: number[]
   linkedToServiceScope?: number[]
