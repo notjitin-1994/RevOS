@@ -1,4 +1,4 @@
-import { JobCardStatus } from '@/lib/supabase/job-card-queries'
+type JobCardStatus = 'draft' | 'queued' | 'in_progress' | 'parts_waiting' | 'quality_check' | 'ready' | 'delivered' | 'cancelled'
 
 interface StatusBadgeProps {
   status: JobCardStatus

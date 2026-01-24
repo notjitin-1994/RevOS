@@ -21,11 +21,13 @@ import interactionPlugin from '@fullcalendar/interaction'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2, Calendar as CalendarIcon } from 'lucide-react'
 import type { DashboardCalendarJobCard } from '@/lib/supabase/dashboard-queries'
-import type { CalendarViewMode } from '@/app/job-cards/types/calendar.types'
-import { useCalendarTouchGestures } from '@/app/job-cards/hooks/use-touch-gestures'
-import { EventContextMenu } from '@/app/job-cards/components/calendar/EventContextMenu'
-import { EnhancedTooltip } from '@/app/job-cards/components/calendar/EnhancedTooltip'
-import { EventWithProgress } from '@/app/job-cards/components/calendar/EventWithProgress'
+// import type { CalendarViewMode } from '@/app/job-cards/types/calendar.types'
+// import { useCalendarTouchGestures } from '@/app/job-cards/hooks/use-touch-gestures'
+// import { EventContextMenu } from '@/app/job-cards/components/calendar/EventContextMenu'
+// import { EnhancedTooltip } from '@/app/job-cards/components/calendar/EnhancedTooltip'
+// import { EventWithProgress } from '@/app/job-cards/components/calendar/EventWithProgress'
+
+type CalendarViewMode = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
 
 interface CalendarSectionProps {
   jobCards: DashboardCalendarJobCard[]
@@ -109,12 +111,12 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
     setCurrentDate(newDate)
   }
 
-  // Touch gesture support
-  useCalendarTouchGestures(
-    () => handleDateNavigate('prev'),
-    () => handleDateNavigate('next'),
-    true
-  )
+  // Touch gesture support - disabled until components are implemented
+  // useCalendarTouchGestures(
+  //   () => handleDateNavigate('prev'),
+  //   () => handleDateNavigate('next'),
+  //   true
+  // )
 
   // Custom event render with enhanced features
   const eventContent = (eventInfo: any) => {
@@ -129,28 +131,17 @@ export function CalendarSection({ jobCards, isLoading = false }: CalendarSection
       leadMechanicName: null,
     }
 
+    // Simplified render until custom components are available
     return (
-      <EventContextMenu
-        jobCard={jobCardViewData}
-        onStatusChange={(status) => {
-          console.log(`📋 Update status: ${jobCard.id} -> ${status}`)
-          // TODO: Implement status update
-        }}
+      <div
+        onMouseEnter={() => setHoveredEventId(jobCard.id)}
+        onMouseLeave={() => setHoveredEventId(null)}
+        className="h-full w-full p-1 text-xs"
+        title={`${jobCard.jobCardNumber}: ${jobCard.customerName}`}
       >
-        <EnhancedTooltip jobCard={jobCardViewData}>
-          <div
-            onMouseEnter={() => setHoveredEventId(jobCard.id)}
-            onMouseLeave={() => setHoveredEventId(null)}
-            className="h-full w-full"
-          >
-            <EventWithProgress
-              jobCard={jobCardViewData}
-              isHovered={isHovered}
-              compact={viewMode === 'dayGridMonth'}
-            />
-          </div>
-        </EnhancedTooltip>
-      </EventContextMenu>
+        <div className="font-semibold truncate">{jobCard.jobCardNumber}</div>
+        <div className="truncate opacity-75">{jobCard.customerName}</div>
+      </div>
     )
   }
 

@@ -103,7 +103,7 @@ export function useJobCardShortcuts({
   onZoomOut,
   onResetZoom,
 }: {
-  onViewModeChange: (mode: 'kanban' | 'timeline' | 'calendar' | 'analytics') => void
+  onViewModeChange: (mode: 'kanban' | 'timeline' | 'analytics') => void
   onCreateNew: () => void
   onSearchFocus: () => void
   onFilterToggle: () => void
@@ -122,11 +122,6 @@ export function useJobCardShortcuts({
       key: 't',
       action: () => onViewModeChange('timeline'),
       description: 'Switch to Timeline/Gantt view',
-    },
-    {
-      key: 'c',
-      action: () => onViewModeChange('calendar'),
-      description: 'Switch to Calendar view',
     },
     {
       key: 'a',

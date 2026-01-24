@@ -14,6 +14,7 @@ import {
 import { useJobCardStore } from '../../lib/stores/job-card-store'
 import { useUpdateJobCardStatus } from '../../hooks/use-job-card-mutations'
 import { useState } from 'react'
+import type { JobCardStatus } from '../../types/kanban.types'
 
 interface KanbanDragDropContextProps {
   children: React.ReactNode
@@ -68,14 +69,14 @@ export function KanbanDragDropContext({
     const overId = over.id as string
 
     // Get current status from the active node's data
-    const currentStatus = active.data.current?.status
+    const currentStatus = active.data.current?.status as JobCardStatus
 
     // Get new status - check if we dropped on a column or another card
-    let newStatus = overId
+    let newStatus = overId as JobCardStatus
 
     // If dropped on a card, get the card's column status
     if (over.data.current?.status) {
-      newStatus = over.data.current.status
+      newStatus = over.data.current.status as JobCardStatus
     }
 
     // Don't update if dropped in the same column
@@ -137,3 +138,4 @@ export function KanbanDragDropContext({
     </DndContext>
   )
 }
+

@@ -2,22 +2,22 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import type { JobCardViewData } from '../types/job-card-view.types'
+import type { KanbanJobCard, JobCardStatus } from '../types/kanban.types'
 
 interface UpdateJobCardStatusVariables {
   jobCardId: string
-  newStatus: string
+  newStatus: JobCardStatus
   userId: string
   garageId: string
 }
 
 interface OptimisticContext {
-  previousJobCards: JobCardViewData[] | undefined
+  previousJobCards: KanbanJobCard[] | undefined
 }
 
 /**
- * Update job card status (client-side)
- * Uses API route that bypasses RLS policies
+ * Update job card status
+ * Uses API route for status updates
  * Implements optimistic updates for immediate UI feedback
  */
 export function useUpdateJobCardStatus() {
@@ -59,10 +59,10 @@ export function useUpdateJobCardStatus() {
       await queryClient.cancelQueries({ queryKey: ['job-cards', garageId] })
 
       // Snapshot previous value for rollback
-      const previousJobCards = queryClient.getQueryData<JobCardViewData[]>(['job-cards', garageId])
+      const previousJobCards = queryClient.getQueryData<KanbanJobCard[]>(['job-cards', garageId])
 
       // Optimistically update cache
-      queryClient.setQueryData<JobCardViewData[]>(['job-cards', garageId], (old) => {
+      queryClient.setQueryData<KanbanJobCard[]>(['job-cards', garageId], (old) => {
         if (!old) return old
 
         return old.map((card) =>
@@ -99,20 +99,20 @@ export function useUpdateJobCardStatus() {
 interface UpdateJobCardVariables {
   jobCardId: string
   updates: {
-    status?: string
-    priority?: string
+    status?: JobCardStatus
+    priority?: 'low' | 'medium' | 'high' | 'urgent'
     promisedDate?: string
-    leadMechanicId?: string
+    leadMechanicId?: string | null
     customerComplaint?: string
     workRequested?: string
     currentMileage?: number
     finalAmount?: number
-    paymentStatus?: string
+    paymentStatus?: 'pending' | 'partial' | 'paid' | 'overdue'
   }
 }
 
 /**
- * Update job card (client-side)
+ * Update job card
  * Implements optimistic updates for immediate UI feedback
  */
 export function useUpdateJobCard() {
@@ -184,10 +184,10 @@ export function useUpdateJobCard() {
       await queryClient.cancelQueries({ queryKey: ['job-cards'] })
 
       // Snapshot previous value
-      const previousJobCards = queryClient.getQueryData<JobCardViewData[]>(['job-cards'])
+      const previousJobCards = queryClient.getQueryData<KanbanJobCard[]>(['job-cards'])
 
       // Optimistically update cache
-      queryClient.setQueryData<JobCardViewData[]>(['job-cards'], (old) => {
+      queryClient.setQueryData<KanbanJobCard[]>(['job-cards'], (old) => {
         if (!old) return old
 
         return old.map((card) =>
@@ -227,3 +227,4 @@ export function useUpdateJobCard() {
     },
   })
 }
+

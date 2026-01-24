@@ -1,5 +1,6 @@
-import { Priority } from '@/lib/supabase/job-card-queries'
 import { AlertCircle } from 'lucide-react'
+
+type Priority = 'low' | 'medium' | 'high' | 'urgent'
 
 interface PriorityBadgeProps {
   priority: Priority

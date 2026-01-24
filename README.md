@@ -1,6 +1,6 @@
 # RevvOS - Automotive Garage Management System
 
-RevvOS is a comprehensive **workshop management solution** designed to streamline automotive service operations. Built with Next.js 14, featuring a modern light mode design with graphite accents and lime highlights.
+RevvOS is a comprehensive **workshop management solution** designed to streamline automotive service operations. Built with Next.js 14, featuring a modern light mode design with professional graphite tones and clean white surfaces.
 
 ## ✨ Key Features
 
@@ -16,13 +16,14 @@ RevvOS is a comprehensive **workshop management solution** designed to streamlin
 
 ## 🎨 Design System
 
-RevvOS uses a **light mode** design system with professional gray tones and lime accents.
+RevvOS uses a **light mode** design system with professional graphite tones and clean white surfaces.
 
 ### Quick Design Reference
 
 | Element | Color | Tailwind |
 |---------|-------|----------|
-| **Brand Primary** | `#CCFF00` (Lime) | `bg-brand` |
+| **Brand Primary** | `#0F172A` (Graphite) | `bg-graphite-900` |
+| **Brand Hover** | `#334155` (Graphite 700) | `bg-graphite-700` |
 | **App Background** | `#CFD0D4` (Light Gray) | `bg-[#CFD0D4]` |
 | **Card Surface** | `#FFFFFF` (White) | `bg-white` |
 | **Text Primary** | `#374151` | `text-gray-700` |
@@ -37,7 +38,7 @@ RevvOS uses a **light mode** design system with professional gray tones and lime
 - **UI Font**: Inter (Body text and UI elements)
 - **Mono Font**: JetBrains Mono (VINs, part numbers, data)
 
-📖 **For complete design system:** See [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)
+📖 **For complete design system:** See [docs/design/DESIGN_SYSTEM.md](./docs/design/DESIGN_SYSTEM.md)
 
 ## 🚀 Getting Started
 
@@ -66,7 +67,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-📖 **For detailed setup instructions:** See [GETTING_STARTED.md](./GETTING_STARTED.md)
+📖 **For detailed setup instructions:** See [docs/guides/GETTING_STARTED.md](./docs/guides/GETTING_STARTED.md)
 
 ## 📁 Project Structure
 
@@ -141,21 +142,21 @@ RevvOS/
 
 | Document | Description |
 |----------|-------------|
-| **[GETTING_STARTED.md](./GETTING_STARTED.md)** | Setup and installation guide |
-| **[FEATURES.md](./FEATURES.md)** | Complete feature list |
-| **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)** | Design tokens and patterns |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Technical architecture |
-| **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** | Complete documentation index |
+| **[docs/guides/GETTING_STARTED.md](./docs/guides/GETTING_STARTED.md)** | Setup and installation guide |
+| **[docs/features/FEATURES.md](./docs/features/FEATURES.md)** | Complete feature list |
+| **[docs/design/DESIGN_SYSTEM.md](./docs/design/DESIGN_SYSTEM.md)** | Design tokens and patterns |
+| **[docs/guides/ARCHITECTURE.md](./docs/guides/ARCHITECTURE.md)** | Technical architecture |
+| **[docs/DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md)** | Complete documentation index |
 
 ### Feature Documentation
 
 | Topic | Document |
 |-------|----------|
-| Auto-Save Feature | [AUTO_SAVE_IMPLEMENTATION.md](./AUTO_SAVE_IMPLEMENTATION.md) |
-| Account Recovery | [RECOVERY_FEATURES_SUMMARY.md](./RECOVERY_FEATURES_SUMMARY.md) |
+| Auto-Save Feature | [docs/features/AUTO_SAVE_IMPLEMENTATION.md](./docs/features/AUTO_SAVE_IMPLEMENTATION.md) |
+| Account Recovery | [docs/features/RECOVERY_FEATURES_SUMMARY.md](./docs/features/RECOVERY_FEATURES_SUMMARY.md) |
 | Job Cards | [docs/JOB_CARDS_IMPLEMENTATION.md](./docs/JOB_CARDS_IMPLEMENTATION.md) |
-| Testing | [TESTING_README.md](./TESTING_README.md) |
-| Security | [SECURITY_TEST_REPORT.md](./SECURITY_TEST_REPORT.md) |
+| Testing | [docs/testing/TESTING_README.md](./docs/testing/TESTING_README.md) |
+| Security | [docs/testing/SECURITY_TEST_REPORT.md](./docs/testing/SECURITY_TEST_REPORT.md) |
 
 ## 🔐 Authentication
 
@@ -169,8 +170,8 @@ RevvOS uses **Login ID** based authentication (not email).
 - ✅ Forgot Login ID (email-based recovery)
 
 **See Also:**
-- [FORGOT_PASSWORD_IMPLEMENTATION.md](./FORGOT_PASSWORD_IMPLEMENTATION.md)
-- [FORGOT_LOGIN_ID_IMPLEMENTATION.md](./FORGOT_LOGIN_ID_IMPLEMENTATION.md)
+- [docs/features/FORGOT_PASSWORD_IMPLEMENTATION.md](./docs/features/FORGOT_PASSWORD_IMPLEMENTATION.md)
+- [docs/features/FORGOT_LOGIN_ID_IMPLEMENTATION.md](./docs/features/FORGOT_LOGIN_ID_IMPLEMENTATION.md)
 
 ## 🧪 Testing
 
@@ -180,7 +181,7 @@ The project includes comprehensive security testing:
 - **Vitest** as the test runner
 - Security analysis for employee creation API
 
-**See:** [TESTING_README.md](./TESTING_README.md)
+**See:** [docs/testing/TESTING_README.md](./docs/testing/TESTING_README.md)
 
 ## 🎨 Design Principles
 
@@ -219,7 +220,7 @@ The project includes comprehensive security testing:
 - ✅ OTP expiration (5 minutes)
 
 **Known Issues:**
-- ⚠️ Employee creation API has vulnerabilities (see [TESTING_README.md](./TESTING_README.md))
+- ⚠️ Employee creation API has vulnerabilities (see [docs/testing/TESTING_README.md](./docs/testing/TESTING_README.md))
 - ⚠️ Rate limiting (planned)
 - ⚠️ CSRF protection (planned)
 
@@ -282,4 +283,4 @@ This is a private project. For questions or support, please contact the RevvOS t
 **Version:** 1.0.0
 **Last Updated:** January 2026
 
-For complete documentation, see [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
+For complete documentation, see [docs/DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md)

@@ -8,7 +8,6 @@ import {
   User,
   Wrench,
   FileText,
-  Save,
   Loader2,
   AlertCircle,
   Plus,
@@ -81,14 +80,10 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
-import { createJobCardAction, updateJobCardAction } from '@/app/actions/job-card-actions'
 import { getMakesDataAction } from '@/app/actions/motorcycle-actions'
 import { createCustomerAction, addVehicleToCustomerAction, type CreateCustomerInput, type CreateVehicleInput } from '@/app/actions/customer-actions'
 import { MotorcycleIcon } from '@/components/ui/motorcycle-icon'
-import { DraftStatusIndicator } from '../components/draft-status-indicator'
-import { useJobCardAutosave } from '../lib/hooks/use-job-card-autosave'
-import { useJobCardDraftStore } from '../lib/stores/job-card-draft-store'
-import { collectJobCardData, validateMinimumDraftData, type CollectJobCardDataOptions } from '../lib/utils/collect-job-card-data'
+import { TabTasks } from '@/app/job-cards/components/tasks/TabTasks'
 
 // ============================================================================
 // TYPES
@@ -741,6 +736,11 @@ function CreateJobCardPageContent() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  // Job card creation states
+  const [isCreatingJobCard, setIsCreatingJobCard] = useState(false)
+  const [jobCardCreationError, setJobCardCreationError] = useState<string | null>(null)
+  const [createdJobCardId, setCreatedJobCardId] = useState<string | null>(null)
+
   // Tab state
   const [activeTab, setActiveTab] = useState<TabValue>('customer')
   const [tabErrors, setTabErrors] = useState<Record<string, string>>({})
@@ -759,6 +759,7 @@ function CreateJobCardPageContent() {
   const [customers, setCustomers] = useState<CustomerData[]>([])
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null)
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleData | null>(null)
+  const [garageId, setGarageId] = useState<string | undefined>(undefined)
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false)
   const [showAddCustomerForm, setShowAddCustomerForm] = useState(false)
@@ -842,7 +843,7 @@ function CreateJobCardPageContent() {
   })
 
   // Parts state
-  const [selectedParts, setSelectedParts] = useState<Array<{
+  type SelectedPart = {
     id: string
     partId: string | null
     partName: string
@@ -850,85 +851,8 @@ function CreateJobCardPageContent() {
     quantity: number
     unitPrice: number
     totalPrice: number
-  }>>([])
-
-  // ============================================================================
-  // DRAFT AUTO-SAVE
-  // ============================================================================
-
-  // Get current user for auto-save
-  const sessionUser = sessionStorage.getItem('user')
-  const currentUser = sessionUser ? JSON.parse(sessionUser) : null
-
-  // Get draft ID from store
-  const draftIdFromStore = useJobCardDraftStore((state) => state.draftId)
-
-  // Function to collect all form data for auto-save
-  const getFormDataForAutosave = useCallback(() => {
-    if (!selectedCustomer || !selectedVehicle || !currentUser) {
-      return null
-    }
-
-    try {
-      return collectJobCardData({
-        garageId: currentUser.garageId,
-        userId: currentUser.userUid,
-        selectedCustomer,
-        selectedVehicle,
-        currentMileage,
-        jobType,
-        priority,
-        customerReportIssues,
-        workRequestedItems,
-        customerNotes,
-        technicalDiagnosisItems,
-        checklistItems,
-        selectedParts,
-        promisedDate,
-        promisedTime,
-        leadMechanicId,
-        serviceAdvisorId,
-        technicianNotes,
-      }, true) // saveAsDraft = true
-    } catch (error) {
-      console.error('Error collecting form data for auto-save:', error)
-      return null
-    }
-  }, [
-    selectedCustomer,
-    selectedVehicle,
-    currentUser,
-    currentMileage,
-    jobType,
-    priority,
-    customerReportIssues,
-    workRequestedItems,
-    customerNotes,
-    technicalDiagnosisItems,
-    checklistItems,
-    selectedParts,
-    promisedDate,
-    promisedTime,
-    leadMechanicId,
-    serviceAdvisorId,
-    technicianNotes,
-  ])
-
-  // Auto-save hook (only enable when user is authenticated)
-  const autoSave = useJobCardAutosave({
-    enabled: !!currentUser && !!currentUser.garageId && !!selectedCustomer,
-    garageId: currentUser?.garageId || '',
-    userId: currentUser?.userUid || '',
-    getFormData: getFormDataForAutosave,
-    hasMinData: () => !!selectedCustomer, // Require at least a customer
-    onSaveStart: () => console.log('Auto-saving draft...'),
-    onSaveSuccess: (savedDraftId) => {
-      console.log('Draft auto-saved:', savedDraftId)
-      // Update draft ID in store if this was a new draft
-      useJobCardDraftStore.getState().setDraftId(savedDraftId)
-    },
-    onSaveError: (error) => console.error('Auto-save failed:', error),
-  })
+  }
+  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([])
 
   // ============================================================================
   // EFFECTS
@@ -941,280 +865,14 @@ function CreateJobCardPageContent() {
       return
     }
 
+    // Set garageId from session
+    const user = JSON.parse(sessionUser)
+    setGarageId(user.garageId || user.garage_id)
+
     loadCustomers()
     loadEmployees()
     loadMakes()
   }, [router])
-
-  // Load existing draft data when editJobCardId is present
-  useEffect(() => {
-    if (!editJobCardId) return
-
-    let isCancelled = false
-    const abortController = new AbortController()
-
-    const loadDraftData = async () => {
-      try {
-        // isLoading is already true from initial state, no need to set it again
-        console.log('Loading draft job card:', editJobCardId)
-
-        // Fetch draft data with abort signal
-        const response = await fetch(`/api/job-cards/${editJobCardId}`, {
-          signal: abortController.signal
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to load draft job card')
-        }
-
-        const result = await response.json()
-        console.log('Draft data loaded:', result)
-
-        if (!result.success || !result.jobCard) {
-          throw new Error(result.error || 'Failed to load draft job card')
-        }
-
-        const data = result.jobCard
-        console.log('Job card data:', data)
-
-        // Check if component was cancelled during fetch
-        if (isCancelled) return
-
-        // Set editing mode
-        setIsEditingDraft(true)
-
-        // Fetch complete customer data with all vehicles
-        if (data.customer) {
-          try {
-            // Fetch the customer with all their vehicles
-            const customerResponse = await fetch(`/api/customers/${data.customer.id}`)
-            if (customerResponse.ok) {
-              const customerResult = await customerResponse.json()
-              if (customerResult.success && customerResult.customer) {
-                const customerWithAllVehicles = customerResult.customer
-
-                // Add the customer to the customers list
-                setCustomers(prevCustomers => {
-                  // Remove the customer if they already exist, then add the updated version
-                  const filtered = prevCustomers.filter(c => c.id !== customerWithAllVehicles.id)
-                  return [...filtered, customerWithAllVehicles]
-                })
-
-                // Set as selected customer
-                setSelectedCustomer(customerWithAllVehicles)
-
-                // Set the draft's vehicle as selected
-                if (data.vehicle) {
-                  const draftVehicle = customerWithAllVehicles.vehicles.find(
-                    (v: VehicleData) => v.id === data.vehicle.id
-                  )
-                  if (draftVehicle) {
-                    setSelectedVehicle(draftVehicle)
-                  }
-                }
-              }
-            } else {
-              // Fallback to old behavior if API call fails
-              console.error('Failed to fetch customer data, using fallback')
-              const customerObj = {
-                id: data.customer.id,
-                firstName: data.customer.firstName,
-                lastName: data.customer.lastName,
-                phoneNumber: data.customer.phoneNumber,
-                email: data.customer.email,
-                vehicles: data.vehicle ? [data.vehicle] : []
-              }
-              setCustomers([customerObj])
-              setSelectedCustomer(customerObj)
-
-              if (data.vehicle) {
-                const vehicleObj = {
-                  id: data.vehicle.id,
-                  make: data.vehicle.make,
-                  model: data.vehicle.model,
-                  year: data.vehicle.year,
-                  licensePlate: data.vehicle.licensePlate,
-                  vin: data.vehicle.vin,
-                  color: data.vehicle.color
-                }
-                setSelectedVehicle(vehicleObj)
-              }
-            }
-          } catch (error) {
-            // Fallback to old behavior if fetch fails
-            console.error('Error fetching customer data:', error)
-            const customerObj = {
-              id: data.customer.id,
-              firstName: data.customer.firstName,
-              lastName: data.customer.lastName,
-              phoneNumber: data.customer.phoneNumber,
-              email: data.customer.email,
-              vehicles: data.vehicle ? [data.vehicle] : []
-            }
-            setCustomers([customerObj])
-            setSelectedCustomer(customerObj)
-
-            if (data.vehicle) {
-              const vehicleObj = {
-                id: data.vehicle.id,
-                make: data.vehicle.make,
-                model: data.vehicle.model,
-                year: data.vehicle.year,
-                licensePlate: data.vehicle.licensePlate,
-                vin: data.vehicle.vin,
-                color: data.vehicle.color
-              }
-              setSelectedVehicle(vehicleObj)
-            }
-          }
-        }
-
-        // Set employees if available
-        if (data.leadMechanic) {
-          const employeeObj = {
-            id: data.leadMechanic.id,
-            firstName: data.leadMechanic.firstName,
-            lastName: data.leadMechanic.lastName,
-            role: 'Mechanic' // Default role for lead mechanic
-          }
-          setEmployees([employeeObj])
-        }
-
-        // Batch all state updates together to minimize re-renders
-        startTransition(() => {
-          // Job details
-          if (data.jobType) setJobType(data.jobType)
-          if (data.priority) setPriority(data.priority)
-          if (data.customerComplaint) {
-            const issues = data.customerComplaint.split(' | ').filter(Boolean)
-            setCustomerReportIssues(issues)
-          }
-          if (data.workRequested) {
-            const work = data.workRequested.split(' | ').filter(Boolean)
-            setWorkRequestedItems(work)
-          }
-          if (data.customerNotes) setCustomerNotes(data.customerNotes)
-          if (data.currentMileage) setCurrentMileage(data.currentMileage.toString())
-          if (data.technicianNotes) setTechnicianNotes(data.technicianNotes)
-
-          // Scheduling
-          if (data.promisedDate) setPromisedDate(data.promisedDate)
-          if (data.promisedTime) setPromisedTime(data.promisedTime)
-          if (data.leadMechanicId) setLeadMechanicId(data.leadMechanicId)
-          if (data.serviceAdvisorId) setServiceAdvisorId(data.serviceAdvisorId)
-
-          // Checklist items
-          if (data.checklistItems && data.checklistItems.length > 0) {
-            const transformedItems = data.checklistItems.map((item: any, index: number) => ({
-              id: item.id || Date.now().toString() + index,
-              itemName: item.itemName || item.item_name || item.task_name || '',
-              description: item.description || item.task_description || '',
-              category: item.category || item.task_category || 'General',
-              priority: item.priority || 'medium',
-              estimatedMinutes: item.estimatedMinutes || item.estimated_minutes || 30,
-              laborRate: item.laborRate || item.labor_rate || 500,
-              displayOrder: item.displayOrder || item.display_order || index + 1,
-            }))
-            setChecklistItems(transformedItems)
-          }
-
-          // Parts
-          if (data.parts && data.parts.length > 0) {
-            const transformedParts = data.parts.map((part: any) => ({
-              id: part.id || Date.now().toString() + Math.random(),
-              partId: part.partId || part.part_id || null,
-              partName: part.partName || part.part_name || '',
-              partNumber: part.partNumber || part.part_number || null,
-              quantity: part.quantityAllocated || part.quantity_allocated || part.quantity_requested || 1,
-              unitPrice: part.unitPrice || part.unit_price || 0,
-              totalPrice: part.totalPrice || part.total_price || 0,
-            }))
-            setSelectedParts(transformedParts)
-          }
-
-          // Detect and set the last tab with data
-          // Check in reverse order (last tab first) to find the most recent tab with data
-          if (data.promisedDate || data.promisedTime || data.leadMechanicId) {
-            setActiveTab('scheduling')
-          } else if (data.parts && data.parts.length > 0) {
-            setActiveTab('labor-parts')
-          } else if (data.checklistItems && data.checklistItems.length > 0) {
-            setActiveTab('tasks')
-          } else if (data.jobType || data.priority || data.customerComplaint) {
-            setActiveTab('job-details')
-          } else if (data.customer) {
-            setActiveTab('customer')
-          }
-        })
-
-        console.log('Draft data loaded successfully')
-
-        // Update draft store with loaded data for persistence
-        useJobCardDraftStore.getState().loadDraftData({
-          draftId: editJobCardId,
-          selectedCustomerId: data.customer?.id || null,
-          selectedVehicleId: data.vehicle?.id || null,
-          currentMileage: data.currentMileage?.toString() || '',
-          jobType: data.jobType || 'repair',
-          priority: data.priority || 'medium',
-          customerReportIssues: data.customerComplaint ? data.customerComplaint.split(' | ').filter(Boolean) : [],
-          workRequestedItems: data.workRequested ? data.workRequested.split(' | ').filter(Boolean) : [],
-          customerNotes: data.customerNotes || '',
-          technicalDiagnosisItems: [],
-          technicianNotes: data.technicianNotes || '',
-          promisedDate: data.promisedDate || '',
-          promisedTime: data.promisedTime || '',
-          leadMechanicId: data.leadMechanicId || '',
-          serviceAdvisorId: data.serviceAdvisorId || '',
-          checklistItems: data.checklistItems?.map((item: any, index: number) => ({
-            id: item.id || Date.now().toString() + index,
-            name: item.itemName || item.item_name || item.task_name || '',
-            description: item.description || item.task_description || '',
-            category: item.category || item.task_category || 'General',
-            priority: item.priority || 'medium',
-            estimatedMinutes: item.estimatedMinutes || item.estimated_minutes || 30,
-            laborRate: item.laborRate || item.labor_rate || 500,
-            completed: item.completed || false,
-            displayOrder: item.displayOrder || item.display_order || index + 1,
-          })) || [],
-          selectedParts: data.parts?.map((part: any) => ({
-            id: part.id || Date.now().toString() + Math.random(),
-            partId: part.partId || part.part_id || '',
-            name: part.partName || part.part_name || '',
-            partNumber: part.partNumber || part.part_number || '',
-            quantity: part.quantityAllocated || part.quantity_allocated || part.quantity_requested || 1,
-            unitPrice: part.unitPrice || part.unit_price || 0,
-            totalPrice: part.totalPrice || part.total_price || 0,
-          })) || [],
-          activeTab: activeTab,
-        })
-        useJobCardDraftStore.getState().markClean()
-        useJobCardDraftStore.getState().updateLastSaved()
-      } catch (err) {
-        // Don't set error if request was aborted
-        if (err instanceof Error && err.name === 'AbortError') {
-          console.log('Draft data fetch was aborted')
-          return
-        }
-        console.error('Error loading draft:', err)
-        if (!isCancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load draft job card')
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    loadDraftData()
-
-    // Cleanup function
-    return () => {
-      isCancelled = true
-      abortController.abort()
-    }
-  }, [editJobCardId]) // Only depend on editJobCardId, NOT customers
 
   useEffect(() => {
     // Only auto-select first vehicle if no vehicle is currently selected
@@ -1396,13 +1054,201 @@ function CreateJobCardPageContent() {
   // HANDLERS
   // ============================================================================
 
-  const handleTabChange = (value: string) => {
+  /**
+   * Creates a draft job card when user proceeds from customer tab to job details
+   * This ensures we have a job card ID to work with for the rest of the form
+   * @returns The job card ID if creation succeeded, null otherwise
+   */
+  const createDraftJobCard = async (): Promise<string | null> => {
+    // Don't create if already editing a draft or if already created
+    if (editJobCardId || createdJobCardId) {
+      return createdJobCardId || editJobCardId || null
+    }
+
+    // Clear any previous errors
+    setJobCardCreationError(null)
+    setIsCreatingJobCard(true)
+
+    try {
+      // Get user from sessionStorage
+      const sessionUser = sessionStorage.getItem('user')
+      if (!sessionUser) {
+        setJobCardCreationError('User not authenticated. Please log in again.')
+        setIsCreatingJobCard(false)
+        return null
+      }
+
+      const currentUser = JSON.parse(sessionUser)
+      const garageId = currentUser.garageId || currentUser.garage_id
+      const userId = currentUser.userUid || currentUser.user_uid
+
+      if (!garageId || !userId) {
+        setJobCardCreationError('Invalid user session. Please log in again.')
+        setIsCreatingJobCard(false)
+        return null
+      }
+
+      // Validate we have customer and vehicle selected
+      if (!selectedCustomer || !selectedVehicle) {
+        setJobCardCreationError('Please select a customer and vehicle before proceeding.')
+        setIsCreatingJobCard(false)
+        return null
+      }
+
+      // Prepare payload
+      const payload = {
+        garageId,
+        customerId: selectedCustomer.id,
+        customerName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`.trim(),
+        customerPhone: selectedCustomer.phoneNumber,
+        customerEmail: selectedCustomer.email || undefined,
+        vehicleId: selectedVehicle.id,
+        vehicleMake: selectedVehicle.make,
+        vehicleModel: selectedVehicle.model,
+        vehicleYear: selectedVehicle.year,
+        vehicleLicensePlate: selectedVehicle.licensePlate,
+        vehicleVin: selectedVehicle.vin || undefined,
+        currentMileage: currentMileage ? parseInt(currentMileage) : undefined,
+        createdBy: userId,
+      }
+
+      console.log('Creating draft job card with payload:', payload)
+
+      // Call API
+      const response = await fetch('/api/job-cards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || result.details || 'Failed to create job card')
+      }
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to create job card')
+      }
+
+      console.log('Job card created successfully:', result.jobCard)
+
+      // Store the created job card ID
+      const jobCardId = result.jobCard.id
+      setCreatedJobCardId(jobCardId)
+
+      // Clear loading state
+      setIsCreatingJobCard(false)
+
+      // Return the job card ID
+      return jobCardId
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred while creating job card'
+      console.error('Error creating job card:', err)
+      setJobCardCreationError(message)
+      setIsCreatingJobCard(false)
+      return null
+    }
+  }
+
+  /**
+   * Saves job details when user proceeds from job-details tab to tasks tab
+   * Includes job type, priority, customer issues, work requested, technical diagnosis, and notes
+   */
+  const saveJobDetails = async (): Promise<boolean> => {
+    // Get the job card ID (either newly created or being edited)
+    const jobCardId = createdJobCardId || editJobCardId
+
+    if (!jobCardId) {
+      console.error('No job card ID available for saving job details')
+      return false
+    }
+
+    setIsLoading(true)
+    setJobCardCreationError(null)
+
+    try {
+      // Prepare the update payload
+      const updateData = {
+        jobType,
+        priority,
+        customerComplaint: customerReportIssues.join('\n\n'),
+        workRequested: workRequestedItems.join('\n\n'),
+        customerNotes,
+        technicianNotes: technicalDiagnosisItems.join('\n\n'),
+      }
+
+      console.log('Saving job details for job card:', jobCardId, updateData)
+
+      // Call the PATCH API
+      const response = await fetch(`/api/job-cards/${jobCardId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || result.details || 'Failed to save job details')
+      }
+
+      console.log('Job details saved successfully:', result)
+      return true
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred while saving job details'
+      console.error('Error saving job details:', err)
+      setJobCardCreationError(message)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleTabChange = async (value: string) => {
+    // When transitioning from customer to job-details, create a draft job card first
+    if (activeTab === 'customer' && value === 'job-details' && !createdJobCardId && !editJobCardId) {
+      // Validate customer tab first
+      if (!validateCustomerTab()) return
+
+      // Create draft job card and get the ID directly
+      const jobCardId = await createDraftJobCard()
+
+      // After creation, if we have the job card ID, proceed to change tab
+      if (jobCardId) {
+        // Clear any previous error
+        setJobCardCreationError(null)
+        // Set the new active tab
+        setActiveTab(value)
+        return
+      }
+
+      // If we don't have the job card ID (creation failed), stay on current tab
+      setIsCreatingJobCard(false)
+      return
+    }
+
     // Validate current tab before allowing navigation
     if (activeTab === 'customer' && value !== 'customer') {
       if (!validateCustomerTab()) return
     }
     if (activeTab === 'job-details' && value !== 'job-details') {
       if (!validateJobDetailsTab()) return
+
+      // Save job details before moving to the next tab
+      const saved = await saveJobDetails()
+      if (!saved) {
+        // Saving failed, stay on current tab
+        return
+      }
+      // Clear any error after successful save
+      setJobCardCreationError(null)
     }
     if (activeTab === 'tasks' && value !== 'tasks') {
       if (!validateTasksTab()) return
@@ -1875,171 +1721,6 @@ function CreateJobCardPageContent() {
     }
   }, [checklistItems, selectedParts])
 
-  const handleSaveAsDraft = async () => {
-    // For draft, only validate customer and vehicle (minimum required data)
-    if (!selectedCustomer) {
-      setTabErrors(prev => ({ ...prev, customer: 'Please select a customer' }))
-      setActiveTab('customer')
-      return
-    }
-    if (!selectedVehicle) {
-      setTabErrors(prev => ({ ...prev, customer: 'Please select a vehicle' }))
-      setActiveTab('customer')
-      return
-    }
-    // Clear any customer tab errors
-    setTabErrors(prev => ({ ...prev, customer: '' }))
-    // Call handleSubmit with saveAsDraft=true - it will create a form event
-    await handleSubmit(new Event('submit') as any, true)
-  }
-
-  const handleSubmit = async (e: React.FormEvent, saveAsDraft: boolean = false) => {
-    e.preventDefault()
-    setError(null)
-
-    // For draft, skip full validation (already validated in handleSaveAsDraft)
-    if (!saveAsDraft && !validateReviewTab()) {
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      const sessionUser = sessionStorage.getItem('user')
-      if (!sessionUser) {
-        throw new Error('User not authenticated')
-      }
-
-      const currentUser = JSON.parse(sessionUser)
-      const garageId = currentUser.garageId
-
-      if (!garageId) {
-        throw new Error('Invalid user session')
-      }
-
-      // Collect all form data from all tabs using the utility function
-      const dataCollectionOptions: CollectJobCardDataOptions = {
-        garageId,
-        userId: currentUser.userUid,
-        selectedCustomer,
-        selectedVehicle,
-        currentMileage,
-        jobType,
-        priority,
-        customerReportIssues,
-        workRequestedItems,
-        customerNotes,
-        technicalDiagnosisItems,
-        checklistItems,
-        selectedParts,
-        promisedDate,
-        promisedTime,
-        leadMechanicId,
-        serviceAdvisorId,
-        technicianNotes,
-      }
-
-      // Use the utility function to collect all data
-      const jobCardData = collectJobCardData(dataCollectionOptions, saveAsDraft)
-
-      // Debug logging to verify data collection
-      console.log('[SAVE DRAFT] Collected data:', {
-        hasChecklistItems: !!jobCardData.checklistItems,
-        checklistItemsCount: jobCardData.checklistItems?.length || 0,
-        hasParts: !!jobCardData.parts,
-        partsCount: jobCardData.parts?.length || 0,
-        hasPromisedDate: !!jobCardData.promisedDate,
-        hasPromisedTime: !!jobCardData.promisedTime,
-        hasLeadMechanicId: !!jobCardData.leadMechanicId,
-        hasServiceAdvisorId: !!jobCardData.serviceAdvisorId,
-        hasTechnicianNotes: !!jobCardData.technicianNotes,
-        checklistItems: jobCardData.checklistItems,
-        parts: jobCardData.parts,
-      })
-
-      let result
-      if (isEditingDraft && editJobCardId) {
-        // Update existing draft
-        // Extract only the fields that UpdateJobCardInput expects
-        const updateData: {
-          customerId: string
-          vehicleId: string
-          jobType: typeof jobCardData.jobType
-          priority: typeof jobCardData.priority
-          status: typeof jobCardData.status
-          customerComplaint: string
-          workRequested: string
-          customerNotes?: string
-          currentMileage?: number
-          promisedDate?: string
-          promisedTime?: string
-          leadMechanicId?: string
-          technicianNotes?: string
-          checklistItems?: typeof jobCardData.checklistItems
-          parts?: typeof jobCardData.parts
-        } = {
-          customerId: jobCardData.customerId,
-          vehicleId: jobCardData.vehicleId,
-          jobType: jobCardData.jobType,
-          priority: jobCardData.priority,
-          status: jobCardData.status,
-          customerComplaint: jobCardData.customerComplaint,
-          workRequested: jobCardData.workRequested,
-          customerNotes: jobCardData.customerNotes,
-          currentMileage: jobCardData.currentMileage,
-          promisedDate: jobCardData.promisedDate,
-          promisedTime: jobCardData.promisedTime,
-          leadMechanicId: jobCardData.leadMechanicId,
-          technicianNotes: jobCardData.technicianNotes,
-          checklistItems: jobCardData.checklistItems,
-          parts: jobCardData.parts,
-        }
-
-        result = await updateJobCardAction(editJobCardId, updateData)
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to update draft job card')
-        }
-        console.log('Draft updated successfully:', result.jobCard)
-      } else {
-        // Create new job card
-        result = await createJobCardAction(jobCardData)
-        if (!result.success || !result.jobCard) {
-          throw new Error(result.error || 'Failed to create job card')
-        }
-        console.log('Job card created successfully:', result.jobCard)
-      }
-
-      setSuccess(true)
-
-      // Update draft store with the draft ID and mark as clean
-      if (saveAsDraft && result.jobCard?.id) {
-        useJobCardDraftStore.getState().setDraftId(result.jobCard.id)
-        useJobCardDraftStore.getState().markClean()
-        useJobCardDraftStore.getState().updateLastSaved()
-      } else if (!saveAsDraft) {
-        // Clear draft store when submitting as final job card
-        useJobCardDraftStore.getState().clearDraft()
-      }
-
-      // Invalidate the job-cards query to ensure fresh data is loaded
-      // when user navigates to the job cards page
-      // Use exact: false to invalidate all job-cards queries regardless of filters
-      await queryClient.invalidateQueries({
-        queryKey: ['job-cards'],
-        exact: false,
-        refetchType: 'active',
-      })
-
-      setTimeout(() => {
-        router.push('/job-cards')
-      }, 1500)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred'
-      setError(message)
-      setIsLoading(false)
-    }
-  }
-
   // ============================================================================
   // HELPERS
   // ============================================================================
@@ -2142,87 +1823,8 @@ function CreateJobCardPageContent() {
               </p>
             </div>
           </div>
-
-          {/* Draft Status Indicator */}
-          <DraftStatusIndicator isSaving={autoSave.isSaving} show={!!selectedCustomer} />
         </div>
       </motion.div>
-
-      {/* Draft Loading Skeleton */}
-      {isLoading && editJobCardId && (
-        <div className="space-y-6">
-          {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-3 py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-graphite-700" />
-            <p className="text-lg font-medium text-graphite-700">Loading draft data...</p>
-          </div>
-
-          {/* Skeleton for tabs */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 space-y-6">
-            {/* Customer & Vehicle Section Skeleton */}
-            <div className="space-y-4">
-              <div className="h-6 bg-gray-200 rounded w-48 animate-pulse" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-                </div>
-                <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Job Details Section Skeleton */}
-            <div className="space-y-4">
-              <div className="h-6 bg-gray-200 rounded w-40 animate-pulse" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-3/5 animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Tasks Section Skeleton */}
-            <div className="space-y-4">
-              <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                      <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
-                    </div>
-                    <div className="h-6 bg-gray-200 rounded w-16 animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Notes Section Skeleton */}
-            <div className="space-y-3">
-              <div className="h-6 bg-gray-200 rounded w-28 animate-pulse" />
-              <div className="h-24 bg-gray-200 rounded-lg animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Success Message */}
       <AnimatePresence>
@@ -2259,6 +1861,64 @@ function CreateJobCardPageContent() {
               <AlertCircle className="h-5 w-5 text-status-error shrink-0 mt-0.5" />
               <p className="text-sm text-status-error/80">{error}</p>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Job Card Creation Error Message */}
+      <AnimatePresence>
+        {jobCardCreationError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-6 p-4 bg-status-error/10 border border-status-error/30 rounded-xl"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-status-error shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-status-error text-sm">Failed to Create Job Card</p>
+                  <p className="text-sm text-status-error/80 mt-1">{jobCardCreationError}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setJobCardCreationError(null)}
+                className="shrink-0 p-1 hover:bg-status-error/20 rounded-lg transition-colors"
+              >
+                <X className="h-4 w-4 text-status-error" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Job Card Creation Loading Overlay */}
+      <AnimatePresence>
+        {isCreatingJobCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm mx-4"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-16 w-16 rounded-full bg-graphite-100 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-graphite-700" />
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-gray-900">Creating Job Card</p>
+                  <p className="text-sm text-gray-600 mt-1">Please wait while we set up your job card...</p>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -2366,11 +2026,11 @@ function CreateJobCardPageContent() {
               currentMileage={currentMileage}
               setCurrentMileage={setCurrentMileage}
               onNextTab={() => handleTabChange('job-details')}
-              onSaveAsDraft={handleSaveAsDraft}
               isLoading={isLoading}
               tabError={tabErrors.customer}
               tabValidation={tabValidation.customer}
               newlyAddedVehicleId={newlyAddedVehicleId}
+              isCreatingJobCard={isCreatingJobCard}
             />
           )}
 
@@ -2399,7 +2059,6 @@ function CreateJobCardPageContent() {
               onRemoveTechnicalDiagnosis={handleRemoveTechnicalDiagnosis}
               onPreviousTab={() => handleTabChange('customer')}
               onNextTab={() => handleTabChange('tasks')}
-              onSaveAsDraft={handleSaveAsDraft}
               isLoading={isLoading}
               selectedCustomer={selectedCustomer}
               selectedVehicle={selectedVehicle}
@@ -2421,12 +2080,8 @@ function CreateJobCardPageContent() {
               onAddTemplateItem={(item) => setChecklistItems([...checklistItems, item])}
               onPreviousTab={() => handleTabChange('job-details')}
               onNextTab={() => handleTabChange('labor-parts')}
-              onSaveAsDraft={handleSaveAsDraft}
               isLoading={isLoading}
-              selectedCustomer={selectedCustomer}
-              selectedVehicle={selectedVehicle}
-              getPriorityColor={getPriorityColor}
-              calculateEstimatedCosts={calculateEstimatedCosts}
+              garageId={garageId}
               customerReportIssues={customerReportIssues}
               workRequestedItems={workRequestedItems}
               technicalDiagnosisItems={technicalDiagnosisItems}
@@ -2441,7 +2096,6 @@ function CreateJobCardPageContent() {
               calculateEstimatedCosts={calculateEstimatedCosts}
               onPreviousTab={() => handleTabChange('tasks')}
               onNextTab={() => handleTabChange('scheduling')}
-              onSaveAsDraft={handleSaveAsDraft}
               isLoading={isLoading}
               selectedCustomer={selectedCustomer}
               selectedVehicle={selectedVehicle}
@@ -2464,7 +2118,6 @@ function CreateJobCardPageContent() {
               setTechnicianNotes={setTechnicianNotes}
               onPreviousTab={() => handleTabChange('labor-parts')}
               onNextTab={() => handleTabChange('review')}
-              onSaveAsDraft={handleSaveAsDraft}
               isLoading={isLoading}
               selectedCustomer={selectedCustomer}
               selectedVehicle={selectedVehicle}
@@ -2488,7 +2141,6 @@ function CreateJobCardPageContent() {
               employees={employees}
               currentMileage={currentMileage}
               onPreviousTab={() => handleTabChange('scheduling')}
-              onSubmit={handleSubmit}
               isLoading={isLoading}
               success={success}
               tabError={tabErrors.review}
@@ -3026,11 +2678,11 @@ function TabCustomer({
   currentMileage,
   setCurrentMileage,
   onNextTab,
-  onSaveAsDraft,
   isLoading,
   tabError,
   tabValidation,
   newlyAddedVehicleId,
+  isCreatingJobCard,
 }: {
   customers: CustomerData[]
   selectedCustomer: CustomerData | null
@@ -3044,11 +2696,11 @@ function TabCustomer({
   currentMileage: string
   setCurrentMileage: (value: string) => void
   onNextTab: () => void
-  onSaveAsDraft: () => void
   isLoading: boolean
   tabError?: string
   tabValidation: boolean
   newlyAddedVehicleId?: string | null
+  isCreatingJobCard?: boolean
 }) {
   const filteredCustomers = customers.filter(customer => {
     const vehicleLicensePlates = customer.vehicles?.map(v => v.licensePlate).join(' ') || ''
@@ -3375,23 +3027,23 @@ function TabCustomer({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onSaveAsDraft}
-          disabled={isLoading || !selectedCustomer || !selectedVehicle}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="h-4 w-4" />
-          <span className="hidden sm:inline">Save as Draft</span>
-          <span className="sm:hidden">Save Draft</span>
-        </button>
-        <button
-          type="button"
           onClick={onNextTab}
-          disabled={!tabValidation}
+          disabled={!tabValidation || isCreatingJobCard}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span className="hidden sm:inline">Next: Job Details</span>
-          <span className="sm:hidden">Next</span>
-          <ChevronRight className="h-4 w-4" />
+          {isCreatingJobCard ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="hidden sm:inline">Creating Job Card...</span>
+              <span className="sm:hidden">Creating...</span>
+            </>
+          ) : (
+            <>
+              <span className="hidden sm:inline">Next: Job Details</span>
+              <span className="sm:hidden">Next</span>
+              <ChevronRight className="h-4 w-4" />
+            </>
+          )}
         </button>
       </div>
     </motion.div>
@@ -3423,7 +3075,6 @@ function TabJobDetails({
   onRemoveTechnicalDiagnosis,
   onPreviousTab,
   onNextTab,
-  onSaveAsDraft,
   isLoading,
   selectedCustomer,
   selectedVehicle,
@@ -3456,7 +3107,6 @@ function TabJobDetails({
   onRemoveTechnicalDiagnosis: (index: number) => void
   onPreviousTab: () => void
   onNextTab: () => void
-  onSaveAsDraft: () => void
   isLoading: boolean
   selectedCustomer: CustomerData | null
   selectedVehicle: VehicleData | null
@@ -3923,16 +3573,6 @@ function TabJobDetails({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onSaveAsDraft}
-          disabled={isLoading || !selectedCustomer || !selectedVehicle}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="h-4 w-4" />
-          <span className="hidden sm:inline">Save as Draft</span>
-          <span className="sm:hidden">Save Draft</span>
-        </button>
-        <button
-          type="button"
           onClick={onNextTab}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
         >
@@ -3947,1188 +3587,7 @@ function TabJobDetails({
 
 // ============================================================================
 // ENHANCED TAB TASKS - World-Class Task Management System
-// ============================================================================
-
-function TabTasks({
-  checklistItems,
-  currentChecklistItem,
-  setCurrentChecklistItem,
-  onAddItem,
-  onRemoveItem,
-  onAddTemplateItem,
-  onPreviousTab,
-  onNextTab,
-  onSaveAsDraft,
-  isLoading,
-  selectedCustomer,
-  selectedVehicle,
-  getPriorityColor,
-  calculateEstimatedCosts,
-  customerReportIssues,
-  workRequestedItems,
-  technicalDiagnosisItems,
-}: {
-  checklistItems: ChecklistItem[]
-  currentChecklistItem: ChecklistItem
-  setCurrentChecklistItem: (item: ChecklistItem) => void
-  onAddItem: () => void
-  onRemoveItem: (id: string) => void
-  onAddTemplateItem: (item: ChecklistItem) => void
-  onPreviousTab: () => void
-  onNextTab: () => void
-  onSaveAsDraft: () => void
-  isLoading: boolean
-  selectedCustomer: CustomerData | null
-  selectedVehicle: VehicleData | null
-  getPriorityColor: (priority: Priority) => string
-  calculateEstimatedCosts: () => { totalLaborMinutes: number; totalLaborHours: string; totalLaborCost: string; totalCost: string }
-  customerReportIssues?: string[]
-  workRequestedItems?: string[]
-  technicalDiagnosisItems?: string[]
-}) {
-  // State for enhanced features
-  const customerIssues = customerReportIssues || []
-  const serviceItems = workRequestedItems || []
-  const diagnosisItems = technicalDiagnosisItems || []
-  const priorities: Priority[] = ['low', 'medium', 'high', 'urgent']
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [showTemplates, setShowTemplates] = useState(false)
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
-  const [pendingTemplate, setPendingTemplate] = useState<TaskTemplate | null>(null)
-  const [templateLinks, setTemplateLinks] = useState<{
-    customerIssues: number[]
-    serviceScope: number[]
-    technicalDiagnosis: number[]
-  }>({ customerIssues: [], serviceScope: [], technicalDiagnosis: [] })
-
-  const costs = calculateEstimatedCosts()
-
-  // Filter task repository
-  const filteredTemplates = searchTasks(TASK_REPOSITORY, searchQuery)
-    .filter(template => selectedCategory === 'all' || template.category === selectedCategory) as TaskTemplate[]
-
-  // Helper to add template as checklist item
-  const addTemplateToChecklist = (template: TaskTemplate) => {
-    // Store the template and show linking modal
-    setPendingTemplate(template)
-    setTemplateLinks({ customerIssues: [], serviceScope: [], technicalDiagnosis: [] })
-  }
-
-  const confirmAddTemplate = () => {
-    if (!pendingTemplate) return
-
-    const newItem: ChecklistItem = {
-      id: Date.now().toString(),
-      itemName: pendingTemplate.name,
-      description: pendingTemplate.description,
-      category: pendingTemplate.category,
-      priority: pendingTemplate.priority,
-      estimatedMinutes: calculateTaskTime(pendingTemplate),
-      laborRate: pendingTemplate.laborRate,
-      displayOrder: checklistItems.length + 1,
-      subtasks: pendingTemplate.subtasks,
-      linkedToCustomerIssues: templateLinks.customerIssues,
-      linkedToServiceScope: templateLinks.serviceScope,
-      linkedToTechnicalDiagnosis: templateLinks.technicalDiagnosis,
-    }
-    // Directly add to checklist without populating the form
-    onAddTemplateItem(newItem)
-    setPendingTemplate(null)
-    setShowTemplates(false)
-  }
-
-  const cancelTemplateLink = () => {
-    setPendingTemplate(null)
-    setTemplateLinks({ customerIssues: [], serviceScope: [], technicalDiagnosis: [] })
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
-      {/* Header with Quick Stats */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-1 bg-graphite-700 rounded-full" />
-          <h2 className="text-xl font-semibold text-graphite-900">Tasks & Service Checklist</h2>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setShowTemplates(!showTemplates)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
-              showTemplates
-                ? "bg-graphite-900 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            )}
-          >
-            <Package className="h-4 w-4" />
-            {showTemplates ? 'Hide Templates' : 'Browse Templates'}
-          </button>
-          <span className="text-sm text-graphite-600 px-3 py-1 bg-gray-100 rounded-lg">
-            {checklistItems.length} {checklistItems.length === 1 ? 'task' : 'tasks'}
-          </span>
-        </div>
-      </div>
-
-      {/* Task Summary Cards */}
-      {checklistItems.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Total Tasks</p>
-            <p className="text-2xl font-bold text-gray-900">{checklistItems.length}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Total Time</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {Math.floor(costs.totalLaborMinutes / 60)}h {costs.totalLaborMinutes % 60}m
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-600 mb-1">Est. Labor Cost</p>
-            <p className="text-2xl font-bold text-gray-900">₹{costs.totalLaborCost}</p>
-          </div>
-          <div className="col-span-2 md:col-span-1 bg-gradient-to-br from-graphite-800/10 to-graphite-700/5 rounded-xl p-4 border-2 border-graphite-700/30">
-            <p className="text-xs font-medium uppercase tracking-wider text-graphite-700 mb-1">Total Est. Cost</p>
-            <p className="text-2xl font-bold text-graphite-700">₹{costs.totalCost}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Task Repository Panel */}
-      {showTemplates && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Package className="h-5 w-5 text-graphite-700" />
-              Service Task Templates
-            </h3>
-            <p className="text-sm text-gray-600">{filteredTemplates.length} templates available</p>
-          </div>
-
-          {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-3 mb-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search templates by name or category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(['all', 'Engine', 'Electrical', 'Body', 'Maintenance', 'Diagnostic', 'Custom'] as const).map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize",
-                    selectedCategory === cat
-                      ? "bg-graphite-900 text-white"
-                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-gray-400"
-                  )}
-                >
-                  {cat === 'all' ? 'All Categories' : cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Template Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-            {filteredTemplates.slice(0, 12).map((template) => {
-              const templateTime = calculateTaskTime(template)
-              const templateCost = calculateTaskCost(template)
-              
-              return (
-                <motion.button
-                  key={template.id}
-                  type="button"
-                  onClick={() => addTemplateToChecklist(template)}
-                  className="text-left p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-graphite-700 hover:shadow-md transition-all group"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                      getPriorityColor(template.priority)
-                    )}>
-                      {template.priority}
-                    </span>
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
-                      {getCategoryIcon(template.category)}
-                      {template.category}
-                    </span>
-                  </div>
-                  
-                  <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-graphite-700 transition-colors">
-                    {template.name}
-                  </h4>
-                  
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">{template.description}</p>
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Timer className="h-3 w-3" />
-                      {Math.floor(templateTime / 60)}h {templateTime % 60}m
-                    </span>
-                    <span className="font-medium text-graphite-700">₹{templateCost}</span>
-                  </div>
-
-                  {template.subtasks.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-gray-100">
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <Layers className="h-3 w-3" />
-                        {template.subtasks.length} subtasks
-                      </span>
-                    </div>
-                  )}
-                </motion.button>
-              )
-            })}
-          </div>
-
-          {filteredTemplates.length === 0 && (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 font-medium">No templates found</p>
-              <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filter</p>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Add Custom Task Form */}
-      <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Plus className="h-5 w-5 text-graphite-700" />
-          Add Custom Task
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Task Name */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Task Name <span className="text-status-error">*</span>
-            </label>
-            <input
-              type="text"
-              value={currentChecklistItem.itemName}
-              onChange={(e) => setCurrentChecklistItem({
-                ...currentChecklistItem,
-                itemName: e.target.value
-              })}
-              placeholder="e.g., Custom Repair, Special Service"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <select
-              value={currentChecklistItem.category || 'Custom'}
-              onChange={(e) => setCurrentChecklistItem({
-                ...currentChecklistItem,
-                category: e.target.value
-              })}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-            >
-              <option value="Engine">Engine</option>
-              <option value="Electrical">Electrical</option>
-              <option value="Body">Body</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Diagnostic">Diagnostic</option>
-              <option value="Custom">Custom</option>
-            </select>
-          </div>
-
-          {/* Priority */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Priority
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {priorities.map((prio) => (
-                <button
-                  key={prio}
-                  type="button"
-                  onClick={() => setCurrentChecklistItem({
-                    ...currentChecklistItem,
-                    priority: prio
-                  })}
-                  className={cn(
-                    "px-3 py-2 rounded-lg border-2 font-medium text-xs transition-all capitalize",
-                    currentChecklistItem.priority === prio
-                      ? getPriorityColor(prio)
-                      : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
-                  )}
-                >
-                  {prio}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Estimated Time */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Est. Time (minutes)
-            </label>
-            <input
-              type="number"
-              value={currentChecklistItem.estimatedMinutes}
-              onChange={(e) => setCurrentChecklistItem({
-                ...currentChecklistItem,
-                estimatedMinutes: parseInt(e.target.value) || 0
-              })}
-              min="0"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-            />
-          </div>
-
-          {/* Labor Rate */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Labor Rate (₹/hr)
-            </label>
-            <input
-              type="number"
-              value={currentChecklistItem.laborRate}
-              onChange={(e) => setCurrentChecklistItem({
-                ...currentChecklistItem,
-                laborRate: parseInt(e.target.value) || 0
-              })}
-              min="0"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={currentChecklistItem.description}
-              onChange={(e) => setCurrentChecklistItem({
-                ...currentChecklistItem,
-                description: e.target.value
-              })}
-              placeholder="Detailed task description..."
-              rows={2}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all resize-none"
-            />
-          </div>
-
-          {/* Subtasks Section */}
-          <div className="md:col-span-2">
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Subtasks <span className="text-xs text-gray-500 font-normal">(optional)</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  const newSubtask: Subtask = {
-                    id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    name: '',
-                    description: '',
-                    estimatedMinutes: 15,
-                    completed: false,
-                    displayOrder: (currentChecklistItem.subtasks?.length || 0) + 1,
-                  }
-                  setCurrentChecklistItem({
-                    ...currentChecklistItem,
-                    subtasks: [...(currentChecklistItem.subtasks || []), newSubtask]
-                  })
-                }}
-                className="text-xs flex items-center gap-1 text-graphite-700 hover:text-graphite-900 font-medium"
-              >
-                <Plus className="h-3 w-3" />
-                Add Subtask
-              </button>
-            </div>
-
-            {/* Subtasks List */}
-            {(currentChecklistItem.subtasks?.length ?? 0) > 0 ? (
-              <div className="space-y-2 mb-3">
-                {currentChecklistItem.subtasks?.map((subtask, index) => (
-                  <div key={subtask.id} className="flex gap-2 items-start p-3 bg-gray-50 rounded-lg border-2 border-gray-200">
-                    <div className="flex-1 space-y-2">
-                      <input
-                        type="text"
-                        value={subtask.name}
-                        onChange={(e) => {
-                          const updatedSubtasks = [...(currentChecklistItem.subtasks || [])]
-                          updatedSubtasks[index] = { ...updatedSubtasks[index], name: e.target.value }
-                          setCurrentChecklistItem({
-                            ...currentChecklistItem,
-                            subtasks: updatedSubtasks
-                          })
-                        }}
-                        placeholder="Subtask name"
-                        className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-                      />
-                      <input
-                        type="text"
-                        value={subtask.description}
-                        onChange={(e) => {
-                          const updatedSubtasks = [...(currentChecklistItem.subtasks || [])]
-                          updatedSubtasks[index] = { ...updatedSubtasks[index], description: e.target.value }
-                          setCurrentChecklistItem({
-                            ...currentChecklistItem,
-                            subtasks: updatedSubtasks
-                          })
-                        }}
-                        placeholder="Subtask description (optional)"
-                        className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-                      />
-                      <div className="flex gap-2 items-center">
-                        <div className="flex-1">
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Time (min)</label>
-                          <input
-                            type="number"
-                            value={subtask.estimatedMinutes}
-                            onChange={(e) => {
-                              const updatedSubtasks = [...(currentChecklistItem.subtasks || [])]
-                              updatedSubtasks[index] = { ...updatedSubtasks[index], estimatedMinutes: parseInt(e.target.value) || 0 }
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                subtasks: updatedSubtasks
-                              })
-                            }}
-                            min="1"
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-graphite-700 focus:border-transparent transition-all"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedSubtasks = currentChecklistItem.subtasks?.filter((_, i) => i !== index) || []
-                            setCurrentChecklistItem({
-                              ...currentChecklistItem,
-                              subtasks: updatedSubtasks
-                            })
-                          }}
-                          className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors mt-4"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 mb-3">
-                <p className="text-sm text-gray-500">No subtasks added yet</p>
-                <p className="text-xs text-gray-400 mt-1">Click "Add Subtask" to break down this task</p>
-              </div>
-            )}
-          </div>
-
-          {/* Link to Issues/Scope/Diagnosis Section */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="border-t-2 border-gray-200 pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Link this task to <span className="text-status-error">*</span>
-              </label>
-              <p className="text-xs text-gray-500 mb-3">Select at least one item from the categories below to track the task</p>
-
-              {/* Customer Reported Issues */}
-              {customerIssues.length > 0 && (
-                <div className="mb-3">
-                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Customer Reported Issues
-                  </p>
-                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                    {customerIssues.map((issue, index) => (
-                      <label
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={currentChecklistItem.linkedToCustomerIssues?.includes(index) || false}
-                          onChange={(e) => {
-                            const currentLinked = currentChecklistItem.linkedToCustomerIssues || []
-                            if (e.target.checked) {
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                linkedToCustomerIssues: [...currentLinked, index]
-                              })
-                            } else {
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                linkedToCustomerIssues: currentLinked.filter(i => i !== index)
-                              })
-                            }
-                          }}
-                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
-                        />
-                        <span className="text-sm text-gray-700 flex-1">{issue}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Service Scope Items */}
-              {serviceItems.length > 0 && (
-                <div className="mb-3">
-                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                    <FileText className="h-3 w-3" />
-                    Service Scope Items
-                  </p>
-                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                    {serviceItems.map((item, index) => (
-                      <label
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={currentChecklistItem.linkedToServiceScope?.includes(index) || false}
-                          onChange={(e) => {
-                            const currentLinked = currentChecklistItem.linkedToServiceScope || []
-                            if (e.target.checked) {
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                linkedToServiceScope: [...currentLinked, index]
-                              })
-                            } else {
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                linkedToServiceScope: currentLinked.filter(i => i !== index)
-                              })
-                            }
-                          }}
-                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
-                        />
-                        <span className="text-sm text-gray-700 flex-1">{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Technical Diagnosis Items */}
-              {diagnosisItems.length > 0 && (
-                <div className="mb-3">
-                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                    <Scan className="h-3 w-3" />
-                    Technical Diagnosis Items
-                  </p>
-                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                    {diagnosisItems.map((item, index) => (
-                      <label
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={currentChecklistItem.linkedToTechnicalDiagnosis?.includes(index) || false}
-                          onChange={(e) => {
-                            const currentLinked = currentChecklistItem.linkedToTechnicalDiagnosis || []
-                            if (e.target.checked) {
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                linkedToTechnicalDiagnosis: [...currentLinked, index]
-                              })
-                            } else {
-                              setCurrentChecklistItem({
-                                ...currentChecklistItem,
-                                linkedToTechnicalDiagnosis: currentLinked.filter(i => i !== index)
-                              })
-                            }
-                          }}
-                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
-                        />
-                        <span className="text-sm text-gray-700 flex-1">{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {customerIssues.length === 0 && serviceItems.length === 0 && diagnosisItems.length === 0 && (
-                <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <p className="text-sm text-gray-500">No items available from previous pages</p>
-                  <p className="text-xs text-gray-400 mt-1">Please add customer issues, service scope, or diagnosis items in the Details tab</p>
-                </div>
-              )}
-
-              {/* Show link status */}
-              {(
-                (currentChecklistItem.linkedToCustomerIssues?.length || 0) +
-                (currentChecklistItem.linkedToServiceScope?.length || 0) +
-                (currentChecklistItem.linkedToTechnicalDiagnosis?.length || 0)
-              ) > 0 && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-600">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                  <span>
-                    Linked to {(
-                      (currentChecklistItem.linkedToCustomerIssues?.length || 0) +
-                      (currentChecklistItem.linkedToServiceScope?.length || 0) +
-                      (currentChecklistItem.linkedToTechnicalDiagnosis?.length || 0)
-                    )} item(s)
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onAddItem}
-          disabled={!currentChecklistItem.itemName.trim()}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus className="h-4 w-4" />
-          Add Custom Task
-        </button>
-      </div>
-
-      {/* Task List with Enhanced Cards */}
-      {checklistItems.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-gray-900">Tasks Added</h4>
-            <span className="text-sm text-gray-600">
-              {checklistItems.reduce((sum, item) => sum + item.estimatedMinutes, 0)} total minutes
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {checklistItems.map((item, index) => {
-              const isExpanded = expandedTaskId === item.id
-              const itemCost = Math.round((item.estimatedMinutes / 60) * item.laborRate)
-              const hasLinks =
-                (item.linkedToCustomerIssues?.length || 0) +
-                (item.linkedToServiceScope?.length || 0) +
-                (item.linkedToTechnicalDiagnosis?.length || 0) > 0
-
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  className={cn(
-                    "bg-white rounded-xl border-2 transition-all relative overflow-hidden",
-                    isExpanded ? "border-graphite-300" : !hasLinks ? "border-amber-300 shadow-md shadow-amber-100" : "border-gray-200"
-                  )}
-                >
-                  <div className="p-4">
-                    <div className="flex items-start gap-3">
-                      {/* Drag Handle */}
-                      <div className="flex items-center gap-2 pt-1">
-                        <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
-                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                          <Wrench className="h-4 w-4 text-gray-700" />
-                        </div>
-                      </div>
-
-                      {/* Task Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h5 className="font-semibold text-gray-900">{item.itemName}</h5>
-                          <span
-                            className={cn(
-                              "px-2 py-0.5 rounded-full text-xs font-medium capitalize shrink-0",
-                              getPriorityColor(item.priority)
-                            )}
-                          >
-                            {item.priority}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                            {item.category}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-1">
-                          <span className="flex items-center gap-1">
-                            <Timer className="h-3.5 w-3.5" />
-                            {item.estimatedMinutes} min
-                          </span>
-                          <span className="font-medium text-graphite-700">₹{itemCost}</span>
-                          <span>₹{item.laborRate}/hr</span>
-                        </div>
-
-                        {item.description && (
-                          <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                        )}
-
-                        {/* Linked Items Preview - Modern Badge System */}
-                        {(
-                          (item.linkedToCustomerIssues?.length || 0) +
-                          (item.linkedToServiceScope?.length || 0) +
-                          (item.linkedToTechnicalDiagnosis?.length || 0)
-                        ) > 0 ? (
-                          <div className="mt-2.5 flex items-center flex-wrap gap-1.5">
-                            {item.linkedToCustomerIssues && item.linkedToCustomerIssues.length > 0 && (
-                              <>
-                                {item.linkedToCustomerIssues.slice(0, 2).map((idx, i) => (
-                                  <span
-                                    key={`ci-preview-${i}`}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200 hover:from-red-100 hover:to-red-150 transition-all cursor-help shadow-sm"
-                                    title={customerIssues[idx]}
-                                  >
-                                    <AlertCircle className="h-3 w-3 shrink-0" />
-                                    <span className="max-w-[120px] truncate">{customerIssues[idx]}</span>
-                                  </span>
-                                ))}
-                                {item.linkedToCustomerIssues.length > 2 && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-100 text-red-600 border border-red-200 shadow-sm">
-                                    +{item.linkedToCustomerIssues.length - 2}
-                                  </span>
-                                )}
-                              </>
-                            )}
-
-                            {item.linkedToServiceScope && item.linkedToServiceScope.length > 0 && (
-                              <>
-                                {item.linkedToServiceScope.slice(0, 2).map((idx, i) => (
-                                  <span
-                                    key={`ss-preview-${i}`}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-blue-150 transition-all cursor-help shadow-sm"
-                                    title={serviceItems[idx]}
-                                  >
-                                    <FileText className="h-3 w-3 shrink-0" />
-                                    <span className="max-w-[120px] truncate">{serviceItems[idx]}</span>
-                                  </span>
-                                ))}
-                                {item.linkedToServiceScope.length > 2 && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-600 border border-blue-200 shadow-sm">
-                                    +{item.linkedToServiceScope.length - 2}
-                                  </span>
-                                )}
-                              </>
-                            )}
-
-                            {item.linkedToTechnicalDiagnosis && item.linkedToTechnicalDiagnosis.length > 0 && (
-                              <>
-                                {item.linkedToTechnicalDiagnosis.slice(0, 2).map((idx, i) => (
-                                  <span
-                                    key={`td-preview-${i}`}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 hover:from-purple-100 hover:to-purple-150 transition-all cursor-help shadow-sm"
-                                    title={diagnosisItems[idx]}
-                                  >
-                                    <Scan className="h-3 w-3 shrink-0" />
-                                    <span className="max-w-[120px] truncate">{diagnosisItems[idx]}</span>
-                                  </span>
-                                ))}
-                                {item.linkedToTechnicalDiagnosis.length > 2 && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-600 border border-purple-200 shadow-sm">
-                                    +{item.linkedToTechnicalDiagnosis.length - 2}
-                                  </span>
-                                )}
-                              </>
-                            )}
-
-                            {/* Link count indicator */}
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 border border-gray-200 shadow-sm">
-                              <Link2 className="h-3 w-3" />
-                              <span className="font-semibold">
-                                {(
-                                  (item.linkedToCustomerIssues?.length || 0) +
-                                  (item.linkedToServiceScope?.length || 0) +
-                                  (item.linkedToTechnicalDiagnosis?.length || 0)
-                                )}
-                              </span>
-                            </span>
-                          </div>
-                        ) : (
-                          /* Unlinked Task Warning */
-                          <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200 shadow-sm animate-pulse">
-                            <Unlink className="h-3 w-3" />
-                            <span>Not linked - Click to add connections</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedTaskId(isExpanded ? null : item.id)}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onRemoveItem(item.id)}
-                          className="p-1.5 rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Expanded Details */}
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="mt-4 pt-4 border-t border-gray-200"
-                      >
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500 mb-1">Category</p>
-                            <p className="font-medium text-gray-900">{item.category}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 mb-1">Priority</p>
-                            <p className="font-medium capitalize text-gray-900">{item.priority}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 mb-1">Estimated Time</p>
-                            <p className="font-medium text-gray-900">{item.estimatedMinutes} min</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 mb-1">Labor Rate</p>
-                            <p className="font-medium text-gray-900">₹{item.laborRate}/hr</p>
-                          </div>
-                        </div>
-
-                        {item.description && (
-                          <div className="mt-4">
-                            <p className="text-gray-500 mb-1">Description</p>
-                            <p className="text-gray-900">{item.description}</p>
-                          </div>
-                        )}
-
-                        {/* Linked Items Section */}
-                        {(
-                          (item.linkedToCustomerIssues?.length || 0) +
-                          (item.linkedToServiceScope?.length || 0) +
-                          (item.linkedToTechnicalDiagnosis?.length || 0)
-                        ) > 0 && (
-                          <div className="mt-4">
-                            <p className="text-gray-500 mb-2 flex items-center gap-1.5">
-                              <Link2 className="h-4 w-4" />
-                              Linked to
-                            </p>
-                            <div className="space-y-2">
-                              {item.linkedToCustomerIssues && item.linkedToCustomerIssues.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {item.linkedToCustomerIssues.map((idx, i) => (
-                                    <span
-                                      key={`ci-${i}`}
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700 border border-red-200"
-                                    >
-                                      <AlertCircle className="h-3 w-3" />
-                                      {customerIssues[idx]}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              {item.linkedToServiceScope && item.linkedToServiceScope.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {item.linkedToServiceScope.map((idx, i) => (
-                                    <span
-                                      key={`ss-${i}`}
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200"
-                                    >
-                                      <FileText className="h-3 w-3" />
-                                      {serviceItems[idx]}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              {item.linkedToTechnicalDiagnosis && item.linkedToTechnicalDiagnosis.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {item.linkedToTechnicalDiagnosis.map((idx, i) => (
-                                    <span
-                                      key={`td-${i}`}
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200"
-                                    >
-                                      <Scan className="h-3 w-3" />
-                                      {diagnosisItems[idx]}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="mt-4 p-3 bg-graphite-800/5 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Estimated Cost for this task:</span>
-                            <span className="text-lg font-bold text-graphite-700">₹{itemCost}</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={onSaveAsDraft}
-          disabled={isLoading || !selectedCustomer || !selectedVehicle}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="h-4 w-4" />
-          <span className="hidden sm:inline">Save as Draft</span>
-          <span className="sm:hidden">Save Draft</span>
-        </button>
-        <button
-          type="button"
-          onClick={onNextTab}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
-        >
-          <span className="hidden sm:inline">Next: Labor & Parts</span>
-          <span className="sm:hidden">Next</span>
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Template Linking Modal */}
-      {pendingTemplate && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Link Template Task</h3>
-                <button
-                  type="button"
-                  onClick={cancelTemplateLink}
-                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="font-medium text-gray-900">{pendingTemplate.name}</p>
-                <p className="text-sm text-gray-600 mt-1">{pendingTemplate.description}</p>
-                <div className="flex items-center gap-3 mt-2 text-sm">
-                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
-                    {pendingTemplate.category}
-                  </span>
-                  <span className="text-gray-600">
-                    {calculateTaskTime(pendingTemplate)} min
-                  </span>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Link this task to <span className="text-status-error">*</span>
-                </label>
-                <p className="text-xs text-gray-500 mb-3">Select at least one item from the categories below</p>
-
-                {/* Customer Reported Issues */}
-                {customerIssues.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Customer Reported Issues
-                    </p>
-                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                      {customerIssues.map((issue, index) => (
-                        <label
-                          key={index}
-                          className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={templateLinks.customerIssues.includes(index)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setTemplateLinks(prev => ({
-                                  ...prev,
-                                  customerIssues: [...prev.customerIssues, index]
-                                }))
-                              } else {
-                                setTemplateLinks(prev => ({
-                                  ...prev,
-                                  customerIssues: prev.customerIssues.filter(i => i !== index)
-                                }))
-                              }
-                            }}
-                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
-                          />
-                          <span className="text-sm text-gray-700 flex-1">{issue}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Service Scope Items */}
-                {serviceItems.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                      <FileText className="h-3 w-3" />
-                      Service Scope Items
-                    </p>
-                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                      {serviceItems.map((item, index) => (
-                        <label
-                          key={index}
-                          className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={templateLinks.serviceScope.includes(index)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setTemplateLinks(prev => ({
-                                  ...prev,
-                                  serviceScope: [...prev.serviceScope, index]
-                                }))
-                              } else {
-                                setTemplateLinks(prev => ({
-                                  ...prev,
-                                  serviceScope: prev.serviceScope.filter(i => i !== index)
-                                }))
-                              }
-                            }}
-                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
-                          />
-                          <span className="text-sm text-gray-700 flex-1">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Technical Diagnosis Items */}
-                {diagnosisItems.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                      <Scan className="h-3 w-3" />
-                      Technical Diagnosis Items
-                    </p>
-                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                      {diagnosisItems.map((item, index) => (
-                        <label
-                          key={index}
-                          className="flex items-start gap-2 p-2 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={templateLinks.technicalDiagnosis.includes(index)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setTemplateLinks(prev => ({
-                                  ...prev,
-                                  technicalDiagnosis: [...prev.technicalDiagnosis, index]
-                                }))
-                              } else {
-                                setTemplateLinks(prev => ({
-                                  ...prev,
-                                  technicalDiagnosis: prev.technicalDiagnosis.filter(i => i !== index)
-                                }))
-                              }
-                            }}
-                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-graphite-700 focus:ring-graphite-700"
-                          />
-                          <span className="text-sm text-gray-700 flex-1">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {customerIssues.length === 0 && serviceItems.length === 0 && diagnosisItems.length === 0 && (
-                  <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                    <p className="text-sm text-gray-500">No items available from previous pages</p>
-                    <p className="text-xs text-gray-400 mt-1">Please add items in the Details tab first</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Link status */}
-              {(
-                templateLinks.customerIssues.length +
-                templateLinks.serviceScope.length +
-                templateLinks.technicalDiagnosis.length
-              ) > 0 && (
-                <div className="mb-4 flex items-center gap-1.5 text-xs text-gray-600">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                  <span>
-                    Linked to {(
-                      templateLinks.customerIssues.length +
-                      templateLinks.serviceScope.length +
-                      templateLinks.technicalDiagnosis.length
-                    )} item(s)
-                  </span>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={cancelTemplateLink}
-                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmAddTemplate}
-                  disabled={
-                    templateLinks.customerIssues.length +
-                    templateLinks.serviceScope.length +
-                    templateLinks.technicalDiagnosis.length ===
-                    0
-                  }
-                  className="flex-1 px-4 py-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Add Task
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </motion.div>
-  )
-}
-
-// ============================================================================
-// TAB: LABOR & PARTS
+// NOTE: TabTasks component moved to /app/job-cards/components/tasks/TabTasks.tsx
 // ============================================================================
 
 interface TabLaborPartsProps {
@@ -5162,7 +3621,6 @@ interface TabLaborPartsProps {
   }
   onPreviousTab: () => void
   onNextTab: () => void
-  onSaveAsDraft: () => void
   isLoading: boolean
   selectedCustomer: CustomerData | null
   selectedVehicle: VehicleData | null
@@ -5175,7 +3633,6 @@ function TabLaborParts({
   calculateEstimatedCosts,
   onPreviousTab,
   onNextTab,
-  onSaveAsDraft,
   isLoading,
   selectedCustomer,
   selectedVehicle,
@@ -5459,16 +3916,6 @@ function TabLaborParts({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onSaveAsDraft}
-          disabled={isLoading || !selectedCustomer || !selectedVehicle}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="h-4 w-4" />
-          <span className="hidden sm:inline">Save as Draft</span>
-          <span className="sm:hidden">Save Draft</span>
-        </button>
-        <button
-          type="button"
           onClick={onNextTab}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
         >
@@ -5497,7 +3944,6 @@ function TabScheduling({
   setTechnicianNotes,
   onPreviousTab,
   onNextTab,
-  onSaveAsDraft,
   isLoading,
   selectedCustomer,
   selectedVehicle,
@@ -5516,7 +3962,6 @@ function TabScheduling({
   setTechnicianNotes: (value: string) => void
   onPreviousTab: () => void
   onNextTab: () => void
-  onSaveAsDraft: () => void
   isLoading: boolean
   selectedCustomer: CustomerData | null
   selectedVehicle: VehicleData | null
@@ -5647,16 +4092,6 @@ function TabScheduling({
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          onClick={onSaveAsDraft}
-          disabled={isLoading || !selectedCustomer || !selectedVehicle}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="h-4 w-4" />
-          <span className="hidden sm:inline">Save as Draft</span>
-          <span className="sm:hidden">Save Draft</span>
-        </button>
-        <button
-          type="button"
           onClick={onNextTab}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 transition-all"
         >
@@ -5686,7 +4121,6 @@ function TabReview({
   employees,
   currentMileage,
   onPreviousTab,
-  onSubmit,
   isLoading,
   success,
   tabError,
@@ -5710,7 +4144,6 @@ function TabReview({
   employees: EmployeeData[]
   currentMileage: string
   onPreviousTab: () => void
-  onSubmit: (e: React.FormEvent, saveAsDraft: boolean) => void
   isLoading: boolean
   success: boolean
   tabError?: string
@@ -5730,7 +4163,7 @@ function TabReview({
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3 }}
     >
-      <form onSubmit={(e) => onSubmit(e, false)} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         <div className="flex items-center gap-2 mb-6">
           <div className="h-8 w-1 bg-graphite-700 rounded-full" />
           <h2 className="text-xl font-semibold text-graphite-900">Review & Create</h2>
@@ -6024,18 +4457,6 @@ function TabReview({
 
         {/* Form Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t-2 border-gray-200">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            type="button"
-            onClick={(e) => onSubmit(e as React.FormEvent, true)}
-            disabled={isLoading || success}
-            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            <span className="hidden sm:inline">Save as Draft</span>
-            <span className="sm:hidden">Save Draft</span>
-          </motion.button>
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}

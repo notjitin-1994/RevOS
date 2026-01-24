@@ -7,21 +7,15 @@ import { KanbanCard } from './KanbanCard'
 import { useJobCardStore } from '../../lib/stores/job-card-store'
 import { groupJobCardsByPriority, groupJobCardsByMechanic, getSwimlaneLabel, sortSwimlaneGroups, getSwimlaneStats } from '../../lib/utils/swimlane-utils'
 import type { JobCardViewData } from '../../types/job-card-view.types'
+import type { KanbanColumnConfig, KanbanJobCard } from '../../types/kanban.types'
 
 interface KanbanSwimlaneProps {
   jobCards: JobCardViewData[]
-  columns: Array<{
-    id: string
-    title: string
-    status: string
-    color: string
-    bgColor: string
-    borderColor: string
-  }>
+  columns: KanbanColumnConfig[]
 }
 
 export function KanbanSwimlane({ jobCards, columns }: KanbanSwimlaneProps) {
-  const { swimlaneType } = useJobCardStore()
+  const { swimlaneType, collapsedColumns, toggleColumnCollapse } = useJobCardStore()
 
   // Group job cards by swimlane type
   const groupedSwimlanes = useMemo(() => {
@@ -42,6 +36,59 @@ export function KanbanSwimlane({ jobCards, columns }: KanbanSwimlaneProps) {
     return null
   }, [jobCards, swimlaneType])
 
+  // Transform JobCardViewData to KanbanJobCard for the KanbanCard component
+  const transformToKanbanCard = (jobCard: JobCardViewData): KanbanJobCard => ({
+    id: jobCard.id,
+    garageId: jobCard.garageId,
+    jobCardNumber: jobCard.jobCardNumber,
+    customerId: jobCard.customerId,
+    customerName: jobCard.customerName,
+    customerPhone: jobCard.customerPhone,
+    customerEmail: jobCard.customerEmail,
+    vehicleId: jobCard.vehicleId,
+    vehicleMake: jobCard.vehicleMake,
+    vehicleModel: jobCard.vehicleModel,
+    vehicleYear: jobCard.vehicleYear,
+    vehicleLicensePlate: jobCard.vehicleLicensePlate,
+    vehicleVin: jobCard.vehicleVin,
+    currentMileage: jobCard.currentMileage,
+    status: jobCard.status as any,
+    priority: jobCard.priority as any,
+    jobType: jobCard.jobType as any,
+    customerComplaint: jobCard.customerComplaint || '',
+    workRequested: jobCard.workRequested || '',
+    customerNotes: jobCard.customerNotes,
+    technicianNotes: jobCard.internalNotes,
+    serviceAdvisorNotes: null,
+    qualityCheckNotes: null,
+    promisedDate: jobCard.promisedDate,
+    promisedTime: jobCard.promisedTime,
+    actualStartDate: null,
+    actualCompletionDate: jobCard.actualCompletionDate,
+    bayAssigned: null,
+    estimatedLaborCost: jobCard.laborCost,
+    estimatedPartsCost: jobCard.partsCost,
+    actualLaborCost: 0,
+    actualPartsCost: 0,
+    discountAmount: 0,
+    taxAmount: 0,
+    finalAmount: jobCard.totalCost,
+    paymentStatus: 'pending' as any,
+    serviceAdvisorId: '',
+    leadMechanicId: jobCard.leadMechanicId,
+    qualityChecked: false,
+    qualityCheckedBy: null,
+    customerRating: null,
+    totalChecklistItems: jobCard.totalChecklistItems,
+    completedChecklistItems: jobCard.completedChecklistItems,
+    progressPercentage: jobCard.progressPercentage,
+    attachmentsCount: 0,
+    commentsCount: 0,
+    createdAt: jobCard.createdAt,
+    updatedAt: jobCard.updatedAt,
+    createdBy: '',
+  })
+
   // If no swimlane, render standard kanban board
   if (swimlaneType === 'none' || !groupedSwimlanes) {
     return (
@@ -51,32 +98,16 @@ export function KanbanSwimlane({ jobCards, columns }: KanbanSwimlaneProps) {
 
           return (
             <KanbanColumn
-              key={column.id}
-              id={column.id}
-              title={column.title}
-              status={column.status}
-              color={column.color}
-              bgColor={column.bgColor}
-              borderColor={column.borderColor}
+              key={column.status}
+              config={column}
               count={columnCards.length}
-              wipLimit={column.status === 'in_progress' ? 5 : column.status === 'parts_waiting' || column.status === 'quality_check' ? 3 : undefined}
+              isCollapsed={collapsedColumns[column.status]}
+              onToggleCollapse={() => toggleColumnCollapse(column.status)}
             >
               {columnCards.map((jobCard) => (
                 <KanbanCard
                   key={jobCard.id}
-                  id={jobCard.id}
-                  jobCardNumber={jobCard.jobCardNumber}
-                  status={jobCard.status}
-                  priority={jobCard.priority}
-                  createdAt={jobCard.createdAt}
-                  customerName={jobCard.customerName}
-                  customerPhone={jobCard.customerPhone}
-                  vehicleMake={jobCard.vehicleMake}
-                  vehicleModel={jobCard.vehicleModel}
-                  vehicleYear={jobCard.vehicleYear}
-                  vehicleLicensePlate={jobCard.vehicleLicensePlate}
-                  leadMechanicId={jobCard.leadMechanicId}
-                  promisedDate={jobCard.promisedDate}
+                  card={transformToKanbanCard(jobCard)}
                 />
               ))}
             </KanbanColumn>
@@ -131,32 +162,16 @@ export function KanbanSwimlane({ jobCards, columns }: KanbanSwimlaneProps) {
 
                   return (
                     <KanbanColumn
-                      key={`${group}-${column.id}`}
-                      id={column.id}
-                      title={column.title}
-                      status={column.status}
-                      color={column.color}
-                      bgColor={column.bgColor}
-                      borderColor={column.borderColor}
+                      key={`${group}-${column.status}`}
+                      config={column}
                       count={columnCards.length}
-                      wipLimit={column.status === 'in_progress' ? 5 : column.status === 'parts_waiting' || column.status === 'quality_check' ? 3 : undefined}
+                      isCollapsed={collapsedColumns[column.status]}
+                      onToggleCollapse={() => toggleColumnCollapse(column.status)}
                     >
                       {columnCards.map((jobCard) => (
                         <KanbanCard
                           key={jobCard.id}
-                          id={jobCard.id}
-                          jobCardNumber={jobCard.jobCardNumber}
-                          status={jobCard.status}
-                          priority={jobCard.priority}
-                          createdAt={jobCard.createdAt}
-                          customerName={jobCard.customerName}
-                          customerPhone={jobCard.customerPhone}
-                          vehicleMake={jobCard.vehicleMake}
-                          vehicleModel={jobCard.vehicleModel}
-                          vehicleYear={jobCard.vehicleYear}
-                          vehicleLicensePlate={jobCard.vehicleLicensePlate}
-                          leadMechanicId={jobCard.leadMechanicId}
-                          promisedDate={jobCard.promisedDate}
+                          card={transformToKanbanCard(jobCard)}
                         />
                       ))}
                     </KanbanColumn>
@@ -170,3 +185,4 @@ export function KanbanSwimlane({ jobCards, columns }: KanbanSwimlaneProps) {
     </div>
   )
 }
+

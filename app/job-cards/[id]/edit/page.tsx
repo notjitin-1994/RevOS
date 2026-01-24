@@ -1,16 +1,10 @@
 'use client'
 
 /**
- * Job Card Detail Page - COMPREHENSIVE VERSION
+ * Edit Job Card Page - Detail Page Replica
  *
- * Displays ALL available data from the database:
- * - Job card parts with full pricing, quantities, core charges
- * - Status history timeline
- * - Parts transactions log
- * - Extended customer information
- * - Extended vehicle information
- * - Technical diagnosis
- * - Full staff details
+ * Visual replica of the job card detail page.
+ * Displays job card information in a clean, organized layout.
  */
 
 import React, { useState, useCallback, useEffect } from 'react'
@@ -18,7 +12,6 @@ import { useRouter, useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
 
 // ============================================================================
 // TYPES & INTERFACES - COMPREHENSIVE
@@ -65,7 +58,6 @@ interface ChecklistItem {
   technicalDiagnosis: string | null
 }
 
-// COMPREHENSIVE PART INTERFACE - All fields from job_card_parts table
 interface JobCardPart {
   id: string
   jobCardId: string
@@ -97,7 +89,6 @@ interface JobCardPart {
   updatedAt: string
 }
 
-// STATUS HISTORY INTERFACE
 interface StatusHistory {
   id: string
   jobCardId: string
@@ -109,7 +100,6 @@ interface StatusHistory {
   timestamp: string
 }
 
-// PARTS TRANSACTION INTERFACE
 interface PartsTransaction {
   id: string
   jobCardId: string
@@ -124,7 +114,6 @@ interface PartsTransaction {
   createdAt: string
 }
 
-// COMPREHENSIVE EMPLOYEE INTERFACE
 interface Employee {
   id: string
   firstName: string
@@ -138,7 +127,6 @@ interface Employee {
   avatar?: string
 }
 
-// COMPREHENSIVE CUSTOMER INTERFACE
 interface Customer {
   id: string
   firstName: string
@@ -156,7 +144,6 @@ interface Customer {
   notes?: string | null
 }
 
-// COMPREHENSIVE VEHICLE INTERFACE
 interface Vehicle {
   id: string
   make: string
@@ -215,41 +202,26 @@ interface TimeEntry {
 }
 
 interface JobCardDetail {
-  // Core Identity
   id: string
   garageId: string
   jobCardNumber: string
-
-  // Customer & Vehicle - FULL DETAILS
   customer: Customer
   vehicle: Vehicle
-
-  // Job Details
   status: JobCardStatus
   priority: Priority
   jobType: string
-
-  // Customer Inputs
   customerComplaint: string | null
   workRequested: string | null
   customerNotes: string | null
-
-  // Internal Notes
   technicianNotes: string | null
   serviceAdvisorNotes: string | null
   qualityCheckNotes: string | null
-
-  // Technical Diagnosis - Previously missing
   technicalDiagnosis: string | null
-
-  // Scheduling
   promisedDate: string | null
   promisedTime: string | null
   actualStartDate: string | null
   actualCompletionDate: string | null
   bayAssigned: string | null
-
-  // Financials
   estimatedLaborCost: number
   estimatedPartsCost: number
   actualLaborCost: number
@@ -258,31 +230,23 @@ interface JobCardDetail {
   taxAmount: number
   finalAmount: number
   paymentStatus: PaymentStatus
-
-  // Staffing - FULL DETAILS
   serviceAdvisorId: string | null
   leadMechanicId: string | null
   serviceAdvisor?: Employee
   leadMechanic?: Employee
-
-  // Quality
   qualityChecked: boolean
   qualityCheckedBy: string | null
   customerRating: number | null
-
-  // Metadata
   createdAt: string
   updatedAt: string
   createdBy: string
-
-  // Related Data
   checklistItems: ChecklistItem[]
-  parts: JobCardPart[] // FULLY IMPLEMENTED
+  parts: JobCardPart[]
   attachments: JobCardAttachment[]
   comments: JobCardComment[]
   timeEntries: TimeEntry[]
-  statusHistory: StatusHistory[] // Previously missing
-  partsTransactions: PartsTransaction[] // Previously missing
+  statusHistory: StatusHistory[]
+  partsTransactions: PartsTransaction[]
 }
 
 // ============================================================================
@@ -340,6 +304,7 @@ import {
   Star,
   ThumbsUp,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
 
 // ============================================================================
@@ -446,7 +411,7 @@ function getStatusConfig(status: JobCardStatus) {
     ready: {
       label: 'Ready',
       classes: 'bg-teal-50 text-teal-700 border-teal-200',
-      icon: () => <CheckCircle2 className="h-3 w-3" />,
+      icon: () => <CheckCircle2 className="h-5 w-5" />,
     },
     delivered: {
       label: 'Delivered',
@@ -532,7 +497,7 @@ async function fetchJobCardDetail(id: string): Promise<JobCardDetail> {
 // MAIN COMPONENT
 // ============================================================================
 
-export default function JobCardDetailPage() {
+export default function EditJobCardPage() {
   const router = useRouter()
   const params = useParams()
   const jobCardId = params.id as string
@@ -541,10 +506,10 @@ export default function JobCardDetailPage() {
   const [activeTab, setActiveTab] = useState<'tasks' | 'parts' | 'timeline' | 'transactions' | 'attachments' | 'comments'>('tasks')
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['customer', 'vehicle', 'schedule', 'staffing', 'diagnosis'])
+    new Set(['customer', 'vehicle', 'diagnosis', 'staffing'])
   )
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
+  const [jobCardData, setJobCardData] = useState<JobCardDetail | null>(null)
 
   // Fetch job card data
   const {
@@ -558,6 +523,13 @@ export default function JobCardDetailPage() {
     enabled: !!jobCardId,
     staleTime: 0,
   })
+
+  // Update local state when data loads
+  useEffect(() => {
+    if (jobCard) {
+      setJobCardData(jobCard)
+    }
+  }, [jobCard])
 
   // Toggle handlers
   const toggleTask = useCallback((taskId: string) => {
@@ -585,12 +557,12 @@ export default function JobCardDetailPage() {
   }, [])
 
   // Calculate derived data
-  const totalTasks = jobCard?.checklistItems.length || 0
-  const completedTasks = jobCard?.checklistItems.filter(t => t.status === 'completed').length || 0
+  const totalTasks = jobCardData?.checklistItems.length || 0
+  const completedTasks = jobCardData?.checklistItems.filter(t => t.status === 'completed').length || 0
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   // Filter and search
-  const filteredChecklistItems = jobCard?.checklistItems.filter(item => {
+  const filteredChecklistItems = jobCardData?.checklistItems.filter(item => {
     const matchesSearch = !searchQuery ||
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -621,7 +593,7 @@ export default function JobCardDetailPage() {
   }
 
   // Error state
-  if (error || !jobCard) {
+  if (error || !jobCardData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#ecf0f5] p-4">
         <motion.div
@@ -680,13 +652,13 @@ export default function JobCardDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-xl md:text-2xl font-display font-bold text-gray-900">
-                  {jobCard.jobCardNumber}
+                  {jobCardData.jobCardNumber}
                 </h1>
-                <StatusBadge status={jobCard.status} size="md" />
-                <PriorityBadge priority={jobCard.priority} size="md" />
+                <StatusBadge status={jobCardData.status} />
+                <PriorityBadge priority={jobCardData.priority} />
               </div>
               <p className="text-sm text-gray-600 mt-0.5 truncate">
-                {jobCard.vehicle.year} {jobCard.vehicle.make} {jobCard.vehicle.model} • {jobCard.customer.firstName} {jobCard.customer.lastName}
+                {jobCardData.vehicle.year} {jobCardData.vehicle.make} {jobCardData.vehicle.model} • {jobCardData.customer.firstName} {jobCardData.customer.lastName}
               </p>
             </div>
 
@@ -695,15 +667,6 @@ export default function JobCardDetailPage() {
                 <Printer className="h-4 w-4" />
                 <span>Print</span>
               </button>
-              {jobCard.status === 'draft' && (
-                <button
-                  onClick={() => router.push(`/job-cards/create?editJobCardId=${jobCard.id}`)}
-                  className="h-11 px-4 flex items-center gap-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 active:scale-[0.98] transition-all"
-                >
-                  <Edit className="h-4 w-4" />
-                  <span>Continue Draft</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -736,7 +699,7 @@ export default function JobCardDetailPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Parts</p>
-                <p className="text-2xl font-display font-bold text-gray-900">{jobCard.parts.length}</p>
+                <p className="text-2xl font-display font-bold text-gray-900">{jobCardData.parts.length}</p>
               </div>
             </div>
           </div>
@@ -750,7 +713,7 @@ export default function JobCardDetailPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Total Time</p>
                 <p className="text-2xl font-display font-bold text-gray-900">
                   {formatDuration(
-                    jobCard.checklistItems.reduce((acc, item) => acc + (item.actualMinutes || 0), 0)
+                    jobCardData.checklistItems.reduce((acc, item) => acc + (item.actualMinutes || 0), 0)
                   )}
                 </p>
               </div>
@@ -765,7 +728,7 @@ export default function JobCardDetailPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Total</p>
                 <p className="text-2xl font-display font-bold text-gray-900 font-mono">
-                  {formatCurrency(jobCard.finalAmount || jobCard.estimatedLaborCost + jobCard.estimatedPartsCost)}
+                  {formatCurrency(jobCardData.finalAmount || jobCardData.estimatedLaborCost + jobCardData.estimatedPartsCost)}
                 </p>
               </div>
             </div>
@@ -793,7 +756,7 @@ export default function JobCardDetailPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-display font-bold text-gray-900">
-                      {jobCard.customer.firstName} {jobCard.customer.lastName}
+                      {jobCardData.customer.firstName} {jobCardData.customer.lastName}
                     </h3>
                     <p className="text-sm text-gray-600">Customer Information</p>
                   </div>
@@ -818,49 +781,23 @@ export default function JobCardDetailPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex items-center gap-3">
                           <Phone className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                          <a
-                            href={`tel:${jobCard.customer.phoneNumber}`}
-                            className="text-sm font-mono text-gray-900 font-semibold hover:text-graphite-700"
-                          >
-                            {jobCard.customer.phoneNumber}
-                          </a>
+                          <span className="text-sm font-mono text-gray-900 font-semibold">{jobCardData.customer.phoneNumber}</span>
                         </div>
-                        {jobCard.customer.alternatePhone && (
-                          <div className="flex items-center gap-3">
-                            <Phone className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                            <a
-                              href={`tel:${jobCard.customer.alternatePhone}`}
-                              className="text-sm font-mono text-gray-900 font-semibold hover:text-graphite-700"
-                            >
-                              {jobCard.customer.alternatePhone} (Alt)
-                            </a>
-                          </div>
-                        )}
-                        {jobCard.customer.email && (
+                        {jobCardData.customer.email && (
                           <div className="flex items-center gap-3">
                             <Mail className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                            <a
-                              href={`mailto:${jobCard.customer.email}`}
-                              className="text-sm text-gray-900 font-semibold hover:text-graphite-700 truncate"
-                            >
-                              {jobCard.customer.email}
-                            </a>
+                            <span className="text-sm text-gray-900 font-semibold">{jobCardData.customer.email}</span>
                           </div>
                         )}
-                        {jobCard.customer.address && (
+                        {jobCardData.customer.address && (
                           <div className="flex items-start gap-3 md:col-span-2">
                             <MapPin className="h-4 w-4 text-gray-600 flex-shrink-0 mt-0.5" />
                             <span className="text-sm text-gray-900">
-                              {jobCard.customer.address}
-                              {jobCard.customer.city && `, ${jobCard.customer.city}`}
-                              {jobCard.customer.state && `, ${jobCard.customer.state}`}
-                              {jobCard.customer.zipCode && ` ${jobCard.customer.zipCode}`}
+                              {jobCardData.customer.address}
+                              {jobCardData.customer.city && `, ${jobCardData.customer.city}`}
+                              {jobCardData.customer.state && `, ${jobCardData.customer.state}`}
+                              {jobCardData.customer.zipCode && ` ${jobCardData.customer.zipCode}`}
                             </span>
-                          </div>
-                        )}
-                        {jobCard.customer.customerSince && (
-                          <div className="md:col-span-2">
-                            <p className="text-xs text-gray-600">Customer since {formatDate(jobCard.customer.customerSince)}</p>
                           </div>
                         )}
                       </div>
@@ -887,9 +824,9 @@ export default function JobCardDetailPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-display font-bold text-gray-900">
-                      {jobCard.vehicle.year} {jobCard.vehicle.make} {jobCard.vehicle.model}
+                      {jobCardData.vehicle.year} {jobCardData.vehicle.make} {jobCardData.vehicle.model}
                     </h3>
-                    <p className="text-sm font-mono text-gray-600">{jobCard.vehicle.licensePlate}</p>
+                    <p className="text-sm font-mono text-gray-600">{jobCardData.vehicle.licensePlate}</p>
                   </div>
                   {expandedSections.has('vehicle') ? (
                     <ChevronUp className="h-5 w-5 text-gray-600" />
@@ -910,48 +847,36 @@ export default function JobCardDetailPage() {
                   >
                     <div className="p-6">
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {jobCard.vehicle.vin && (
+                        {jobCardData.vehicle.vin && (
                           <div className="col-span-2">
                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">VIN</p>
-                            <p className="text-sm font-mono text-gray-900 tracking-wide">{jobCard.vehicle.vin}</p>
+                            <p className="text-sm font-mono text-gray-900 tracking-wide">{jobCardData.vehicle.vin}</p>
                           </div>
                         )}
-                        {jobCard.vehicle.currentMileage && (
+                        {jobCardData.vehicle.currentMileage && (
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Mileage</p>
                             <p className="text-sm font-mono text-gray-900">
-                              {jobCard.vehicle.currentMileage.toLocaleString()} km
+                              {jobCardData.vehicle.currentMileage.toLocaleString()} km
                             </p>
                           </div>
                         )}
-                        {jobCard.vehicle.color && (
+                        {jobCardData.vehicle.color && (
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Color</p>
-                            <p className="text-sm text-gray-900">{jobCard.vehicle.color}</p>
+                            <p className="text-sm text-gray-900">{jobCardData.vehicle.color}</p>
                           </div>
                         )}
-                        {jobCard.vehicle.fuelType && (
+                        {jobCardData.vehicle.fuelType && (
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Fuel Type</p>
-                            <p className="text-sm text-gray-900">{jobCard.vehicle.fuelType}</p>
+                            <p className="text-sm text-gray-900">{jobCardData.vehicle.fuelType}</p>
                           </div>
                         )}
-                        {jobCard.vehicle.transmission && (
+                        {jobCardData.vehicle.transmission && (
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Transmission</p>
-                            <p className="text-sm text-gray-900">{jobCard.vehicle.transmission}</p>
-                          </div>
-                        )}
-                        {jobCard.vehicle.engineNumber && (
-                          <div className="col-span-2">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Engine Number</p>
-                            <p className="text-sm font-mono text-gray-900">{jobCard.vehicle.engineNumber}</p>
-                          </div>
-                        )}
-                        {jobCard.vehicle.lastServiceDate && (
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Last Service</p>
-                            <p className="text-sm text-gray-900">{formatDate(jobCard.vehicle.lastServiceDate)}</p>
+                            <p className="text-sm text-gray-900">{jobCardData.vehicle.transmission}</p>
                           </div>
                         )}
                       </div>
@@ -961,8 +886,8 @@ export default function JobCardDetailPage() {
               </AnimatePresence>
             </motion.div>
 
-            {/* Technical Diagnosis - Previously Missing */}
-            {jobCard.technicalDiagnosis && (
+            {/* Technical Diagnosis */}
+            {jobCardData.technicalDiagnosis && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -998,9 +923,7 @@ export default function JobCardDetailPage() {
                       className="overflow-hidden"
                     >
                       <div className="p-6">
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-lg p-4">
-                          {jobCard.technicalDiagnosis}
-                        </p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCardData.technicalDiagnosis}</p>
                       </div>
                     </motion.div>
                   )}
@@ -1020,11 +943,11 @@ export default function JobCardDetailPage() {
                 <nav className="flex overflow-x-auto scrollbar-hide" role="tablist">
                   {[
                     { id: 'tasks' as const, label: 'Tasks', icon: Wrench, count: totalTasks },
-                    { id: 'parts' as const, label: 'Parts', icon: Package, count: jobCard.parts.length },
-                    { id: 'timeline' as const, label: 'Timeline', icon: History, count: jobCard.statusHistory.length },
-                    { id: 'transactions' as const, label: 'Transactions', icon: Activity, count: jobCard.partsTransactions.length },
-                    { id: 'attachments' as const, label: 'Attachments', icon: Paperclip, count: jobCard.attachments.length },
-                    { id: 'comments' as const, label: 'Comments', icon: MessageSquare, count: jobCard.comments.length },
+                    { id: 'parts' as const, label: 'Parts', icon: Package, count: jobCardData.parts.length },
+                    { id: 'timeline' as const, label: 'Timeline', icon: History, count: jobCardData.statusHistory.length },
+                    { id: 'transactions' as const, label: 'Transactions', icon: Activity, count: jobCardData.partsTransactions.length },
+                    { id: 'attachments' as const, label: 'Attachments', icon: Paperclip, count: jobCardData.attachments.length },
+                    { id: 'comments' as const, label: 'Comments', icon: MessageSquare, count: jobCardData.comments.length },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -1083,29 +1006,29 @@ export default function JobCardDetailPage() {
                   </div>
                 )}
 
-                {/* Parts Tab - FULLY IMPLEMENTED */}
+                {/* Parts Tab */}
                 {activeTab === 'parts' && (
-                  <PartsSection parts={jobCard.parts} jobCardId={jobCardId} />
+                  <PartsSection parts={jobCardData.parts} jobCardId={jobCardId} />
                 )}
 
-                {/* Timeline Tab - Status History */}
+                {/* Timeline Tab */}
                 {activeTab === 'timeline' && (
-                  <TimelineSection statusHistory={jobCard.statusHistory} />
+                  <TimelineSection statusHistory={jobCardData.statusHistory} />
                 )}
 
-                {/* Transactions Tab - Parts Transactions */}
+                {/* Transactions Tab */}
                 {activeTab === 'transactions' && (
-                  <TransactionsSection transactions={jobCard.partsTransactions} />
+                  <TransactionsSection transactions={jobCardData.partsTransactions} />
                 )}
 
                 {/* Attachments Tab */}
                 {activeTab === 'attachments' && (
-                  <AttachmentsSection attachments={jobCard.attachments} jobCardId={jobCardId} />
+                  <AttachmentsSection attachments={jobCardData.attachments} jobCardId={jobCardId} />
                 )}
 
                 {/* Comments Tab */}
                 {activeTab === 'comments' && (
-                  <CommentsSection comments={jobCard.comments} jobCardId={jobCardId} />
+                  <CommentsSection comments={jobCardData.comments} jobCardId={jobCardId} />
                 )}
               </div>
             </motion.div>
@@ -1113,7 +1036,7 @@ export default function JobCardDetailPage() {
 
           {/* RIGHT COLUMN */}
           <div className="space-y-6">
-            {/* Staffing Card - Full Details */}
+            {/* Staffing Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1149,13 +1072,13 @@ export default function JobCardDetailPage() {
                     className="overflow-hidden"
                   >
                     <div className="p-4 space-y-3">
-                      {jobCard.serviceAdvisor && (
-                        <EmployeeCard employee={jobCard.serviceAdvisor} role="Service Advisor" />
+                      {jobCardData.serviceAdvisor && (
+                        <EmployeeCard employee={jobCardData.serviceAdvisor} role="Service Advisor" />
                       )}
-                      {jobCard.leadMechanic && (
-                        <EmployeeCard employee={jobCard.leadMechanic} role="Lead Mechanic" />
+                      {jobCardData.leadMechanic && (
+                        <EmployeeCard employee={jobCardData.leadMechanic} role="Lead Mechanic" />
                       )}
-                      {!jobCard.serviceAdvisor && !jobCard.leadMechanic && (
+                      {!jobCardData.serviceAdvisor && !jobCardData.leadMechanic && (
                         <p className="text-sm text-gray-600 text-center py-4">No staff assigned</p>
                       )}
                     </div>
@@ -1182,25 +1105,25 @@ export default function JobCardDetailPage() {
               </div>
 
               <div className="space-y-4">
-                <CostRow label="Labor (Est.)" value={formatCurrency(jobCard.estimatedLaborCost)} />
-                <CostRow label="Labor (Actual)" value={formatCurrency(jobCard.actualLaborCost)} />
+                <CostRow label="Labor (Est.)" value={formatCurrency(jobCardData.estimatedLaborCost)} />
+                <CostRow label="Labor (Actual)" value={formatCurrency(jobCardData.actualLaborCost)} />
                 <div className="h-px bg-white/20" />
-                <CostRow label="Parts (Est.)" value={formatCurrency(jobCard.estimatedPartsCost)} />
-                <CostRow label="Parts (Actual)" value={formatCurrency(jobCard.actualPartsCost)} />
-                {jobCard.discountAmount > 0 && (
+                <CostRow label="Parts (Est.)" value={formatCurrency(jobCardData.estimatedPartsCost)} />
+                <CostRow label="Parts (Actual)" value={formatCurrency(jobCardData.actualPartsCost)} />
+                {jobCardData.discountAmount > 0 && (
                   <>
                     <div className="h-px bg-white/20" />
-                    <CostRow label="Discount" value={`-${formatCurrency(jobCard.discountAmount)}`} />
+                    <CostRow label="Discount" value={`-${formatCurrency(jobCardData.discountAmount)}`} />
                   </>
                 )}
-                {jobCard.taxAmount > 0 && (
-                  <CostRow label="Tax" value={formatCurrency(jobCard.taxAmount)} />
+                {jobCardData.taxAmount > 0 && (
+                  <CostRow label="Tax" value={formatCurrency(jobCardData.taxAmount)} />
                 )}
                 <div className="h-px bg-white/20" />
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-300">Total</span>
                   <span className="text-xl font-display font-bold font-mono">
-                    {formatCurrency(jobCard.finalAmount)}
+                    {formatCurrency(jobCardData.finalAmount)}
                   </span>
                 </div>
 
@@ -1209,12 +1132,12 @@ export default function JobCardDetailPage() {
                     <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">Payment Status</span>
                     <span className={cn(
                       'px-3 py-1 rounded-full text-xs font-semibold',
-                      jobCard.paymentStatus === 'paid' ? 'bg-green-500/20 text-green-300' :
-                      jobCard.paymentStatus === 'partial' ? 'bg-amber-500/20 text-amber-300' :
-                      jobCard.paymentStatus === 'overdue' ? 'bg-red-500/20 text-red-300' :
+                      jobCardData.paymentStatus === 'paid' ? 'bg-green-500/20 text-green-300' :
+                      jobCardData.paymentStatus === 'partial' ? 'bg-amber-500/20 text-amber-300' :
+                      jobCardData.paymentStatus === 'overdue' ? 'bg-red-500/20 text-red-300' :
                       'bg-gray-500/20 text-gray-300'
                     )}>
-                      {jobCard.paymentStatus}
+                      {jobCardData.paymentStatus}
                     </span>
                   </div>
                 </div>
@@ -1222,7 +1145,7 @@ export default function JobCardDetailPage() {
             </motion.div>
 
             {/* Quality Check Panel */}
-            {(jobCard.qualityChecked || jobCard.customerRating) && (
+            {(jobCardData.qualityChecked || jobCardData.customerRating) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1235,7 +1158,7 @@ export default function JobCardDetailPage() {
                   </div>
                   <div>
                     <h3 className="text-base font-display font-bold text-gray-900">Quality Check</h3>
-                    {jobCard.qualityChecked && (
+                    {jobCardData.qualityChecked && (
                       <p className="text-xs text-green-600 font-semibold flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3" />
                         Passed
@@ -1244,31 +1167,26 @@ export default function JobCardDetailPage() {
                   </div>
                 </div>
 
-                {jobCard.customerRating && (
+                {jobCardData.customerRating && (
                   <div className="flex items-center gap-2 mb-3">
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={cn(
-                            'h-5 w-5',
-                            star <= jobCard.customerRating!
-                              ? 'fill-amber-500 text-amber-500'
-                              : 'text-gray-300'
-                          )}
+                          className={cn('h-5 w-5', star <= jobCardData.customerRating! ? 'fill-amber-500 text-amber-500' : 'text-gray-300')}
                         />
                       ))}
                     </div>
                     <span className="text-sm font-semibold text-gray-900">
-                      {jobCard.customerRating}/5
+                      {jobCardData.customerRating}/5
                     </span>
                   </div>
                 )}
 
-                {jobCard.qualityCheckNotes && (
+                {jobCardData.qualityCheckNotes && (
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600 mb-1">Notes</p>
-                    <p className="text-sm text-gray-900">{jobCard.qualityCheckNotes}</p>
+                    <p className="text-sm text-gray-900">{jobCardData.qualityCheckNotes}</p>
                   </div>
                 )}
               </motion.div>
@@ -1277,14 +1195,14 @@ export default function JobCardDetailPage() {
         </div>
 
         {/* Notes Section */}
-        {(jobCard.customerNotes || jobCard.technicianNotes || jobCard.serviceAdvisorNotes) && (
+        {(jobCardData.customerNotes || jobCardData.technicianNotes || jobCardData.serviceAdvisorNotes) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            {jobCard.customerNotes && (
+            {jobCardData.customerNotes && (
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -1292,11 +1210,11 @@ export default function JobCardDetailPage() {
                   </div>
                   <h4 className="text-sm font-display font-bold text-gray-900">Customer Notes</h4>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.customerNotes}</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCardData.customerNotes}</p>
               </div>
             )}
 
-            {jobCard.technicianNotes && (
+            {jobCardData.technicianNotes && (
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -1304,11 +1222,11 @@ export default function JobCardDetailPage() {
                   </div>
                   <h4 className="text-sm font-display font-bold text-gray-900">Technician Notes</h4>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.technicianNotes}</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCardData.technicianNotes}</p>
               </div>
             )}
 
-            {jobCard.serviceAdvisorNotes && (
+            {jobCardData.serviceAdvisorNotes && (
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -1316,7 +1234,7 @@ export default function JobCardDetailPage() {
                   </div>
                   <h4 className="text-sm font-display font-bold text-gray-900">Advisor Notes</h4>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.serviceAdvisorNotes}</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCardData.serviceAdvisorNotes}</p>
               </div>
             )}
           </motion.div>
@@ -1526,7 +1444,7 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
 }
 
 // ============================================================================
-// COMPREHENSIVE PARTS SECTION
+// PARTS SECTION
 // ============================================================================
 
 interface PartsSectionProps {
@@ -1541,10 +1459,6 @@ function PartsSection({ parts, jobCardId }: PartsSectionProps) {
         <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-display font-bold text-gray-900 mb-2">No Parts Added</h3>
         <p className="text-sm text-gray-600 mb-4">Parts will appear here once added to this job card</p>
-        <button className="h-11 px-6 flex items-center justify-center gap-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 active:scale-[0.98] transition-all mx-auto">
-          <Plus className="h-4 w-4" />
-          Add Part
-        </button>
       </div>
     )
   }
@@ -1688,11 +1602,6 @@ function PartsSection({ parts, jobCardId }: PartsSectionProps) {
           </tbody>
         </table>
       </div>
-
-      <button className="w-full h-11 flex items-center justify-center gap-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 active:scale-[0.98] transition-all">
-        <Plus className="h-4 w-4" />
-        Add Part
-      </button>
     </div>
   )
 }
@@ -1854,10 +1763,6 @@ function AttachmentsSection({ attachments, jobCardId }: { attachments: JobCardAt
       <Paperclip className="h-16 w-16 text-gray-400 mx-auto mb-4" />
       <h3 className="text-lg font-display font-bold text-gray-900 mb-2">Attachments</h3>
       <p className="text-sm text-gray-600 mb-4">{attachments.length} files attached</p>
-      <button className="h-11 px-6 flex items-center justify-center gap-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 active:scale-[0.98] transition-all mx-auto">
-        <UploadCloud className="h-4 w-4" />
-        Upload File
-      </button>
     </div>
   )
 }
@@ -1868,19 +1773,6 @@ function CommentsSection({ comments, jobCardId }: { comments: JobCardComment[], 
       <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
       <h3 className="text-lg font-display font-bold text-gray-900 mb-2">Comments</h3>
       <p className="text-sm text-gray-600 mb-4">{comments.length} comments</p>
-      <div className="max-w-md mx-auto">
-        <textarea
-          placeholder="Add a comment..."
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-graphite-900 focus:border-transparent resize-none"
-          rows={3}
-        />
-        <div className="flex justify-end mt-3">
-          <button className="h-11 px-6 flex items-center gap-2 bg-graphite-900 text-white font-semibold rounded-xl hover:bg-graphite-800 active:scale-[0.98] transition-all">
-            <Send className="h-4 w-4" />
-            Post Comment
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

@@ -5,7 +5,21 @@
  */
 
 import type { GanttTask, TimelineViewMode } from '../../types/timeline.types'
-import type { JobCardData } from '@/lib/supabase/job-card-queries'
+
+// Basic JobCardData type definition
+type JobCardStatus = 'draft' | 'queued' | 'in_progress' | 'parts_waiting' | 'quality_check' | 'ready' | 'delivered' | 'cancelled'
+
+type JobCardData = {
+  id: string
+  jobType: string
+  priority: string
+  status: JobCardStatus
+  promisedDate?: string
+  promisedTime?: string
+  createdAt: string
+  updatedAt: string
+  [key: string]: any // Allow other properties
+}
 
 /**
  * Get date range for a given view mode
@@ -32,12 +46,35 @@ export function getViewDateRange(viewMode: TimelineViewMode, currentDate: Date):
       break
 
     case 'month':
-      // Full month view
+      // Full month view - from 1st to last day of month
+      const originalMonth = currentDate.getMonth()
+      const originalYear = currentDate.getFullYear()
+
       start.setDate(1)
       start.setHours(0, 0, 0, 0)
+
+      // Move to next month and set to 0 to get last day of current month
       end.setMonth(end.getMonth() + 1)
-      end.setDate(0)
+      end.setDate(0) // Last day of current month
       end.setHours(23, 59, 59, 999)
+
+      // Verify calculation
+      const endMonth = end.getMonth()
+      const calculatedLastDay = end.getDate()
+
+      console.log('📅 Month view date range:', {
+        viewMode,
+        originalInput: currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        originalMonth,
+        originalYear,
+        start: start.toISOString(),
+        startDisplay: start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        end: end.toISOString(),
+        endDisplay: end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        endMonth,
+        calculatedLastDay,
+        totalDays: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+      })
       break
   }
 
@@ -97,14 +134,35 @@ export function getTimelineColumnWidth(viewMode: TimelineViewMode): number {
 
 /**
  * Calculate total timeline width
+ * Uses local calendar days, not UTC days, to avoid timezone issues
  */
 export function calculateTimelineWidth(viewMode: TimelineViewMode, startDate: Date, endDate: Date): number {
   const columnWidth = getTimelineColumnWidth(viewMode)
-  const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-  // Add 1 to include both start and end dates in the calculation
-  return (diffDays + 1) * columnWidth
+  // Calculate using local calendar dates to avoid timezone offset issues
+  const startLocal = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+  const endLocal = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
+
+  // Calculate the difference in whole local days
+  const diffTime = endLocal.getTime() - startLocal.getTime()
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
+
+  // Add 1 to include both start and end dates
+  const totalDays = diffDays + 1
+
+  console.log('📐 Timeline width calculation:', {
+    viewMode,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    startLocal: startLocal.toISOString(),
+    endLocal: endLocal.toISOString(),
+    diffDays,
+    totalDays,
+    columnWidth,
+    calculatedWidth: totalDays * columnWidth,
+  })
+
+  return totalDays * columnWidth
 }
 
 /**
