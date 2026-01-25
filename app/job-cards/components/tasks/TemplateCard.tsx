@@ -1,17 +1,21 @@
 // ============================================================================
-// Component: TemplateCard
-// Description: Displays a single job card template as a card with add button
+// Component: TemplateCard (Enhanced with Recommendations)
+// Description: Displays a single job card template as a card with add button and recommendation badges
 // ============================================================================
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import { Clock, IndianRupee, Layers, Package, Plus, Sparkles } from 'lucide-react'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Clock, IndianRupee, Layers, Package, Plus, Sparkles, TrendingUp, Check, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { JobCardTemplate, TaskCategory, TaskPriority } from '@/lib/types/template.types'
 
 interface TemplateCardProps {
   template: JobCardTemplate
   onAddToChecklist: (template: JobCardTemplate) => void
+  isRecommended?: boolean
+  recommendationReasons?: string[]
+  recommendationScore?: number
+  recommendationRank?: number
   className?: string
 }
 
@@ -61,12 +65,36 @@ function calculateTemplateCost(template: JobCardTemplate): number {
   return laborCost + partsCost
 }
 
-export function TemplateCard({ template, onAddToChecklist, className }: TemplateCardProps) {
+export function TemplateCard({
+  template,
+  onAddToChecklist,
+  isRecommended = false,
+  recommendationReasons = [],
+  recommendationScore = 0,
+  recommendationRank = 0,
+  className
+}: TemplateCardProps) {
+  const [isAdded, setIsAdded] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+
   const priorityBadge = getPriorityBadge(template.priority)
   const estimatedTime = calculateTemplateTime(template)
   const estimatedCost = calculateTemplateCost(template)
   const subtasksCount = template.subtasks?.length || 0
   const partsCount = template.parts?.length || 0
+
+  const handleAddToChecklist = () => {
+    // Add to checklist (recording is handled in TemplatesList)
+    onAddToChecklist(template)
+
+    // Show success animation
+    setIsAdded(true)
+    setShowSuccess(true)
+
+    setTimeout(() => {
+      setShowSuccess(false)
+    }, 2000)
+  }
 
   return (
     <motion.div
@@ -74,10 +102,46 @@ export function TemplateCard({ template, onAddToChecklist, className }: Template
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-graphite-700 hover:shadow-lg transition-all duration-200',
+        'relative bg-white border-2 rounded-xl p-4 transition-all duration-200 group',
+        isRecommended
+          ? 'border-brand hover:shadow-glow'
+          : 'border-gray-200 hover:border-graphite-700 hover:shadow-lg',
+        isAdded && 'ring-2 ring-green-500 ring-offset-2',
         className
       )}
     >
+      {/* Recommended Badge */}
+      {isRecommended && (
+        <div className="absolute -top-2 -right-2 z-10">
+          <div className="flex items-center gap-1 px-2.5 py-1 bg-brand rounded-full shadow-glow border-2 border-brand">
+            <Sparkles className="h-3 w-3 text-graphite-900" />
+            <span className="text-xs font-bold text-graphite-900">#{recommendationRank}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Success Overlay */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-green-500/90 rounded-xl flex items-center justify-center z-20"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="flex items-center gap-2 text-white"
+            >
+              <Check className="h-6 w-6" />
+              <span className="font-semibold">Added!</span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header: Name and Priority Badge */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
@@ -108,6 +172,24 @@ export function TemplateCard({ template, onAddToChecklist, className }: Template
           {template.category}
         </span>
       </div>
+
+      {/* Recommendation Reasons */}
+      {isRecommended && recommendationReasons.length > 0 && (
+        <div className="mb-3 p-2 bg-brand/20 rounded-lg border border-brand">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-graphite-900" />
+            <span className="text-xs font-semibold text-graphite-900">Why recommended</span>
+          </div>
+          <ul className="space-y-0.5">
+            {recommendationReasons.slice(0, 2).map((reason, idx) => (
+              <li key={idx} className="text-xs text-graphite-900 flex items-start gap-1.5">
+                <span className="text-graphite-700">•</span>
+                <span>{reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Tags */}
       {template.tags && template.tags.length > 0 && (
@@ -146,7 +228,7 @@ export function TemplateCard({ template, onAddToChecklist, className }: Template
         {subtasksCount > 0 && (
           <div className="flex items-center gap-1.5">
             <Layers className="h-4 w-4" />
-            <span className="font-medium">{subtasksCount} subtasks</span>
+            <span className="font-medium">{subtasksCount}</span>
           </div>
         )}
 
@@ -154,30 +236,53 @@ export function TemplateCard({ template, onAddToChecklist, className }: Template
         {partsCount > 0 && (
           <div className="flex items-center gap-1.5">
             <Package className="h-4 w-4" />
-            <span className="font-medium">{partsCount} parts</span>
+            <span className="font-medium">{partsCount}</span>
           </div>
         )}
       </div>
 
       {/* Add to Checklist Button */}
       <button
-        onClick={() => onAddToChecklist(template)}
+        onClick={handleAddToChecklist}
+        disabled={isAdded}
         className={cn(
           'w-full flex items-center justify-center gap-2',
-          'px-4 py-2.5 bg-graphite-900 text-white font-semibold rounded-xl',
-          'hover:bg-graphite-800 active:bg-graphite-900',
-          'transition-all duration-200'
+          'px-4 py-2.5 font-semibold rounded-xl',
+          'transition-all duration-200',
+          isRecommended
+            ? 'bg-graphite-900 text-white hover:bg-graphite-800'
+            : 'bg-graphite-900 text-white hover:bg-graphite-800',
+          isAdded && 'opacity-50 cursor-not-allowed'
         )}
       >
-        <Plus className="h-4 w-4" />
-        Add to Checklist
+        {isAdded ? (
+          <>
+            <Check className="h-4 w-4" />
+            Added
+          </>
+        ) : (
+          <>
+            <Link2 className="h-4 w-4" />
+            Connect & Add
+          </>
+        )}
       </button>
 
       {/* System Template Badge */}
       {template.is_system_template && (
         <div className="mt-3 pt-3 border-t border-gray-200">
-          <span className="text-xs text-gray-500 italic">
-            System template • Used {template.usage_count} times
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="italic">System template</span>
+            <span>Used {template.usage_count} times</span>
+          </div>
+        </div>
+      )}
+
+      {/* Recommendation Score (Debug - hidden in production) */}
+      {isRecommended && process.env.NODE_ENV === 'development' && (
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <span className="text-xs text-gray-400">
+            Score: {recommendationScore.toFixed(1)}
           </span>
         </div>
       )}

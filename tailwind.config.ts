@@ -36,6 +36,15 @@ const config: Config = {
           success: '#2DD4BF', // Teal (Never Green)
           info: '#38BDF8',
         },
+        // 2026 Design System - Neo Mint & Fresh Colors
+        neo: {
+          mint: '#00D4AA',
+          'mint-light': '#4DE6C8',
+          'mint-dark': '#00A886',
+          orange: '#FF9F43',
+          'orange-light': '#FFB976',
+          'orange-dark': '#E5852F',
+        },
       },
       fontFamily: {
         display: ['var(--font-barlow)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -67,6 +76,26 @@ const config: Config = {
           /* WebKit */
           '&::-webkit-scrollbar': {
             display: 'none',
+          },
+        },
+        '.scrollbar-thin': {
+          /* Firefox */
+          'scrollbar-width': 'thin',
+          'scrollbar-color': '#CBD5E1 transparent',
+          /* WebKit */
+          '&::-webkit-scrollbar': {
+            height: '8px',
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#CBD5E1',
+            'border-radius': '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#94A3B8',
           },
         },
         '.pb-safe': {

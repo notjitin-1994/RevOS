@@ -13,50 +13,26 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient()
 
-    // Get current user from session
-    const authHeader = request.headers.get('authorization')
-    let garageId: string | null = null
-
-    // Try to get garage_id from various sources
-    // In production, this should come from a proper JWT/session token
+    // Get garage_id from query params (this is the garage_uid in users table)
     const url = new URL(request.url)
-    const garageIdParam = url.searchParams.get('garageId')
+    const garageUid = url.searchParams.get('garageId')
 
-    if (garageIdParam) {
-      garageId = garageIdParam
-    }
-
-    if (!garageId) {
+    if (!garageUid) {
+      console.error('No garageId provided')
       return NextResponse.json(
-        { error: 'Garage ID is required' },
+        { error: 'Garage ID is required', garageId: garageUid },
         { status: 400 }
       )
     }
 
-    console.log('Fetching employees for garage ID:', garageId)
+    console.log('Fetching employees for garage_uid:', garageUid)
 
-    // Fetch employees from users table
-    // Try garage_id first, if no results, try garage_uid
-    // Filter out owner role (case-insensitive)
+    // Fetch employees from users table using garage_uid
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .or(`garage_id.eq.${garageId},garage_uid.eq.${garageId}`)
-      .not('user_role', 'in', '("Owner","owner")')
+      .eq('garage_uid', garageUid)
       .order('created_at', { ascending: false })
-
-    // Debug log to see what we got
-    console.log('Query result:', {
-      count: data?.length || 0,
-      error: error?.message,
-      sample: data?.slice(0, 3).map((d: any) => ({
-        user_uid: d.user_uid,
-        first_name: d.first_name,
-        last_name: d.last_name,
-        user_role: d.user_role,
-        garage_id: d.garage_id,
-      }))
-    })
 
     if (error) {
       console.error('Error fetching employees:', error)
@@ -86,7 +62,7 @@ export async function GET(request: Request) {
       dateOfJoining: user.date_of_joining || null,
       bloodGroup: user.blood_group || null,
       department: user.department || null,
-      role: user.user_role,
+      userRole: user.user_role,
       status: user.is_active ? 'active' : 'inactive',
       profilePicture: user.profile_picture || null,
       certifications: [],

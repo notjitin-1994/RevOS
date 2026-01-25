@@ -15,10 +15,11 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { SchedulingTab } from '@/components/scheduling/SchedulingTab'
 
 // ============================================================================
 // TYPES & INTERFACES - COMPREHENSIVE
@@ -42,7 +43,7 @@ interface ChecklistSubtask {
 
 interface ChecklistItem {
   id: string
-  name: string
+  itemName: string // Changed from 'name' to match API response and shared type
   description: string | null
   status: TaskStatus
   priority: Priority
@@ -303,9 +304,10 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
+  Circle,
+  Play,
   Wrench,
   Package,
-  DollarSign,
   FileText,
   MessageSquare,
   Paperclip,
@@ -340,13 +342,18 @@ import {
   Star,
   ThumbsUp,
   AlertTriangle,
+  IndianRupee,
 } from 'lucide-react'
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | null | undefined): string {
+  // Handle NaN, null, undefined
+  if (amount === null || amount === undefined || Number.isNaN(amount)) {
+    return '₹0.00'
+  }
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -521,6 +528,16 @@ async function fetchJobCardDetail(id: string): Promise<JobCardDetail> {
 
   const result = await response.json()
 
+  console.log('[API Response]', {
+    success: result.success,
+    hasJobCard: !!result.jobCard,
+    jobCardKeys: result.jobCard ? Object.keys(result.jobCard) : [],
+    hasChecklistItems: !!result.jobCard?.checklistItems,
+    checklistItemsCount: result.jobCard?.checklistItems?.length,
+    firstChecklistItem: result.jobCard?.checklistItems?.[0],
+    fullJobCard: result.jobCard
+  })
+
   if (!result.success || !result.jobCard) {
     throw new Error('Job card not found')
   }
@@ -538,13 +555,14 @@ export default function JobCardDetailPage() {
   const jobCardId = params.id as string
 
   // UI State
-  const [activeTab, setActiveTab] = useState<'tasks' | 'parts' | 'timeline' | 'transactions' | 'attachments' | 'comments'>('tasks')
+  const [activeTab, setActiveTab] = useState<'tasks' | 'parts' | 'schedule' | 'timeline' | 'transactions' | 'attachments' | 'comments'>('tasks')
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['customer', 'vehicle', 'schedule', 'staffing', 'diagnosis'])
+    new Set()
   )
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false)
 
   // Fetch job card data
   const {
@@ -557,7 +575,144 @@ export default function JobCardDetailPage() {
     queryFn: () => fetchJobCardDetail(jobCardId),
     enabled: !!jobCardId,
     staleTime: 0,
+    refetchOnWindowFocus: true,
   })
+
+  // Real-time subscription for job card updates
+  useEffect(() => {
+    if (!jobCardId) return
+
+    const supabase = createClient()
+
+    // Subscribe to job_cards changes
+    const jobCardChannel = supabase
+      .channel(`job-card-${jobCardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'job_cards',
+          filter: `id=eq.${jobCardId}`,
+        },
+        (payload) => {
+          console.log('[Real-time] Job card updated:', payload)
+          refetch()
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsRealtimeConnected(true)
+        }
+      })
+
+    // Subscribe to users table changes (for service advisor and lead mechanic updates)
+    const usersChannel = supabase
+      .channel(`job-card-users-${jobCardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+        },
+        (payload) => {
+          console.log('[Real-time] User updated:', payload)
+          // Only refetch if the updated user is the service advisor or lead mechanic
+          if (jobCard && (
+            payload.old.user_uid === jobCard.serviceAdvisorId ||
+            payload.old.user_uid === jobCard.leadMechanicId
+          )) {
+            refetch()
+          }
+        }
+      )
+      .subscribe()
+
+    // Subscribe to checklist items changes
+    const checklistChannel = supabase
+      .channel(`job-card-checklist-${jobCardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'job_card_checklist_items',
+          filter: `job_card_id=eq.${jobCardId}`,
+        },
+        (payload) => {
+          console.log('[Real-time] Checklist item updated:', payload)
+          refetch()
+        }
+      )
+      .subscribe()
+
+    // Subscribe to job card parts changes
+    const partsChannel = supabase
+      .channel(`job-card-parts-${jobCardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'job_card_parts',
+          filter: `job_card_id=eq.${jobCardId}`,
+        },
+        (payload) => {
+          console.log('[Real-time] Job card part updated:', payload)
+          refetch()
+        }
+      )
+      .subscribe()
+
+    // Subscribe to status history changes
+    const statusHistoryChannel = supabase
+      .channel(`job-card-status-history-${jobCardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'job_card_status_history',
+          filter: `job_card_id=eq.${jobCardId}`,
+        },
+        (payload) => {
+          console.log('[Real-time] Status history updated:', payload)
+          refetch()
+        }
+      )
+      .subscribe()
+
+    // Subscribe to parts transactions changes
+    const partsTransactionsChannel = supabase
+      .channel(`job-card-parts-transactions-${jobCardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'parts_transactions',
+          filter: `job_card_id=eq.${jobCardId}`,
+        },
+        (payload) => {
+          console.log('[Real-time] Parts transaction updated:', payload)
+          refetch()
+        }
+      )
+      .subscribe()
+
+    // Cleanup function
+    return () => {
+      console.log('[Real-time] Cleaning up subscriptions')
+      setIsRealtimeConnected(false)
+      supabase.removeChannel(jobCardChannel)
+      supabase.removeChannel(usersChannel)
+      supabase.removeChannel(checklistChannel)
+      supabase.removeChannel(partsChannel)
+      supabase.removeChannel(statusHistoryChannel)
+      supabase.removeChannel(partsTransactionsChannel)
+    }
+  }, [jobCardId, jobCard, refetch])
 
   // Toggle handlers
   const toggleTask = useCallback((taskId: string) => {
@@ -573,26 +728,62 @@ export default function JobCardDetailPage() {
   }, [])
 
   const toggleSection = useCallback((section: string) => {
+    console.log('[toggleSection] Clicking section:', section)
+    console.log('[toggleSection] Current expandedSections:', Array.from(expandedSections))
     setExpandedSections(prev => {
       const newSet = new Set(prev)
       if (newSet.has(section)) {
         newSet.delete(section)
+        console.log('[toggleSection] Removing section:', section)
       } else {
         newSet.add(section)
+        console.log('[toggleSection] Adding section:', section)
       }
+      console.log('[toggleSection] New expandedSections:', Array.from(newSet))
       return newSet
     })
-  }, [])
+  }, [expandedSections])
 
   // Calculate derived data
-  const totalTasks = jobCard?.checklistItems.length || 0
-  const completedTasks = jobCard?.checklistItems.filter(t => t.status === 'completed').length || 0
+  const totalTasks = jobCard?.checklistItems?.length || 0
+  const completedTasks = jobCard?.checklistItems?.filter(t => t.status === 'completed').length || 0
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
+  // Calculate labor cost from checklist items in real-time with null checks
+  const calculatedLaborCost = (jobCard?.checklistItems || []).reduce((sum, item) => {
+    const minutes = item?.estimatedMinutes || 0
+    const hours = minutes / 60
+    const rate = item?.laborRate || 0
+    return sum + (hours * rate)
+  }, 0)
+
+  // Calculate total estimated minutes
+  const totalEstimatedMinutes = (jobCard?.checklistItems || []).reduce((sum, item) => {
+    return sum + (item?.estimatedMinutes || 0)
+  }, 0)
+
+  // Use calculated labor cost if job card cost is 0/null
+  const displayLaborCost = jobCard?.estimatedLaborCost || calculatedLaborCost
+  const displayPartsCost = jobCard?.estimatedPartsCost || 0
+  const totalEstimatedCost = displayLaborCost + displayPartsCost
+
+  // Debug logging (remove in production)
+  console.log('[Job Card Data]', {
+    jobCardExists: !!jobCard,
+    hasChecklistItems: !!jobCard?.checklistItems,
+    checklistItemsCount: jobCard?.checklistItems?.length,
+    estimatedLaborCost: jobCard?.estimatedLaborCost,
+    calculatedLaborCost,
+    displayLaborCost,
+    totalEstimatedMinutes,
+    rawChecklistItems: jobCard?.checklistItems,
+    firstItem: jobCard?.checklistItems?.[0]
+  })
 
   // Filter and search
   const filteredChecklistItems = jobCard?.checklistItems.filter(item => {
     const matchesSearch = !searchQuery ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesSearch
   }) || []
@@ -691,6 +882,20 @@ export default function JobCardDetailPage() {
             </div>
 
             <div className="hidden md:flex items-center gap-2">
+              {/* Real-time connection indicator */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border",
+                isRealtimeConnected
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-gray-50 text-gray-600 border-gray-200"
+              )}>
+                <div className={cn(
+                  "h-2 w-2 rounded-full",
+                  isRealtimeConnected ? "bg-green-500 animate-pulse" : "bg-gray-400"
+                )} />
+                <span>{isRealtimeConnected ? "Live" : "Offline"}</span>
+              </div>
+
               <button className="h-11 px-4 flex items-center gap-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all">
                 <Printer className="h-4 w-4" />
                 <span>Print</span>
@@ -747,9 +952,12 @@ export default function JobCardDetailPage() {
                 <Timer className="h-6 w-6 text-gray-700" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Total Time</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Est. Time</p>
                 <p className="text-2xl font-display font-bold text-gray-900">
-                  {formatDuration(
+                  {formatDuration(totalEstimatedMinutes)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Actual: {formatDuration(
                     jobCard.checklistItems.reduce((acc, item) => acc + (item.actualMinutes || 0), 0)
                   )}
                 </p>
@@ -760,12 +968,12 @@ export default function JobCardDetailPage() {
           <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <DollarSign className="h-6 w-6 text-gray-700" />
+                <IndianRupee className="h-6 w-6 text-gray-700" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Total</p>
                 <p className="text-2xl font-display font-bold text-gray-900 font-mono">
-                  {formatCurrency(jobCard.finalAmount || jobCard.estimatedLaborCost + jobCard.estimatedPartsCost)}
+                  {formatCurrency(jobCard.finalAmount || totalEstimatedCost)}
                 </p>
               </div>
             </div>
@@ -1008,107 +1216,143 @@ export default function JobCardDetailPage() {
               </motion.div>
             )}
 
-            {/* TABS SECTION */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden"
-            >
-              {/* Tab Navigation */}
-              <div className="border-b-2 border-gray-200">
-                <nav className="flex overflow-x-auto scrollbar-hide" role="tablist">
-                  {[
-                    { id: 'tasks' as const, label: 'Tasks', icon: Wrench, count: totalTasks },
-                    { id: 'parts' as const, label: 'Parts', icon: Package, count: jobCard.parts.length },
-                    { id: 'timeline' as const, label: 'Timeline', icon: History, count: jobCard.statusHistory.length },
-                    { id: 'transactions' as const, label: 'Transactions', icon: Activity, count: jobCard.partsTransactions.length },
-                    { id: 'attachments' as const, label: 'Attachments', icon: Paperclip, count: jobCard.attachments.length },
-                    { id: 'comments' as const, label: 'Comments', icon: MessageSquare, count: jobCard.comments.length },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={cn(
-                        'flex items-center gap-2 px-6 py-4 font-semibold text-sm border-b-4 transition-colors whitespace-nowrap min-h-[64px]',
-                        activeTab === tab.id
-                          ? 'border-graphite-900 text-graphite-900'
-                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      )}
-                      role="tab"
-                      aria-selected={activeTab === tab.id}
-                      aria-controls={`panel-${tab.id}`}
-                    >
-                      <tab.icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
-                      {tab.count > 0 && (
-                        <span className={cn(
-                          'px-2 py-0.5 rounded-full text-xs font-semibold',
-                          activeTab === tab.id
-                            ? 'bg-graphite-100 text-graphite-900'
-                            : 'bg-gray-100 text-gray-700'
-                        )}>
-                          {tab.count}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="p-6">
-                {/* Tasks Tab */}
-                {activeTab === 'tasks' && (
-                  <div className="space-y-4">
-                    {filteredChecklistItems.map((task, index) => (
-                      <ChecklistItemCard
-                        key={task.id}
-                        task={task}
-                        index={index}
-                        isExpanded={expandedTasks.has(task.id)}
-                        onToggle={() => toggleTask(task.id)}
-                      />
-                    ))}
-
-                    {filteredChecklistItems.length === 0 && (
-                      <div className="text-center py-12">
-                        <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-display font-bold text-gray-900 mb-2">No tasks found</h3>
-                        <p className="text-sm text-gray-600">
-                          {searchQuery ? 'Try a different search term' : 'No tasks have been added yet'}
-                        </p>
+            {/* NOTES SECTION - Collapsible */}
+            <div className="flex flex-col space-y-4">
+              {/* Customer Notes */}
+              {jobCard.customerNotes && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden"
+                >
+                  <div
+                    onClick={() => toggleSection('customerNotes')}
+                    className="px-6 py-4 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:from-gray-100 transition-colors select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <MessageSquare className="h-5 w-5 text-gray-700" />
                       </div>
-                    )}
+                      <div className="flex-1">
+                        <h3 className="text-base font-display font-bold text-gray-900">Customer Notes</h3>
+                      </div>
+                      {expandedSections.has('customerNotes') ? (
+                        <ChevronUp className="h-5 w-5 text-gray-600" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-600" />
+                      )}
+                    </div>
                   </div>
-                )}
 
-                {/* Parts Tab - FULLY IMPLEMENTED */}
-                {activeTab === 'parts' && (
-                  <PartsSection parts={jobCard.parts} jobCardId={jobCardId} />
-                )}
+                  <AnimatePresence>
+                    {expandedSections.has('customerNotes') && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        exit={{ height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-6">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.customerNotes}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
 
-                {/* Timeline Tab - Status History */}
-                {activeTab === 'timeline' && (
-                  <TimelineSection statusHistory={jobCard.statusHistory} />
-                )}
+              {/* Technician Notes */}
+              {jobCard.technicianNotes && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.26 }}
+                  className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden"
+                >
+                  <div
+                    onClick={() => toggleSection('technicianNotes')}
+                    className="px-6 py-4 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:from-gray-100 transition-colors select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <Wrench className="h-5 w-5 text-gray-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-base font-display font-bold text-gray-900">Technician Notes</h3>
+                      </div>
+                      {expandedSections.has('technicianNotes') ? (
+                        <ChevronUp className="h-5 w-5 text-gray-600" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-600" />
+                      )}
+                    </div>
+                  </div>
 
-                {/* Transactions Tab - Parts Transactions */}
-                {activeTab === 'transactions' && (
-                  <TransactionsSection transactions={jobCard.partsTransactions} />
-                )}
+                  <AnimatePresence>
+                    {expandedSections.has('technicianNotes') && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        exit={{ height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-6">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.technicianNotes}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
 
-                {/* Attachments Tab */}
-                {activeTab === 'attachments' && (
-                  <AttachmentsSection attachments={jobCard.attachments} jobCardId={jobCardId} />
-                )}
+              {/* Service Advisor Notes */}
+              {jobCard.serviceAdvisorNotes && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.27 }}
+                  className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden"
+                >
+                  <div
+                    onClick={() => toggleSection('advisorNotes')}
+                    className="px-6 py-4 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:from-gray-100 transition-colors select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <User className="h-5 w-5 text-gray-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-base font-display font-bold text-gray-900">Advisor Notes</h3>
+                      </div>
+                      {expandedSections.has('advisorNotes') ? (
+                        <ChevronUp className="h-5 w-5 text-gray-600" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-600" />
+                      )}
+                    </div>
+                  </div>
 
-                {/* Comments Tab */}
-                {activeTab === 'comments' && (
-                  <CommentsSection comments={jobCard.comments} jobCardId={jobCardId} />
-                )}
-              </div>
-            </motion.div>
+                  <AnimatePresence>
+                    {expandedSections.has('advisorNotes') && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        exit={{ height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-6">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.serviceAdvisorNotes}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </div>
           </div>
 
           {/* RIGHT COLUMN */}
@@ -1173,7 +1417,7 @@ export default function JobCardDetailPage() {
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-white" />
+                  <IndianRupee className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-base font-display font-bold">Cost Summary</h3>
@@ -1182,10 +1426,10 @@ export default function JobCardDetailPage() {
               </div>
 
               <div className="space-y-4">
-                <CostRow label="Labor (Est.)" value={formatCurrency(jobCard.estimatedLaborCost)} />
+                <CostRow label="Labor (Est.)" value={formatCurrency(displayLaborCost)} />
                 <CostRow label="Labor (Actual)" value={formatCurrency(jobCard.actualLaborCost)} />
                 <div className="h-px bg-white/20" />
-                <CostRow label="Parts (Est.)" value={formatCurrency(jobCard.estimatedPartsCost)} />
+                <CostRow label="Parts (Est.)" value={formatCurrency(displayPartsCost)} />
                 <CostRow label="Parts (Actual)" value={formatCurrency(jobCard.actualPartsCost)} />
                 {jobCard.discountAmount > 0 && (
                   <>
@@ -1200,7 +1444,7 @@ export default function JobCardDetailPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-300">Total</span>
                   <span className="text-xl font-display font-bold font-mono">
-                    {formatCurrency(jobCard.finalAmount)}
+                    {formatCurrency(jobCard.finalAmount || totalEstimatedCost)}
                   </span>
                 </div>
 
@@ -1276,51 +1520,129 @@ export default function JobCardDetailPage() {
           </div>
         </div>
 
-        {/* Notes Section */}
-        {(jobCard.customerNotes || jobCard.technicianNotes || jobCard.serviceAdvisorNotes) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            {jobCard.customerNotes && (
-              <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <MessageSquare className="h-4 w-4 text-gray-700" />
+        {/* TABS SECTION - Full Width */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden"
+        >
+          {/* Tab Navigation */}
+          <div className="border-b-2 border-gray-200">
+            <nav className="flex overflow-x-auto scrollbar-thin" role="tablist">
+              {[
+                { id: 'tasks' as const, label: 'Tasks', icon: Wrench, count: totalTasks },
+                { id: 'parts' as const, label: 'Parts', icon: Package, count: jobCard.parts.length },
+                { id: 'schedule' as const, label: 'Schedule', icon: Calendar, count: jobCard.promisedDate ? 1 : 0 },
+                { id: 'timeline' as const, label: 'Timeline', icon: History, count: jobCard.statusHistory.length },
+                { id: 'transactions' as const, label: 'Transactions', icon: Activity, count: jobCard.partsTransactions.length },
+                { id: 'attachments' as const, label: 'Attachments', icon: Paperclip, count: jobCard.attachments.length },
+                { id: 'comments' as const, label: 'Comments', icon: MessageSquare, count: jobCard.comments.length },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'flex items-center gap-2 px-6 py-4 font-semibold text-sm border-b-4 transition-colors whitespace-nowrap min-h-[64px]',
+                    activeTab === tab.id
+                      ? 'border-graphite-900 text-graphite-900'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  )}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls={`panel-${tab.id}`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                  {tab.count > 0 && (
+                    <span className={cn(
+                      'px-2 py-0.5 rounded-full text-xs font-semibold',
+                      activeTab === tab.id
+                        ? 'bg-graphite-100 text-graphite-900'
+                        : 'bg-gray-100 text-gray-700'
+                    )}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {/* Tasks Tab */}
+            {activeTab === 'tasks' && (
+              <div className="space-y-4">
+                {filteredChecklistItems.map((task, index) => (
+                  <ChecklistItemCard
+                    key={task.id}
+                    task={task}
+                    index={index}
+                    isExpanded={expandedTasks.has(task.id)}
+                    onToggle={() => toggleTask(task.id)}
+                    jobCardId={jobCardId}
+                  />
+                ))}
+
+                {filteredChecklistItems.length === 0 && (
+                  <div className="text-center py-12">
+                    <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-display font-bold text-gray-900 mb-2">No tasks found</h3>
+                    <p className="text-sm text-gray-600">
+                      {searchQuery ? 'Try a different search term' : 'No tasks have been added yet'}
+                    </p>
                   </div>
-                  <h4 className="text-sm font-display font-bold text-gray-900">Customer Notes</h4>
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.customerNotes}</p>
+                )}
               </div>
             )}
 
-            {jobCard.technicianNotes && (
-              <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <Wrench className="h-4 w-4 text-gray-700" />
-                  </div>
-                  <h4 className="text-sm font-display font-bold text-gray-900">Technician Notes</h4>
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.technicianNotes}</p>
-              </div>
+            {/* Parts Tab - FULLY IMPLEMENTED */}
+            {activeTab === 'parts' && (
+              <PartsSection parts={jobCard.parts} jobCardId={jobCardId} />
             )}
 
-            {jobCard.serviceAdvisorNotes && (
-              <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-gray-700" />
-                  </div>
-                  <h4 className="text-sm font-display font-bold text-gray-900">Advisor Notes</h4>
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{jobCard.serviceAdvisorNotes}</p>
-              </div>
+            {/* Schedule Tab */}
+            {activeTab === 'schedule' && (
+              <SchedulingTab
+                jobCardId={jobCardId}
+                initialData={{
+                  promisedDate: jobCard.promisedDate,
+                  promisedTime: jobCard.promisedTime,
+                  actualStartDate: jobCard.actualStartDate,
+                  actualCompletionDate: jobCard.actualCompletionDate,
+                  bayAssigned: jobCard.bayAssigned,
+                  serviceAdvisorId: jobCard.serviceAdvisorId,
+                  mechanicId: jobCard.leadMechanicId,
+                }}
+                onDataChange={(data) => {
+                  // TODO: Implement data update mutation
+                  console.log('[Schedule] Data changed:', data)
+                }}
+              />
             )}
-          </motion.div>
-        )}
+
+            {/* Timeline Tab - Status History */}
+            {activeTab === 'timeline' && (
+              <TimelineSection statusHistory={jobCard.statusHistory} />
+            )}
+
+            {/* Transactions Tab - Parts Transactions */}
+            {activeTab === 'transactions' && (
+              <TransactionsSection transactions={jobCard.partsTransactions} />
+            )}
+
+            {/* Attachments Tab */}
+            {activeTab === 'attachments' && (
+              <AttachmentsSection attachments={jobCard.attachments} jobCardId={jobCardId} />
+            )}
+
+            {/* Comments Tab */}
+            {activeTab === 'comments' && (
+              <CommentsSection comments={jobCard.comments} jobCardId={jobCardId} />
+            )}
+          </div>
+        </motion.div>
       </main>
     </div>
   )
@@ -1401,12 +1723,59 @@ interface ChecklistItemCardProps {
   index: number
   isExpanded: boolean
   onToggle: () => void
+  jobCardId: string
 }
 
-function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProps) {
+function ChecklistItemCard({ task, isExpanded, onToggle, jobCardId }: ChecklistItemCardProps) {
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
   const progress = task.subtasks.length > 0
     ? Math.round((task.subtasks.filter(st => st.completed).length / task.subtasks.length) * 100)
     : task.status === 'completed' ? 100 : 0
+
+  // Quick status update mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async (status: TaskStatus) => {
+      const response = await fetch(`/api/job-cards/${jobCardId}/checklist/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-card', jobCardId] })
+    }
+  })
+
+  const handleQuickAction = (e: React.MouseEvent, action: string) => {
+    e.stopPropagation()
+
+    if (action === 'view-details') {
+      router.push(`/job-cards/${jobCardId}/tasks/${task.id}`)
+    } else if (action === 'start' && task.status === 'pending') {
+      updateStatusMutation.mutate('in_progress')
+    } else if (action === 'complete' && task.status === 'in_progress') {
+      updateStatusMutation.mutate('completed')
+    } else if (action === 'block') {
+      updateStatusMutation.mutate('blocked')
+    }
+  }
+
+  const getStatusClass = (status: TaskStatus) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-teal-50 text-teal-700 border-teal-200'
+      case 'in_progress':
+        return 'bg-blue-50 text-blue-700 border-blue-200'
+      case 'blocked':
+        return 'bg-red-50 text-red-700 border-red-200'
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-300'
+    }
+  }
 
   return (
     <motion.div
@@ -1415,34 +1784,45 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
       transition={{ delay: 0 }}
       className={cn(
         'bg-white rounded-xl border-2 transition-all duration-200',
-        task.status === 'completed' ? 'border-green-200 bg-green-50/30' :
-        task.status === 'in_progress' ? 'border-graphite-400 bg-graphite-50/30' :
+        task.status === 'completed' ? 'border-teal-200 bg-teal-50/30' :
+        task.status === 'in_progress' ? 'border-blue-400 bg-blue-50/30' :
+        task.status === 'blocked' ? 'border-red-300 bg-red-50/30' :
         'border-gray-200 hover:border-gray-300'
       )}
     >
+      {/* Collapsed View - Enhanced with 5 key data points and subtask summary */}
       <button
         onClick={onToggle}
         className="w-full p-4 flex items-start gap-3 active:bg-gray-50 transition-colors text-left"
       >
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="text-base font-display font-bold text-gray-900">{task.name}</h4>
+          {/* Task Name + Status Badge + Subtask Summary - 3 key data points */}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <h4 className="text-base font-display font-bold text-gray-900">{task.itemName}</h4>
+
+            {/* Status Badge - Key data point #1 */}
             <span className={cn(
               'px-2.5 py-0.5 rounded-lg text-xs font-semibold border flex-shrink-0',
-              task.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200' :
-              task.status === 'in_progress' ? 'bg-graphite-100 text-graphite-900 border-graphite-300' :
-              'bg-gray-100 text-gray-700 border-gray-300'
+              getStatusClass(task.status)
             )}>
               {task.status.replace('_', ' ')}
             </span>
+
+            {/* Subtask Summary - Key data point #2 */}
+            {task.subtasks.length > 0 && (
+              <span className="flex items-center gap-1 text-xs font-medium text-gray-600">
+                <CheckCircle2 className="h-3 w-3" />
+                {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
+              </span>
+            )}
           </div>
 
           {task.description && (
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.description}</p>
           )}
 
+          {/* Category + Time Estimate - Key data points #3-5 */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <PriorityBadge priority={task.priority} />
             <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-medium border border-gray-200">
               {task.category}
             </span>
@@ -1452,6 +1832,7 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
             </span>
           </div>
 
+          {/* Progress Bar - Visual summary */}
           {(task.subtasks.length > 0 || task.status !== 'pending') && (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -1465,8 +1846,8 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
                   transition={{ duration: 0.5 }}
                   className={cn(
                     'h-full rounded-full',
-                    progress === 100 ? 'bg-green-500' :
-                    progress >= 50 ? 'bg-graphite-600' :
+                    progress === 100 ? 'bg-teal-500' :
+                    progress >= 50 ? 'bg-blue-600' :
                     'bg-amber-500'
                   )}
                 />
@@ -1484,6 +1865,52 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
         </div>
       </button>
 
+      {/* Quick Actions - ONLY in collapsed view */}
+      {!isExpanded && (
+        <div className="px-4 pb-4 flex items-center gap-2">
+          {task.status === 'pending' && (
+            <button
+              onClick={(e) => handleQuickAction(e, 'start')}
+              disabled={updateStatusMutation.isPending}
+              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 text-blue-700 font-semibold rounded-lg border border-blue-200 hover:bg-blue-100 active:scale-[0.98] transition-all disabled:opacity-50"
+            >
+              <Play className="h-4 w-4" />
+              Start Task
+            </button>
+          )}
+
+          {task.status === 'in_progress' && (
+            <>
+              <button
+                onClick={(e) => handleQuickAction(e, 'complete')}
+                disabled={updateStatusMutation.isPending}
+                className="flex-1 min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-teal-50 text-teal-700 font-semibold rounded-lg border border-teal-200 hover:bg-teal-100 active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Complete
+              </button>
+
+              <button
+                onClick={(e) => handleQuickAction(e, 'block')}
+                disabled={updateStatusMutation.isPending}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center p-3 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 active:scale-[0.98] transition-all disabled:opacity-50"
+                aria-label="Mark as blocked"
+              >
+                <AlertCircle className="h-4 w-4" />
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={(e) => handleQuickAction(e, 'view-details')}
+            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-graphite-900 text-white font-semibold rounded-lg hover:bg-graphite-700 active:scale-[0.98] transition-all"
+          >
+            <Edit className="h-4 w-4" />
+            View Details
+          </button>
+        </div>
+      )}
+
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -1494,6 +1921,7 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
             className="overflow-hidden border-t-2 border-gray-200"
           >
             <div className="p-4 space-y-4">
+              {/* Mechanic Notes */}
               {task.mechanicNotes && (
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs font-semibold text-gray-600 mb-1">Mechanic Notes</p>
@@ -1501,6 +1929,7 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
                 </div>
               )}
 
+              {/* Cost Breakdown */}
               <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="text-xs text-gray-600">Estimated Cost</p>
@@ -1517,6 +1946,60 @@ function ChecklistItemCard({ task, isExpanded, onToggle }: ChecklistItemCardProp
                   </div>
                 )}
               </div>
+
+              {/* Subtasks Section - NEW */}
+              {task.subtasks && task.subtasks.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="text-sm font-semibold text-gray-900">Subtasks</h5>
+                    <span className="text-xs text-gray-600">
+                      {Math.round((task.subtasks.filter(st => st.completed).length / task.subtasks.length) * 100)}% complete
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {task.subtasks.map((subtask, idx) => (
+                      <div
+                        key={subtask.id}
+                        className={cn(
+                          "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                          subtask.completed
+                            ? "bg-teal-50 border-teal-200"
+                            : "bg-gray-50 border-gray-200"
+                        )}
+                      >
+                        <div className="min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0">
+                          {subtask.completed ? (
+                            <CheckCircle2 className="h-5 w-5 text-teal-600" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className={cn(
+                            "text-sm font-medium",
+                            subtask.completed ? "text-gray-500 line-through" : "text-gray-900"
+                          )}>
+                            <span className="text-gray-600 mr-2">{idx + 1}.</span>
+                            {subtask.name}
+                          </p>
+
+                          {subtask.description && (
+                            <p className="text-xs text-gray-600 mt-1">{subtask.description}</p>
+                          )}
+                        </div>
+
+                        {subtask.displayOrder && (
+                          <span className="text-xs text-gray-500 flex-shrink-0">
+                            {subtask.displayOrder}m
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -11,6 +12,7 @@ interface DatePickerProps {
   onClose?: () => void
   className?: string
   placeholder?: string
+  theme?: 'dark' | 'light'
 }
 
 /**
@@ -26,13 +28,15 @@ interface DatePickerProps {
  */
 type ViewMode = 'days' | 'months' | 'years'
 
-export function DatePicker({ value, onChange, onClose, className, placeholder }: DatePickerProps) {
+export function DatePicker({ value, onChange, onClose, className, placeholder, theme = 'dark' }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(value ? new Date(value) : null)
   const [currentDate, setCurrentDate] = useState(selectedDate || new Date())
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('days')
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; width: number } | null>(null)
   const pickerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Update selected date when value prop changes
   useEffect(() => {
@@ -49,7 +53,13 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
   // Close picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      // Check if click is outside both the picker and the portal
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(target) &&
+        !(target as Element)?.closest?.('[data-date-picker-portal]')
+      ) {
         setIsOpen(false)
       }
     }
@@ -60,6 +70,23 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  // Calculate popover position when opening
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const scrollY = window.scrollY
+      const scrollX = window.scrollX
+
+      setPopoverPosition({
+        top: rect.bottom + scrollY + 8, // 8px gap
+        left: rect.left + scrollX,
+        width: rect.width
+      })
+    } else {
+      setPopoverPosition(null)
     }
   }, [isOpen])
 
@@ -170,59 +197,97 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
     <div ref={pickerRef} className={cn('relative', className)}>
       {/* Date Input Button */}
       <motion.button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
         className={cn(
-          'w-full px-4 py-3 text-base bg-graphite-900 border border-graphite-700 rounded-xl min-h-[44px]',
-          'text-left text-white placeholder:text-graphite-500',
-          'focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent',
+          'w-full px-4 py-3 text-base border rounded-xl min-h-[44px]',
+          'focus:outline-none focus:ring-2 focus:ring-transparent focus:border-transparent',
           'transition-all duration-200',
-          'hover:border-brand/40 active:border-brand/60',
-          'flex items-center justify-between'
+          'flex items-center justify-between',
+          theme === 'dark'
+            ? 'bg-graphite-900 border-graphite-700 text-white placeholder:text-graphite-500 hover:border-brand/40 active:border-brand/60'
+            : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 hover:border-gray-400 active:border-gray-500'
         )}
       >
-        <span className={selectedDate ? 'font-medium' : 'text-graphite-500'}>
+        <span className={cn(
+          selectedDate ? 'font-medium' : 'text-gray-500'
+        )}>
           {selectedDate ? formatDate(selectedDate) : (placeholder || 'Select date')}
         </span>
-        <Calendar className="h-5 w-5 text-brand flex-shrink-0 ml-2" />
+        <Calendar className={cn(
+          'h-5 w-5 flex-shrink-0 ml-2',
+          theme === 'dark' ? 'text-brand' : 'text-gray-700'
+        )} />
       </motion.button>
 
-      {/* Calendar Popover */}
-      <AnimatePresence>
-        {isOpen && (
+      {/* Calendar Popover - Rendered via Portal */}
+      {isOpen && popoverPosition && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
           <motion.div
+            data-date-picker-portal
             initial={{ opacity: 0, y: -10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute z-50 mt-2 w-full min-w-[320px]"
+            className="fixed z-[9999]"
+            style={{
+              top: `${popoverPosition.top}px`,
+              left: `${popoverPosition.left}px`,
+              width: `${Math.max(popoverPosition.width, 320)}px`
+            }}
           >
-            <div className="bg-graphite-800 rounded-2xl border border-graphite-700 shadow-2xl overflow-hidden">
+            <div className={cn(
+              'rounded-2xl border shadow-2xl overflow-hidden',
+              theme === 'dark'
+                ? 'bg-graphite-800 border-graphite-700'
+                : 'bg-white border-gray-200'
+            )}>
               {/* Header with Month/Year */}
-              <div className="bg-gradient-to-r from-graphite-900 to-graphite-800 px-4 py-4 border-b border-graphite-700">
+              <div className={cn(
+                'px-4 py-4 border-b',
+                theme === 'dark'
+                  ? 'bg-gradient-to-r from-graphite-900 to-graphite-800 border-graphite-700'
+                  : 'bg-gradient-to-r from-gray-50 to-white border-gray-200'
+              )}>
                 <div className="flex items-center justify-between">
                   {/* Month and Year - Clickable */}
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-brand" />
+                    <Calendar className={cn(
+                      'h-5 w-5',
+                      theme === 'dark' ? 'text-brand' : 'text-gray-700'
+                    )} />
                     <div className="flex items-center gap-1">
                       <motion.button
                         type="button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setViewMode('months')}
-                        className="text-lg font-semibold text-brand hover:text-brand/90 transition-colors px-2 py-1 rounded-lg hover:bg-graphite-700/50"
+                        className={cn(
+                          'text-lg font-semibold transition-colors px-2 py-1 rounded-lg',
+                          theme === 'dark'
+                            ? 'text-brand hover:text-brand/90 hover:bg-graphite-700/50'
+                            : 'text-gray-900 hover:text-gray-700 hover:bg-gray-100'
+                        )}
                       >
                         {months[currentDate.getMonth()]}
                       </motion.button>
-                      <span className="text-brand">/</span>
+                      <span className={cn(
+                        theme === 'dark' ? 'text-brand' : 'text-gray-700'
+                      )}>/</span>
                       <motion.button
                         type="button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setViewMode('years')}
-                        className="text-lg font-semibold text-brand hover:text-brand/90 transition-colors px-2 py-1 rounded-lg hover:bg-graphite-700/50"
+                        className={cn(
+                          'text-lg font-semibold transition-colors px-2 py-1 rounded-lg',
+                          theme === 'dark'
+                            ? 'text-brand hover:text-brand/90 hover:bg-graphite-700/50'
+                            : 'text-gray-900 hover:text-gray-700 hover:bg-gray-100'
+                        )}
                       >
                         {currentDate.getFullYear()}
                       </motion.button>
@@ -238,18 +303,30 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={handlePrevMonth}
-                          className="p-2 rounded-lg hover:bg-graphite-700 transition-colors duration-200"
+                          className={cn(
+                            'p-2 rounded-lg transition-colors duration-200',
+                            theme === 'dark' ? 'hover:bg-graphite-700' : 'hover:bg-gray-100'
+                          )}
                         >
-                          <ChevronLeft className="h-5 w-5 text-brand" />
+                          <ChevronLeft className={cn(
+                            'h-5 w-5',
+                            theme === 'dark' ? 'text-brand' : 'text-gray-700'
+                          )} />
                         </motion.button>
                         <motion.button
                           type="button"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={handleNextMonth}
-                          className="p-2 rounded-lg hover:bg-graphite-700 transition-colors duration-200"
+                          className={cn(
+                            'p-2 rounded-lg transition-colors duration-200',
+                            theme === 'dark' ? 'hover:bg-graphite-700' : 'hover:bg-gray-100'
+                          )}
                         >
-                          <ChevronRight className="h-5 w-5 text-brand" />
+                          <ChevronRight className={cn(
+                            'h-5 w-5',
+                            theme === 'dark' ? 'text-brand' : 'text-gray-700'
+                          )} />
                         </motion.button>
                       </>
                     ) : viewMode === 'years' ? (
@@ -259,18 +336,30 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={handlePrevYearRange}
-                          className="p-2 rounded-lg hover:bg-graphite-700 transition-colors duration-200"
+                          className={cn(
+                            'p-2 rounded-lg transition-colors duration-200',
+                            theme === 'dark' ? 'hover:bg-graphite-700' : 'hover:bg-gray-100'
+                          )}
                         >
-                          <ChevronLeft className="h-5 w-5 text-brand" />
+                          <ChevronLeft className={cn(
+                            'h-5 w-5',
+                            theme === 'dark' ? 'text-brand' : 'text-gray-700'
+                          )} />
                         </motion.button>
                         <motion.button
                           type="button"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={handleNextYearRange}
-                          className="p-2 rounded-lg hover:bg-graphite-700 transition-colors duration-200"
+                          className={cn(
+                            'p-2 rounded-lg transition-colors duration-200',
+                            theme === 'dark' ? 'hover:bg-graphite-700' : 'hover:bg-gray-100'
+                          )}
                         >
-                          <ChevronRight className="h-5 w-5 text-brand" />
+                          <ChevronRight className={cn(
+                            'h-5 w-5',
+                            theme === 'dark' ? 'text-brand' : 'text-gray-700'
+                          )} />
                         </motion.button>
                       </>
                     ) : null}
@@ -287,7 +376,10 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                       {weekDays.map((day) => (
                         <div
                           key={day}
-                          className="text-center text-xs font-semibold text-graphite-400 uppercase tracking-wide py-2"
+                          className={cn(
+                            'text-center text-xs font-semibold uppercase tracking-wide py-2',
+                            theme === 'dark' ? 'text-graphite-400' : 'text-gray-500'
+                          )}
                         >
                           {day}
                         </div>
@@ -323,7 +415,10 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                                   <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="absolute inset-0 bg-brand/10"
+                                    className={cn(
+                                      'absolute inset-0',
+                                      theme === 'dark' ? 'bg-brand/10' : 'bg-gray-100'
+                                    )}
                                   />
                                 )}
 
@@ -333,13 +428,16 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                                    className="absolute inset-0 bg-brand"
+                                    className="absolute inset-0 bg-gray-900"
                                   />
                                 )}
 
                                 {/* Today indicator */}
                                 {isToday(date) && !isSameDay(date, selectedDate) && (
-                                  <div className="absolute inset-0 border-2 border-brand/40 rounded-lg" />
+                                  <div className={cn(
+                                    'absolute inset-0 border-2 rounded-lg',
+                                    theme === 'dark' ? 'border-brand/40' : 'border-gray-900'
+                                  )} />
                                 )}
                               </>
                             )}
@@ -350,10 +448,10 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                             className={cn(
                               'relative z-10 flex items-center justify-center h-full',
                               isSameDay(date, selectedDate)
-                                ? 'text-graphite-900 font-bold'
+                                ? 'text-white font-bold'
                                 : date && isToday(date)
-                                ? 'text-brand font-semibold'
-                                : 'text-graphite-200'
+                                ? theme === 'dark' ? 'text-brand font-semibold' : 'text-gray-900 font-semibold'
+                                : theme === 'dark' ? 'text-graphite-200' : 'text-gray-700'
                             )}
                           >
                             {date?.getDate()}
@@ -378,8 +476,10 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                           'py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200',
                           'relative overflow-hidden',
                           currentDate.getMonth() === index
-                            ? 'bg-brand text-graphite-900 font-bold'
-                            : 'bg-graphite-700/50 text-graphite-200 hover:bg-graphite-700'
+                            ? 'bg-gray-900 text-white font-bold'
+                            : theme === 'dark'
+                            ? 'bg-graphite-700/50 text-graphite-200 hover:bg-graphite-700'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         )}
                       >
                         {month}
@@ -405,8 +505,10 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                             'py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200',
                             'relative overflow-hidden',
                             currentDate.getFullYear() === year
-                              ? 'bg-brand text-graphite-900 font-bold'
-                              : 'bg-graphite-700/50 text-graphite-200 hover:bg-graphite-700'
+                              ? 'bg-gray-900 text-white font-bold'
+                              : theme === 'dark'
+                              ? 'bg-graphite-700/50 text-graphite-200 hover:bg-graphite-700'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           )}
                         >
                           {year}
@@ -418,11 +520,22 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
               )}
 
               {/* Footer */}
-              <div className="px-4 py-3 bg-graphite-900/50 border-t border-graphite-700">
+              <div className={cn(
+                'px-4 py-3 border-t',
+                theme === 'dark'
+                  ? 'bg-graphite-900/50 border-graphite-700'
+                  : 'bg-gray-50 border-gray-200'
+              )}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-brand shadow-[0_0_8px_rgba(204,255,0,0.6)]" />
-                    <span className="text-xs text-graphite-400">
+                    <div className={cn(
+                      'h-2 w-2 rounded-full',
+                      theme === 'dark' ? 'bg-brand shadow-[0_0_8px_rgba(204,255,0,0.6)]' : 'bg-gray-900'
+                    )} />
+                    <span className={cn(
+                      'text-xs',
+                      theme === 'dark' ? 'text-graphite-400' : 'text-gray-600'
+                    )}>
                       {selectedDate ? formatDate(selectedDate) : 'Select a date'}
                     </span>
                   </div>
@@ -431,7 +544,10 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsOpen(false)}
-                    className="text-xs font-medium text-brand hover:text-brand/90 transition-colors"
+                    className={cn(
+                      'text-xs font-medium transition-colors',
+                      theme === 'dark' ? 'text-brand hover:text-brand/90' : 'text-gray-700 hover:text-gray-900'
+                    )}
                   >
                     Close
                   </motion.button>
@@ -439,8 +555,9 @@ export function DatePicker({ value, onChange, onClose, className, placeholder }:
               </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }

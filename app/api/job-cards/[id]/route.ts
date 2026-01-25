@@ -16,7 +16,8 @@ export async function PATCH(
     const jobCardId = params.id
     const body = await request.json()
 
-    console.log('📝 Updating job card:', jobCardId, body)
+    console.log('📝 PATCH /api/job-cards/[id] - Updating job card:', jobCardId)
+    console.log('📝 Request body:', JSON.stringify(body, null, 2))
 
     const supabase = createAdminClient()
 
@@ -99,8 +100,11 @@ export async function PATCH(
     for (const [frontendField, dbColumn] of Object.entries(fieldMapping)) {
       if (body[frontendField] !== undefined) {
         updateData[dbColumn] = body[frontendField]
+        console.log(`📝 Mapping field: ${frontendField} → ${dbColumn} = ${body[frontendField]}`)
       }
     }
+
+    console.log('📝 Final updateData:', updateData)
 
     // If status changed, record in status history
     if (body.status && body.status !== existingCard.status) {
@@ -360,50 +364,50 @@ export async function GET(
       vehicleDetails = vehicle
     }
 
-    // Fetch employee (lead mechanic) details if assigned
+    // Fetch employee (lead mechanic) details if assigned from users table
     let leadMechanic = null
     if (card.lead_mechanic_id) {
       const { data: mechanic } = await supabase
-        .from('employees')
+        .from('users')
         .select('*')
-        .eq('id', card.lead_mechanic_id)
+        .eq('user_uid', card.lead_mechanic_id)
         .single()
 
       if (mechanic) {
         leadMechanic = {
-          id: mechanic.id,
+          id: mechanic.user_uid,
           firstName: mechanic.first_name,
           lastName: mechanic.last_name,
           email: mechanic.email,
           phoneNumber: mechanic.phone_number,
-          role: mechanic.role,
-          specialization: mechanic.specialization,
-          status: mechanic.status,
-          hireDate: mechanic.hire_date,
+          role: mechanic.user_role,
+          specialization: mechanic.specialization || null,
+          status: mechanic.is_active ? 'active' : 'inactive',
+          hireDate: mechanic.date_of_joining || null,
         }
       }
     }
 
-    // Fetch service advisor details (Previously missing)
+    // Fetch service advisor details from users table
     let serviceAdvisor = null
     if (card.service_advisor_id) {
       const { data: advisor } = await supabase
-        .from('employees')
+        .from('users')
         .select('*')
-        .eq('id', card.service_advisor_id)
+        .eq('user_uid', card.service_advisor_id)
         .single()
 
       if (advisor) {
         serviceAdvisor = {
-          id: advisor.id,
+          id: advisor.user_uid,
           firstName: advisor.first_name,
           lastName: advisor.last_name,
           email: advisor.email,
           phoneNumber: advisor.phone_number,
-          role: advisor.role,
-          specialization: advisor.specialization,
-          status: advisor.status,
-          hireDate: advisor.hire_date,
+          role: advisor.user_role,
+          specialization: advisor.specialization || null,
+          status: advisor.is_active ? 'active' : 'inactive',
+          hireDate: advisor.date_of_joining || null,
         }
       }
     }
@@ -503,7 +507,7 @@ export async function GET(
       // Transform checklist items to expected format
       checklistItems: (checklistItems || []).map(item => ({
         id: item.id,
-        name: item.item_name || item.name || 'Unnamed Task',
+        itemName: item.item_name || item.name || 'Unnamed Task', // Map to itemName to match type
         description: item.description,
         status: item.status,
         priority: item.priority || 'medium',
@@ -516,7 +520,17 @@ export async function GET(
         startedAt: item.started_at,
         completedAt: item.completed_at,
         mechanicNotes: item.mechanic_notes,
-        subtasks: [],
+        subtasks: (item.subtasks || []).map((st: any) => ({
+          id: st.id,
+          name: st.name, // Subtasks use 'name' field
+          description: st.description,
+          estimatedMinutes: st.estimated_minutes,
+          completed: st.completed || false,
+          displayOrder: st.display_order,
+        })),
+        linkedToCustomerIssues: item.linked_to_customer_issues || [],
+        linkedToServiceScope: item.linked_to_service_scope || [],
+        linkedToTechnicalDiagnosis: item.linked_to_technical_diagnosis || [],
         isTimerRunning: false,
         timerStartedAt: null,
         totalTimeSpent: item.actual_minutes || 0,

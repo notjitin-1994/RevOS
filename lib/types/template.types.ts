@@ -31,6 +31,7 @@ export interface ChecklistItem {
   id: string
   itemName: string
   description?: string
+  status?: 'pending' | 'in-progress' | 'completed' | 'skipped' // Added status field
   category?: string
   priority: TaskPriority
   estimatedMinutes: number
